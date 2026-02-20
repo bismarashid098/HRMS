@@ -13,10 +13,9 @@ const router = express.Router();
 
 router.use(protect);
 
-router.post("/", authorize("Employee"), applyLeave);
+router.post("/", applyLeave);
 router.get("/my/:employeeId", authorize("Employee"), getMyLeaves);
 
-router.get("/", authorize("Admin", "HR"), getAllLeaves);
-router.put("/:id", authorize("Admin", "HR"), updateLeaveStatus);
-
+router.get("/", authorize("Admin", "HR", "Manager"), getAllLeaves);
+router.put("/:id", authorize("Admin", "HR", "Manager"), updateLeaveStatus);
 module.exports = router;

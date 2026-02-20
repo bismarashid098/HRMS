@@ -2,50 +2,41 @@ const mongoose = require("mongoose");
 
 const employeeSchema = new mongoose.Schema(
   {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true
-    },
-
-    employeeId: {
+    name: {
       type: String,
       required: true,
-      unique: true
+      trim: true
     },
-
     department: {
       type: String,
+      required: true,
+      trim: true
+    },
+    salary: {
+      type: Number,
       required: true
     },
-
-    designation: {
+    biometricId: {
       type: String,
-      required: true
+      required: true,
+      unique: true,
+      trim: true
     },
-
-    joiningDate: {
-      type: Date,
-      required: true
+    leaveBalance: {
+      type: Number,
+      default: 0
     },
-
     employmentStatus: {
       type: String,
       enum: ["Active", "Resigned", "Terminated"],
       default: "Active"
     },
-
-    salary: {
-      basic: { type: Number, required: true },
-      allowance: { type: Number, default: 0 }
-    },
-
     isDeleted: {
       type: Boolean,
       default: false
     }
   },
-  { timestamps: true }
+  { timestamps: { createdAt: true, updatedAt: true } }
 );
 
 module.exports = mongoose.model("Employee", employeeSchema);

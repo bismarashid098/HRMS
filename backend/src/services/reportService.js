@@ -1,6 +1,6 @@
 const Attendance = require("../models/Attendance");
 const Leave = require("../models/Leave");
-const Payroll = require("../models/Payroll");
+const Payroll = require("../models/payroll");
 
 exports.getAttendanceSummary = async (employeeId, month, year) => {
   const start = new Date(year, month - 1, 1);

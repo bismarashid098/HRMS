@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import {
     Box,
     Heading,
@@ -8,109 +9,207 @@ import {
     Divider,
     SimpleGrid,
     VStack,
+    Spinner,
+    Center,
+    HStack
 } from "@chakra-ui/react";
-
-import { getEmployeeById } from "./employeeData";
+import api from "../../api/axios";
 
 const EmployeeView = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [employee, setEmployee] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const employee = getEmployeeById(id);
+    useEffect(() => {
+        const fetchEmployee = async () => {
+            try {
+                const { data } = await api.get(`/employees/${id}`);
+                setEmployee(data);
+            } catch {
+                setError("Failed to fetch employee details");
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    // ❌ SAFETY CHECK
-    if (!employee) {
+        fetchEmployee();
+    }, [id]);
+
+    if (loading) {
         return (
-            <Box>
+            <Center h="200px">
+                <Spinner size="xl" />
+            </Center>
+        );
+    }
+
+    if (error || !employee) {
+        return (
+            <Box p={5}>
                 <Heading size="md" color="red.500">
-                    Employee Not Found
+                    {error || "Employee Not Found"}
                 </Heading>
-                <Button mt="4" onClick={() => navigate("/employees")}>
+                <Button mt="4" onClick={() => navigate("/dashboard/employees")}>
                     Back to Employees
                 </Button>
             </Box>
         );
     }
 
-    const statusColor = employee.status === "Active" ? "green" : "red";
-
-    const attendance = employee.attendance || {
-        totalDays: 0,
-        present: 0,
-        late: 0,
+    const getStatusColor = (status) => {
+        switch (status) {
+            case "Active":
+                return "green";
+            case "Resigned":
+                return "orange";
+            case "Terminated":
+                return "red";
+            default:
+                return "gray";
+        }
     };
 
     return (
-        <Box>
-            <Heading size="md" mb="4">
+        <Box p={5} bg="white" shadow="md" borderRadius="md">
+            <Heading size="lg" mb="6">
                 Employee Profile
             </Heading>
 
-            {/* ================= BASIC INFO ================= */}
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
-                <VStack align="start" spacing={2}>
-                    <Text><b>Employee ID:</b> {employee.id}</Text>
-                    <Text><b>Name:</b> {employee.name}</Text>
-                    <Text><b>Role:</b> {employee.role}</Text>
-                    <Text><b>Department:</b> {employee.department}</Text>
-                    <Text>
-                        <b>Status:</b>{" "}
-                        <Badge colorScheme={statusColor}>
-                            {employee.status}
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10}>
+                <VStack align="start" spacing={4}>
+                    <Box>
+                        <Text fontWeight="bold" color="gray.500">Employee ID</Text>
+                        <Text fontSize="lg">{employee.employeeId}</Text>
+                    </Box>
+                    <Box>
+                        <Text fontWeight="bold" color="gray.500">Name</Text>
+                        <Text fontSize="lg">{employee.user?.name}</Text>
+                    </Box>
+                    <Box>
+                        <Text fontWeight="bold" color="gray.500">Role</Text>
+                        <Text fontSize="lg">{employee.designation}</Text>
+                    </Box>
+                    <Box>
+                        <Text fontWeight="bold" color="gray.500">Department</Text>
+                        <Text fontSize="lg">{employee.department}</Text>
+                    </Box>
+                    <Box>
+                        <Text fontWeight="bold" color="gray.500">Status</Text>
+                        <Badge colorScheme={getStatusColor(employee.employmentStatus)} fontSize="md" px={2} py={1} borderRadius="md">
+                            {employee.employmentStatus}
                         </Badge>
-                    </Text>
+                    </Box>
                 </VStack>
 
-                <VStack align="start" spacing={2}>
-                    <Text><b>Monthly Salary:</b> Rs {employee.salary}</Text>
-                    <Text><b>Phone:</b> {employee.phone}</Text>
-                    <Text><b>Address:</b> {employee.address}</Text>
-                    <Text><b>Email:</b> {employee.email || "—"}</Text>
-                    <Text><b>Joining Date:</b> {employee.joiningDate}</Text>
+                <VStack align="start" spacing={4}>
+                    <Box>
+                        <Text fontWeight="bold" color="gray.500">Basic Salary</Text>
+                        <Text fontSize="lg">Rs {employee.salary?.basic}</Text>
+                    </Box>
+                    <Box>
+                        <Text fontWeight="bold" color="gray.500">Phone</Text>
+                        <Text fontSize="lg">{employee.phone || "N/A"}</Text>
+                    </Box>
+                    <Box>
+                        <Text fontWeight="bold" color="gray.500">Address</Text>
+                        <Text fontSize="lg">{employee.address || "N/A"}</Text>
+                    </Box>
+                    <Box>
+                        <Text fontWeight="bold" color="gray.500">Email</Text>
+                        <Text fontSize="lg">{employee.user?.email || "N/A"}</Text>
+                    </Box>
+                    <Box>
+                        <Text fontWeight="bold" color="gray.500">Joining Date</Text>
+                        <Text fontSize="lg">
+                            {new Date(employee.joiningDate).toLocaleDateString()}
+                        </Text>
+                    </Box>
                 </VStack>
             </SimpleGrid>
 
-            <Divider my="6" />
+            <Divider my="8" />
 
-            {/* ================= ATTENDANCE ================= */}
-            <Heading size="sm" mb="3">
-                Attendance Summary
-            </Heading>
+            <Box mb="6">
+                <Heading size="md" mb="4">
+                    Linked Modules
+                </Heading>
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                    <Box>
+                        <Text fontSize="sm" fontWeight="semibold" mb={2}>
+                            Attendance
+                        </Text>
+                        <HStack spacing={3}>
+                            <Button
+                                size="sm"
+                                colorScheme="green"
+                                variant="solid"
+                                onClick={() =>
+                                    navigate(`/dashboard/attendance?employeeId=${employee._id}`)
+                                }
+                            >
+                                Attendance Ledger
+                            </Button>
+                        </HStack>
+                    </Box>
+                    <Box>
+                        <Text fontSize="sm" fontWeight="semibold" mb={2}>
+                            Leaves
+                        </Text>
+                        <HStack spacing={3}>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                colorScheme="green"
+                                onClick={() => navigate("/dashboard/leaves")}
+                            >
+                                Leave Records
+                            </Button>
+                        </HStack>
+                    </Box>
+                    <Box>
+                        <Text fontSize="sm" fontWeight="semibold" mb={2}>
+                            Advances and Payroll
+                        </Text>
+                        <HStack spacing={3}>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                colorScheme="green"
+                                onClick={() => navigate("/dashboard/reports/advances")}
+                            >
+                                Advance / Loan Ledger
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                colorScheme="green"
+                                onClick={() => navigate("/dashboard/reports/payroll")}
+                            >
+                                Payroll History
+                            </Button>
+                        </HStack>
+                    </Box>
+                </SimpleGrid>
+            </Box>
 
-            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-                <Box borderWidth="1px" p="4" borderRadius="md">
-                    <Text fontWeight="bold">Total Working Days</Text>
-                    <Text>{attendance.totalDays}</Text>
-                </Box>
+            <Box>
+                <Button
+                    colorScheme="blue"
+                    mr="3"
+                    onClick={() => navigate(`/dashboard/employees/edit/${employee._id}`)}
+                >
+                    Edit Employee
+                </Button>
 
-                <Box borderWidth="1px" p="4" borderRadius="md">
-                    <Text fontWeight="bold">Present Days</Text>
-                    <Text>{attendance.present}</Text>
-                </Box>
-
-                <Box borderWidth="1px" p="4" borderRadius="md">
-                    <Text fontWeight="bold">Late Days</Text>
-                    <Text>{attendance.late}</Text>
-                </Box>
-            </SimpleGrid>
-
-            <Divider my="6" />
-
-            {/* ================= ACTIONS ================= */}
-            <Button
-                colorScheme="blue"
-                mr="3"
-                onClick={() => navigate(`/employees/edit/${employee.id}`)}
-            >
-                Edit Employee
-            </Button>
-
-            <Button
-                variant="outline"
-                onClick={() => navigate("/employees")}
-            >
-                Back to List
-            </Button>
+                <Button
+                    variant="outline"
+                    onClick={() => navigate("/dashboard/employees")}
+                >
+                    Back to List
+                </Button>
+            </Box>
         </Box>
     );
 };

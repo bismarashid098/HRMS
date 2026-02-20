@@ -1,53 +1,326 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import api from "../../api/axios";
+import {
+  Box,
+  Button,
+  FormControl,
+  FormLabel,
+  Input,
+  Select,
+  Grid,
+  GridItem,
+  Heading,
+  useToast,
+  VStack,
+  Flex,
+  Text,
+  Spinner,
+} from "@chakra-ui/react";
+import { FaSave, FaArrowLeft } from "react-icons/fa";
 
-const EmployeeForm = ({ onAdd }) => {
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [role, setRole] = useState("");
+const EmployeeForm = () => {
+  const { id } = useParams(); // Get ID from URL if editing
+  const navigate = useNavigate();
+  const toast = useToast();
+  
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    role: "",
+    department: "",
+    salary: "",
+    phone: "",
+    address: "",
+    joiningDate: new Date().toISOString().split("T")[0], // Default today
+    employmentStatus: "Active",
+  });
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+  const fetchEmployeeData = useCallback(async () => {
+    if (!id) return;
+    setFetching(true);
+    try {
+      const { data } = await api.get(`/employees/${id}`);
+      setFormData({
+        name: data.user?.name || "",
+        email: data.user?.email || "",
+        role: data.designation || "",
+        department: data.department || "",
+        salary: data.salary?.basic || "",
+        phone: data.phone || "",
+        address: data.address || "",
+        joiningDate: data.joiningDate ? data.joiningDate.split("T")[0] : "",
+        employmentStatus: data.employmentStatus || "Active",
+      });
+    } catch {
+      toast({
+        title: "Error fetching employee",
+        description: "Could not load employee details.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setFetching(false);
+    }
+  }, [id, toast]);
 
-        if (!name || !email || !role) return;
+  useEffect(() => {
+    if (id) {
+      fetchEmployeeData();
+    }
+  }, [id, fetchEmployeeData]);
 
-        onAdd({
-            id: Date.now(),
-            name,
-            email,
-            role,
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+
+    if (!formData.name || !formData.email || !formData.salary) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in Name, Email, and Salary.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      setLoading(false);
+      return;
+    }
+
+    const salaryNumber = Number(formData.salary);
+    if (Number.isNaN(salaryNumber) || salaryNumber <= 0) {
+      toast({
+        title: "Invalid Salary",
+        description: "Salary must be a positive number.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.email.includes("@")) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        department: formData.department,
+        designation: formData.role,
+        salary: salaryNumber,
+        joiningDate: formData.joiningDate,
+        phone: formData.phone,
+        address: formData.address,
+        employmentStatus: formData.employmentStatus,
+      };
+
+      if (id) {
+        // Update existing employee
+        await api.put(`/employees/${id}`, payload);
+        toast({
+          title: "Employee Updated",
+          description: "Employee details updated successfully.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
         });
+      } else {
+        // Create new employee
+        await api.post("/employees", payload);
+        toast({
+          title: "Employee Created",
+          description: "New employee added successfully.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
 
-        setName("");
-        setEmail("");
-        setRole("");
-    };
+      navigate("/dashboard/employees");
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Failed to save employee.",
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  if (fetching) {
     return (
-        <form className="employee-form" onSubmit={handleSubmit}>
-            <input
-                type="text"
-                placeholder="Employee Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-            />
-
-            <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
-
-            <input
-                type="text"
-                placeholder="Role / Designation"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-            />
-
-            <button type="submit">Add Employee</button>
-        </form>
+      <Flex justify="center" align="center" h="400px">
+        <Spinner size="xl" color="blue.500" />
+      </Flex>
     );
+  }
+
+  return (
+    <Box maxW="900px" mx="auto" bg="white" p={8} borderRadius="lg" shadow="md">
+      {/* Header */}
+      <Flex justify="space-between" align="center" mb={6}>
+        <VStack align="start" spacing={1}>
+          <Heading size="lg" color="gray.700">
+            {id ? "Edit Employee" : "New Employee"}
+          </Heading>
+          <Text color="gray.500" fontSize="sm">
+            {id ? "Update employee details and status." : "Add a new employee to the system."}
+          </Text>
+        </VStack>
+        
+        <Flex gap={3}>
+            <Button 
+                leftIcon={<FaArrowLeft />} 
+                variant="outline" 
+                onClick={() => navigate("/dashboard/employees")}
+            >
+                Back
+            </Button>
+            <Button
+                leftIcon={<FaSave />}
+                colorScheme="blue"
+                onClick={handleSubmit}
+                isLoading={loading}
+                loadingText="Saving"
+            >
+                Save Employee
+            </Button>
+        </Flex>
+      </Flex>
+
+      {/* Form Grid */}
+      <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
+        {/* Left Column */}
+        <GridItem>
+          <VStack spacing={4} align="stretch">
+            <FormControl isRequired>
+              <FormLabel>Full Name</FormLabel>
+              <Input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="e.g. John Doe"
+              />
+            </FormControl>
+
+            <FormControl isRequired>
+              <FormLabel>Email Address</FormLabel>
+              <Input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="john@company.com"
+                // Disable email editing if updating to prevent auth issues, or keep enabled if backend handles it safely
+                // isDisabled={!!id} 
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Role / Designation</FormLabel>
+              <Input
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                placeholder="e.g. Software Engineer"
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Department</FormLabel>
+              <Input
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                placeholder="e.g. Engineering"
+              />
+            </FormControl>
+
+            {id && (
+              <FormControl>
+                <FormLabel>Employment Status</FormLabel>
+                <Select
+                  name="employmentStatus"
+                  value={formData.employmentStatus}
+                  onChange={handleChange}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Resigned">Resigned</option>
+                  <option value="Terminated">Terminated</option>
+                </Select>
+              </FormControl>
+            )}
+          </VStack>
+        </GridItem>
+
+        {/* Right Column */}
+        <GridItem>
+          <VStack spacing={4} align="stretch">
+            <FormControl isRequired>
+              <FormLabel>Basic Salary (Monthly)</FormLabel>
+              <Input
+                type="number"
+                name="salary"
+                value={formData.salary}
+                onChange={handleChange}
+                placeholder="e.g. 50000"
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Joining Date</FormLabel>
+              <Input
+                type="date"
+                name="joiningDate"
+                value={formData.joiningDate}
+                onChange={handleChange}
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Phone Number</FormLabel>
+              <Input
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="e.g. 0300-1234567"
+              />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Address</FormLabel>
+              <Input
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                placeholder="e.g. 123 Main St, City"
+              />
+            </FormControl>
+          </VStack>
+        </GridItem>
+      </Grid>
+    </Box>
+  );
 };
 
 export default EmployeeForm;

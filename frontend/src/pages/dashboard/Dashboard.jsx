@@ -1,41 +1,37 @@
-import Sidebar from "../../components/Sidebar";
+import Sidebar from "../../components/layout/Sidebar";
 import TopNavbar from "../../components/TopNavbar";
+import { Outlet } from "react-router-dom";
 import "../../style/dashboard.css";
+import { Box, Flex, useMediaQuery } from "@chakra-ui/react";
 
 const Dashboard = () => {
-    return (
-        <div className="dashboard-layout">
-            <Sidebar />
+  const [isMobile] = useMediaQuery("(max-width: 768px)");
 
-            <div className="dashboard-main">
-                <TopNavbar />
+  return (
+    <Flex h="100vh" overflow="hidden" direction={isMobile ? "column" : "row"}>
+      <Box
+        w={isMobile ? "100%" : "250px"}
+        flexShrink={0}
+        borderRight={isMobile ? "none" : "1px solid"}
+        borderColor={isMobile ? "transparent" : "green.800"}
+      >
+        <Sidebar />
+      </Box>
 
-                <div className="dashboard-content">
-                    <div className="dashboard-cards">
-                        <div className="card">
-                            <h4>Employees</h4>
-                            <h2>42</h2>
-                        </div>
+      <Flex direction="column" flex="1" overflow="hidden">
+        <TopNavbar />
 
-                        <div className="card">
-                            <h4>Attendance Today</h4>
-                            <h2>38</h2>
-                        </div>
-
-                        <div className="card">
-                            <h4>Pending Leaves</h4>
-                            <h2>5</h2>
-                        </div>
-
-                        <div className="card">
-                            <h4>Monthly Payroll</h4>
-                            <h2>$120,000</h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+        <Box
+          flex="1"
+          overflowY="auto"
+          bg="#f7f9fc"
+          p={{ base: 4, md: 6 }}
+        >
+          <Outlet />
+        </Box>
+      </Flex>
+    </Flex>
+  );
 };
 
 export default Dashboard;

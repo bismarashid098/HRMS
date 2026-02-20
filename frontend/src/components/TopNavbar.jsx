@@ -1,20 +1,43 @@
+import { useContext } from "react";
+import { Box, Flex, Text, Button, Menu, MenuButton, MenuList, MenuItem, Avatar } from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import { FaChevronDown, FaSignOutAlt, FaUser } from "react-icons/fa";
+
 const TopNavbar = () => {
+    const { user, logout } = useContext(AuthContext);
+    const navigate = useNavigate();
+
     const handleLogout = () => {
-        alert("Logged out successfully");
-        window.location.href = "/"; // login page
+        logout();
+        navigate("/login");
     };
 
     return (
-        <div className="top-navbar">
-            <h2 className="page-title">Dashboard</h2>
+        <Box bg="white" px={6} py={3} shadow="sm" borderBottom="1px" borderColor="gray.100">
+            <Flex justify="space-between" align="center">
+                <Text fontSize="xl" fontWeight="bold" color="gray.700">
+                    Welcome, {user?.name?.split(" ")[0]}! 👋
+                </Text>
 
-            <div className="navbar-right">
-                <span className="profile-name">Admin</span>
-                <button className="logout-btn" onClick={handleLogout}>
-                    Logout
-                </button>
-            </div>
-        </div>
+                <Menu>
+                    <MenuButton as={Button} rightIcon={<FaChevronDown />} variant="ghost">
+                        <Flex align="center" gap={2}>
+                            <Avatar size="sm" name={user?.name} bg="#065f46" color="white" />
+                            <Text display={{ base: "none", md: "block" }}>{user?.name}</Text>
+                        </Flex>
+                    </MenuButton>
+                    <MenuList>
+                        <MenuItem icon={<FaUser />} onClick={() => navigate("/dashboard/settings")}>
+                            Profile Settings
+                        </MenuItem>
+                        <MenuItem icon={<FaSignOutAlt />} onClick={handleLogout} color="red.500">
+                            Logout
+                        </MenuItem>
+                    </MenuList>
+                </Menu>
+            </Flex>
+        </Box>
     );
 };
 

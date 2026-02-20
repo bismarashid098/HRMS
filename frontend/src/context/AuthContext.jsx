@@ -1,31 +1,63 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
+import api from "../api/axios";
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(
-        localStorage.getItem("auth") === "true"
-    );
-
-    const login = (email, password) => {
-        if (email === "admin@hrms.com" && password === "123") {
-            setIsAuthenticated(true);
-            localStorage.setItem("auth", "true");
-            return true;
-        }
-        return false;
-    };
+    const [user, setUser] = useState(null);
+    const [token, setToken] = useState(localStorage.getItem("token") || "");
+    const [loading, setLoading] = useState(true);
 
     const logout = () => {
-        setIsAuthenticated(false);
-        localStorage.removeItem("auth");
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        setUser(null);
+        setToken("");
+    };
+
+    useEffect(() => {
+        const verifyUser = async () => {
+            if (!token) {
+                setLoading(false);
+                return;
+            }
+            try {
+                const { data } = await api.get("/auth/verify");
+                setUser(data);
+            } catch {
+                logout();
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        verifyUser();
+    }, [token]);
+
+    const login = (userData, authToken) => {
+        localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem("token", authToken);
+        setUser(userData);
+        setToken(authToken);
+    };
+
+    const updateUserProfile = (updatedUser) => {
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+        <AuthContext.Provider
+            value={{
+                isAuthenticated: !!user,
+                user,
+                login,
+                logout,
+                updateUserProfile,
+                loading
+            }}
+        >
             {children}
         </AuthContext.Provider>
     );
 };
-
-export const useAuth = () => useContext(AuthContext);

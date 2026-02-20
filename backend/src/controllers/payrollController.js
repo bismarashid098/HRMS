@@ -1,13 +1,37 @@
 const asyncHandler = require("express-async-handler");
-const Payroll = require("../models/Payroll");
+const Payroll = require("../models/payroll");
 const Employee = require("../models/Employee");
 const { calculateDeductions } = require("../services/payrollService");
+
+exports.getAllPayrolls = asyncHandler(async (req, res) => {
+    const { month, year } = req.query;
+    const query = {};
+    
+    if (month) query.month = parseInt(month);
+    if (year) query.year = parseInt(year);
+
+    const payrolls = await Payroll.find(query)
+        .populate("employee", "employeeId department designation")
+        .populate({
+            path: "employee",
+            populate: { path: "user", select: "name" }
+        })
+        .sort({ year: -1, month: -1 });
+
+    res.json(payrolls);
+});
 
 // ===============================
 // Generate Payroll
 // ===============================
 exports.generatePayroll = asyncHandler(async (req, res) => {
   const { employeeId, month, year } = req.body;
+
+  // Check if payroll already exists
+  const existingPayroll = await Payroll.findOne({ employee: employeeId, month, year });
+  if (existingPayroll) {
+     return res.status(200).json(existingPayroll); // Return existing instead of error
+  }
 
   const employee = await Employee.findById(employeeId);
   if (!employee) {
@@ -17,14 +41,14 @@ exports.generatePayroll = asyncHandler(async (req, res) => {
   const basic = employee.salary.basic;
   const allowance = employee.salary.allowance || 0;
 
-  const deductions = await calculateDeductions(
+  const deductionResult = await calculateDeductions(
     employeeId,
     month,
     year,
     basic
   );
 
-  const netSalary = basic + allowance - deductions;
+  const netSalary = basic + allowance - deductionResult.total;
 
   try {
     const payroll = await Payroll.create({
@@ -33,9 +57,17 @@ exports.generatePayroll = asyncHandler(async (req, res) => {
       year,
       basicSalary: basic,
       allowance,
-      deductions,
-      netSalary
+      deductions: deductionResult.total,
+      netSalary,
+      status: "Generated"
     });
+
+    if (deductionResult.advanceIds && deductionResult.advanceIds.length > 0) {
+      await require("../models/Advance").updateMany(
+        { _id: { $in: deductionResult.advanceIds } },
+        { $set: { status: "Paid" } }
+      );
+    }
 
     res.status(201).json(payroll);
   } catch (err) {
