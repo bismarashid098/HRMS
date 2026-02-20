@@ -1,0 +1,44 @@
+.employees-page {
+    padding: 20px;
+}
+
+.employee-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.employee-form input {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.employee-form button {
+    background: #0a6b63;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.employee-form button:hover {
+    background: #085b54;
+}
+
+.employee-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.employee-table th,
+.employee-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.employee-table th {
+    background: #f4f6f8;
+}

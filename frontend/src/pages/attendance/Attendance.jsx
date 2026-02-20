@@ -1,8 +1,8 @@
 import { useState } from "react";
 import {
     Box,
-    Button,
     Heading,
+    Button,
     Table,
     Thead,
     Tbody,
@@ -11,106 +11,75 @@ import {
     Td,
     Select,
     Badge,
-    Text,
 } from "@chakra-ui/react";
 
-import { markPayrollDirty } from "../../utils/payrollUtils";
-import { logAudit } from "../../utils/auditLogger";
-
-const CURRENT_MONTH = "2026-01";
-
-const getStatusColor = (status) => {
-    if (status === "PRESENT") return "green";
-    if (status === "LATE") return "yellow";
-    if (status === "HALF DAY") return "orange";
-    return "red";
-};
+import { getEmployees } from "../employees/employeeData";
 
 const Attendance = () => {
-    const payrollLocked =
-        localStorage.getItem(`payroll-lock-${CURRENT_MONTH}`) === "LOCKED";
+    const employees = getEmployees();
 
-    const [records, setRecords] = useState([
-        { id: 1, date: "16/01/2026", time: "09:05", status: "PRESENT" },
-        { id: 2, date: "16/01/2026", time: "09:30", status: "LATE" },
-    ]);
-
-    const markAttendance = () => {
-        const now = new Date();
-        const time = now.toTimeString().slice(0, 5);
-
-        const newRecord = {
-            id: Date.now(),
-            date: now.toLocaleDateString(),
-            time,
+    const [records, setRecords] = useState(
+        employees.map((emp) => ({
+            employeeId: emp.id,
+            name: emp.name,
+            date: "18/01/2026",
             status: "PRESENT",
-        };
+        }))
+    );
 
-        setRecords((prev) => [newRecord, ...prev]);
+    const updateStatus = (id, status) => {
+        const updated = records.map((r) =>
+            r.employeeId === id ? { ...r, status } : r
+        );
+        setRecords(updated);
 
-        logAudit("Attendance Marked", `Marked at ${time}`);
+        // 🔥 Payroll dirty mark
+        localStorage.setItem("payroll-dirty", "true");
+        localStorage.setItem("attendance-records", JSON.stringify(updated));
     };
 
-    const updateStatus = (id, newStatus) => {
-        setRecords((prev) =>
-            prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
-        );
-
-        logAudit("Attendance Updated", `Record ${id} → ${newStatus}`);
-
-        if (payrollLocked) {
-            markPayrollDirty(CURRENT_MONTH);
-        }
+    const color = (status) => {
+        if (status === "PRESENT") return "green";
+        if (status === "LATE") return "yellow";
+        if (status === "HALF DAY") return "orange";
+        return "red";
     };
 
     return (
         <Box>
-            <Heading size="md" mb="2">
+            <Heading size="md" mb="4">
                 Attendance (Accounts Control)
             </Heading>
 
-            {payrollLocked && (
-                <Text color="red.500" mb="3" fontSize="sm">
-                    Payroll locked. Changes will require recalculation.
-                </Text>
-            )}
-
-            <Button colorScheme="green" mb="4" onClick={markAttendance}>
-                Mark Attendance
-            </Button>
-
-            <Table variant="simple">
+            <Table>
                 <Thead>
                     <Tr>
+                        <Th>Employee</Th>
                         <Th>Date</Th>
-                        <Th>Time</Th>
                         <Th>Status</Th>
-                        <Th>Manual Edit</Th>
+                        <Th>Edit</Th>
                     </Tr>
                 </Thead>
 
                 <Tbody>
-                    {records.map((rec) => (
-                        <Tr key={rec.id}>
-                            <Td>{rec.date}</Td>
-                            <Td>{rec.time}</Td>
+                    {records.map((r) => (
+                        <Tr key={r.employeeId}>
+                            <Td>{r.name}</Td>
+                            <Td>{r.date}</Td>
                             <Td>
-                                <Badge colorScheme={getStatusColor(rec.status)}>
-                                    {rec.status}
-                                </Badge>
+                                <Badge colorScheme={color(r.status)}>{r.status}</Badge>
                             </Td>
                             <Td>
                                 <Select
-                                    size="sm"
-                                    value={rec.status}
+                                    value={r.status}
                                     onChange={(e) =>
-                                        updateStatus(rec.id, e.target.value)
+                                        updateStatus(r.employeeId, e.target.value)
                                     }
                                 >
-                                    <option value="PRESENT">Present</option>
-                                    <option value="LATE">Late</option>
-                                    <option value="HALF DAY">Half Day</option>
-                                    <option value="ABSENT">Absent</option>
+                                    <option>PRESENT</option>
+                                    <option>LATE</option>
+                                    <option>HALF DAY</option>
+                                    <option>ABSENT</option>
                                 </Select>
                             </Td>
                         </Tr>

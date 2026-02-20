@@ -1,62 +1,28 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { createContext, useContext, useState } from "react";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const navigate = useNavigate();
+    const [isAuthenticated, setIsAuthenticated] = useState(
+        localStorage.getItem("auth") === "true"
+    );
 
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    // 🔹 On app load (refresh survive)
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        const role = localStorage.getItem("role");
-
-        if (token && role) {
-            setUser({
-                token,
-                role, // accounts | manager (future)
-            });
+    const login = (email, password) => {
+        if (email === "admin@hrms.com" && password === "123") {
+            setIsAuthenticated(true);
+            localStorage.setItem("auth", "true");
+            return true;
         }
-
-        setLoading(false);
-    }, []);
-
-    // 🔹 LOGIN (Accounts default)
-    const login = (token, role = "accounts") => {
-        localStorage.setItem("token", token);
-        localStorage.setItem("role", role);
-
-        setUser({
-            token,
-            role,
-        });
-
-        navigate("/");
+        return false;
     };
 
-    // 🔹 LOGOUT
     const logout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-
-        setUser(null);
-        navigate("/login");
+        setIsAuthenticated(false);
+        localStorage.removeItem("auth");
     };
 
     return (
-        <AuthContext.Provider
-            value={{
-                user,
-                login,
-                logout,
-                loading,
-                isAccounts: user?.role === "accounts",
-                isManager: user?.role === "manager",
-            }}
-        >
+        <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

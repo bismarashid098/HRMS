@@ -13,7 +13,6 @@ const router = express.Router();
 router.use(protect);
 router.use(authorize("Admin", "HR"));
 
-// 
 router.get("/attendance", attendanceReport);
 router.get("/leaves", leaveReport);
 router.get("/payroll", payrollReport);

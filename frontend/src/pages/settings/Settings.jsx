@@ -1,46 +1,65 @@
+import { useState } from "react";
 import {
     Box,
     Heading,
+    Select,
     Input,
     Button,
     VStack,
-    FormControl,
-    FormLabel,
 } from "@chakra-ui/react";
-import { useState } from "react";
+
+import {
+    getAdvanceSettings,
+    saveAdvanceSettings,
+} from "../../utils/advanceSettings";
 
 const Settings = () => {
-    const [company, setCompany] = useState("HRMS Pvt Ltd");
-    const [workHours, setWorkHours] = useState("9 AM - 6 PM");
+    const [settings, setSettings] = useState(getAdvanceSettings());
 
-    const saveSettings = () => {
-        alert("Settings Saved ✅ (UI Only)");
+    const save = () => {
+        saveAdvanceSettings(settings);
+        alert("Advance settings saved");
     };
 
     return (
         <Box maxW="400px">
-            <Heading size="md" mb="4">
-                System Settings
-            </Heading>
+            <Heading mb="4">Advance Settings</Heading>
 
-            <VStack spacing="4">
-                <FormControl>
-                    <FormLabel>Company Name</FormLabel>
-                    <Input
-                        value={company}
-                        onChange={(e) => setCompany(e.target.value)}
-                    />
-                </FormControl>
+            <VStack spacing="3">
+                <Select
+                    value={settings.type}
+                    onChange={(e) =>
+                        setSettings({
+                            ...settings,
+                            type: e.target.value,
+                        })
+                    }
+                >
+                    <option value="PERCENTAGE">
+                        Percentage of Salary
+                    </option>
+                    <option value="FIXED">
+                        Fixed Amount (Rs)
+                    </option>
+                </Select>
 
-                <FormControl>
-                    <FormLabel>Working Hours</FormLabel>
-                    <Input
-                        value={workHours}
-                        onChange={(e) => setWorkHours(e.target.value)}
-                    />
-                </FormControl>
+                <Input
+                    type="number"
+                    placeholder={
+                        settings.type === "PERCENTAGE"
+                            ? "Percentage (%)"
+                            : "Amount (Rs)"
+                    }
+                    value={settings.value}
+                    onChange={(e) =>
+                        setSettings({
+                            ...settings,
+                            value: Number(e.target.value),
+                        })
+                    }
+                />
 
-                <Button colorScheme="blue" onClick={saveSettings}>
+                <Button colorScheme="blue" onClick={save}>
                     Save Settings
                 </Button>
             </VStack>

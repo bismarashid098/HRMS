@@ -9,16 +9,16 @@ import {
     SimpleGrid,
     VStack,
 } from "@chakra-ui/react";
-import employeeData from "./employeeData";
+
+import { getEmployeeById } from "./employeeData";
 
 const EmployeeView = () => {
     const { id } = useParams();
     const navigate = useNavigate();
 
-    const employee = employeeData.find(
-        (emp) => emp.id === Number(id)
-    );
+    const employee = getEmployeeById(id);
 
+    // ❌ SAFETY CHECK
     if (!employee) {
         return (
             <Box>
@@ -32,86 +32,84 @@ const EmployeeView = () => {
         );
     }
 
-    const getStatusColor = (status) => {
-        if (status === "Active") return "green";
-        if (status === "Inactive") return "red";
-        return "gray";
+    const statusColor = employee.status === "Active" ? "green" : "red";
+
+    const attendance = employee.attendance || {
+        totalDays: 0,
+        present: 0,
+        late: 0,
     };
 
     return (
         <Box>
             <Heading size="md" mb="4">
-                Employee Details
+                Employee Profile
             </Heading>
 
-            <SimpleGrid columns={2} spacing={6}>
-                <VStack align="start">
+            {/* ================= BASIC INFO ================= */}
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+                <VStack align="start" spacing={2}>
+                    <Text><b>Employee ID:</b> {employee.id}</Text>
+                    <Text><b>Name:</b> {employee.name}</Text>
+                    <Text><b>Role:</b> {employee.role}</Text>
+                    <Text><b>Department:</b> {employee.department}</Text>
                     <Text>
-                        <strong>Employee ID:</strong> {employee.id}
-                    </Text>
-                    <Text>
-                        <strong>Name:</strong> {employee.name}
-                    </Text>
-                    <Text>
-                        <strong>Role:</strong> {employee.role}
-                    </Text>
-                    <Text>
-                        <strong>Department:</strong> {employee.department}
-                    </Text>
-                    <Text>
-                        <strong>Status:</strong>{" "}
-                        <Badge colorScheme={getStatusColor(employee.status)}>
+                        <b>Status:</b>{" "}
+                        <Badge colorScheme={statusColor}>
                             {employee.status}
                         </Badge>
                     </Text>
                 </VStack>
 
-                <VStack align="start">
-                    <Text>
-                        <strong>Salary Type:</strong> {employee.salaryType}
-                    </Text>
-                    <Text>
-                        <strong>Monthly Salary:</strong> Rs. {employee.salary}
-                    </Text>
-                    <Text>
-                        <strong>Joining Date:</strong> {employee.joiningDate}
-                    </Text>
-                    <Text>
-                        <strong>Contact:</strong> {employee.contact}
-                    </Text>
-                    <Text>
-                        <strong>Email:</strong> {employee.email}
-                    </Text>
+                <VStack align="start" spacing={2}>
+                    <Text><b>Monthly Salary:</b> Rs {employee.salary}</Text>
+                    <Text><b>Phone:</b> {employee.phone}</Text>
+                    <Text><b>Address:</b> {employee.address}</Text>
+                    <Text><b>Email:</b> {employee.email || "—"}</Text>
+                    <Text><b>Joining Date:</b> {employee.joiningDate}</Text>
                 </VStack>
             </SimpleGrid>
 
             <Divider my="6" />
 
+            {/* ================= ATTENDANCE ================= */}
             <Heading size="sm" mb="3">
-                Attendance & Payroll Summary
+                Attendance Summary
             </Heading>
 
-            <SimpleGrid columns={3} spacing={6}>
-                <Box p="4" borderWidth="1px" borderRadius="md">
+            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+                <Box borderWidth="1px" p="4" borderRadius="md">
                     <Text fontWeight="bold">Total Working Days</Text>
-                    <Text>{employee.attendance.totalDays}</Text>
+                    <Text>{attendance.totalDays}</Text>
                 </Box>
 
-                <Box p="4" borderWidth="1px" borderRadius="md">
+                <Box borderWidth="1px" p="4" borderRadius="md">
                     <Text fontWeight="bold">Present Days</Text>
-                    <Text>{employee.attendance.present}</Text>
+                    <Text>{attendance.present}</Text>
                 </Box>
 
-                <Box p="4" borderWidth="1px" borderRadius="md">
+                <Box borderWidth="1px" p="4" borderRadius="md">
                     <Text fontWeight="bold">Late Days</Text>
-                    <Text>{employee.attendance.late}</Text>
+                    <Text>{attendance.late}</Text>
                 </Box>
             </SimpleGrid>
 
             <Divider my="6" />
 
-            <Button colorScheme="blue" onClick={() => navigate("/employees")}>
-                Back to Employees
+            {/* ================= ACTIONS ================= */}
+            <Button
+                colorScheme="blue"
+                mr="3"
+                onClick={() => navigate(`/employees/edit/${employee.id}`)}
+            >
+                Edit Employee
+            </Button>
+
+            <Button
+                variant="outline"
+                onClick={() => navigate("/employees")}
+            >
+                Back to List
             </Button>
         </Box>
     );

@@ -1,0 +1,143 @@
+/* Layout */
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+    background: #f4f6f8;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    background: #043c3c;
+    color: white;
+    padding: 20px;
+}
+
+.sidebar-title {
+    margin-bottom: 30px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar-menu li {
+    padding: 12px 0;
+    cursor: pointer;
+}
+
+/* Main */
+.dashboard-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Top Navbar */
+.top-navbar {
+    height: 60px;
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    border-bottom: 1px solid #ddd;
+}
+
+.page-title {
+    margin: 0;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.profile-name {
+    font-weight: 600;
+}
+
+.logout-btn {
+    background: #0a6b5f;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.logout-btn:hover {
+    background: #085c52;
+}
+
+/* Content */
+.dashboard-content {
+    padding: 30px;
+}
+
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    background: #063b3b;
+    color: #ffffff;
+    padding: 20px 16px;
+}
+
+/* Title */
+.sidebar-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+/* Menu */
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Links */
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    color: #e6f4f4;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14.5px;
+    transition: background 0.2s ease;
+}
+
+/* Icons */
+.sidebar-link .icon {
+    font-size: 16px;
+}
+
+/* Hover */
+.sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* Active (SOFT & PROFESSIONAL) */
+.sidebar-link.active {
+    background: rgba(255, 255, 255, 0.18);
+    font-weight: 500;
+}

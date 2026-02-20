@@ -1,0 +1,40 @@
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+
+export const generateAdvanceHistoryPDF = (employees, month) => {
+  const doc = new jsPDF();
+
+  doc.setFontSize(16);
+  doc.text("ADVANCE HISTORY REPORT", 105, 15, { align: "center" });
+
+  doc.setFontSize(11);
+  doc.text(`Month: ${month}`, 14, 25);
+
+  const rows = [];
+
+  employees.forEach((emp) => {
+    emp.advanceHistory?.forEach((adv) => {
+      if (adv.month === month) {
+        rows.push([
+          emp.name,
+          adv.amount,
+          adv.reason,
+          adv.date,
+        ]);
+      }
+    });
+  });
+
+  if (rows.length === 0) {
+    doc.text("No advance records found.", 14, 40);
+  } else {
+    doc.autoTable({
+      startY: 35,
+      theme: "grid",
+      head: [["Employee", "Amount", "Reason", "Date"]],
+      body: rows,
+    });
+  }
+
+  doc.save(`Advance-History-${month}.pdf`);
+};

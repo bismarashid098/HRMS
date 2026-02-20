@@ -1,67 +1,34 @@
-import { useState } from "react";
-import {
-  Box,
-  Button,
-  Input,
-  Heading,
-  VStack,
-  Text,
-} from "@chakra-ui/react";
-import { useAuth } from "../../context/AuthContext";
+import "../../style/login.css";
 
 const Login = () => {
-  const { login } = useAuth();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-
-    // 🔹 TEMPORARY LOGIN (Accounts)
-    // Backend later connect hoga
-    login("dummy-token-accounts", "accounts");
-  };
-
   return (
-    <Box
-      minH="100vh"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      bg="gray.100"
-    >
-      <Box bg="white" p="8" rounded="md" shadow="md" w="350px">
-        <VStack spacing="4">
-          <Heading size="md">Accounts Login</Heading>
+    <div className="login-page">
+      {/* LEFT */}
+      <div className="login-left">
+        <div className="login-box">
+          <h1>WorkSphere HRMS</h1>
 
-          <Input
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <div className="login-row">
+            <input type="email" placeholder="Email" />
+            <input type="password" placeholder="Password" />
+            <button className="login-btn">Login</button>
+          </div>
 
-          <Input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <p className="note">Authorized access only</p>
+        </div>
+      </div>
 
-          <Button
-            colorScheme="blue"
-            width="full"
-            onClick={handleLogin}
-          >
-            Login
-          </Button>
-
-          <Text fontSize="sm" color="gray.500">
-            Accounts access only
-          </Text>
-        </VStack>
-      </Box>
-    </Box>
+      {/* RIGHT */}
+      <div className="login-right">
+        <div>
+          <h1>Welcome to<br />WorkSphere</h1>
+          <p>
+            A smart HRMS solution for factories,<br />
+            offices & enterprises
+          </p>
+        </div>
+      </div>
+    </div>
   );
 };
 
