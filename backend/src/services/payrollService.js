@@ -51,6 +51,7 @@ exports.calculateDeductions = async (employeeId, month, year, basicSalary) => {
     leaveDeduction,
     advanceDeduction,
     taxDeduction,
+    unpaidDays,
     advanceIds: advances.map(a => a._id)
   };
 };

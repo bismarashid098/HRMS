@@ -49,8 +49,10 @@ const Payroll = () => {
   
   const [month, setMonth] = useState(defaultMonth);
   const [payrolls, setPayrolls] = useState([]);
+  const [overview, setOverview] = useState([]);
   const [employees, setEmployees] = useState([]); // For bulk generation
   const [loading, setLoading] = useState(false);
+  const [overviewLoading, setOverviewLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generateProgress, setGenerateProgress] = useState(0);
   const [actionLoadingId, setActionLoadingId] = useState(null);
@@ -85,9 +87,37 @@ const Payroll = () => {
     }
   }, [month, toast]);
 
+  const fetchOverview = useCallback(async () => {
+    setOverviewLoading(true);
+    try {
+      const [year, m] = month.split("-");
+      const { data } = await api.get(
+        `/payroll/overview?month=${parseInt(m)}&year=${year}`
+      );
+      setOverview(data);
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Error fetching payroll overview",
+        description: "Could not load employee salary overview.",
+        status: "error",
+        duration: 3000,
+        isClosable: true
+      });
+    } finally {
+      setOverviewLoading(false);
+    }
+  }, [month, toast]);
+
   useEffect(() => {
     fetchPayrolls();
   }, [fetchPayrolls]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchOverview();
+    }
+  }, [fetchOverview, isAdmin]);
 
   const handleApprove = async (id) => {
     setActionLoadingId(id);
@@ -180,6 +210,13 @@ const Payroll = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Payroll");
     XLSX.writeFile(workbook, `Payroll-${month}.xlsx`);
+  };
+
+  const handleRefresh = () => {
+    fetchPayrolls();
+    if (isAdmin) {
+      fetchOverview();
+    }
   };
 
   const generatePDF = (payroll) => {
@@ -353,6 +390,102 @@ const Payroll = () => {
         </SimpleGrid>
       )}
 
+      {isAdmin && (
+        <Box
+          mb={6}
+          bg="white"
+          p={4}
+          borderRadius="lg"
+          shadow="sm"
+        >
+          <Heading size="md" mb={2} color="gray.700">
+            Employee Salary Overview
+          </Heading>
+          <Text fontSize="sm" color="gray.500" mb={4}>
+            All active employees with fixed salary, extra unpaid leaves and expected net salary for the selected month.
+          </Text>
+          {overviewLoading ? (
+            <Flex justify="center" align="center" h="120px">
+              <Spinner size="lg" color="green.500" />
+            </Flex>
+          ) : overview.length === 0 ? (
+            <Text fontSize="sm" color="gray.500">
+              No active employees found for overview.
+            </Text>
+          ) : (
+            <Box overflowX="auto">
+              <Table size="sm">
+                <Thead bg="gray.50">
+                  <Tr>
+                    <Th>Employee</Th>
+                    <Th>Department</Th>
+                    <Th isNumeric>Fixed Salary</Th>
+                    <Th isNumeric>Extra Unpaid Leaves</Th>
+                    <Th isNumeric>Leave Deduction</Th>
+                    <Th isNumeric>Advance</Th>
+                    <Th isNumeric>Tax</Th>
+                    <Th isNumeric>Total Deductions</Th>
+                    <Th isNumeric>Net Salary</Th>
+                    <Th>Status</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {overview.map((item) => (
+                    <Tr key={item.employeeId}>
+                      <Td>
+                        <Text fontWeight="medium">{item.name}</Text>
+                        <Text fontSize="xs" color="gray.500">
+                          {item.employeeCode}
+                        </Text>
+                      </Td>
+                      <Td>
+                        <Text fontSize="sm" color="gray.700">
+                          {item.department}
+                        </Text>
+                      </Td>
+                      <Td isNumeric>
+                        Rs {Number(item.basicSalary || 0).toLocaleString()}
+                      </Td>
+                      <Td isNumeric>
+                        {item.unpaidLeaveDays || 0}
+                      </Td>
+                      <Td isNumeric color="red.500">
+                        - Rs {Number(item.leaveDeduction || 0).toLocaleString()}
+                      </Td>
+                      <Td isNumeric color="red.500">
+                        - Rs {Number(item.advanceDeduction || 0).toLocaleString()}
+                      </Td>
+                      <Td isNumeric color="red.500">
+                        - Rs {Number(item.taxDeduction || 0).toLocaleString()}
+                      </Td>
+                      <Td isNumeric color="red.600">
+                        - Rs {Number(item.totalDeductions || 0).toLocaleString()}
+                      </Td>
+                      <Td isNumeric fontWeight="bold" color="green.600">
+                        Rs {Number(item.netSalary || 0).toLocaleString()}
+                      </Td>
+                      <Td>
+                        <Badge
+                          colorScheme={
+                            item.payrollStatus === "Approved"
+                              ? "green"
+                              : item.payrollStatus === "Generated"
+                              ? "orange"
+                              : "gray"
+                          }
+                        >
+                          {item.payrollStatus}
+                        </Badge>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </Box>
+          )}
+        </Box>
+      )}
+
       <Box
         mb={6}
         bg="white"
@@ -379,8 +512,8 @@ const Payroll = () => {
             </Select>
             <Button
               leftIcon={<FaSyncAlt />}
-              onClick={fetchPayrolls}
-              isLoading={loading}
+              onClick={handleRefresh}
+              isLoading={loading || overviewLoading}
             >
               Refresh
             </Button>

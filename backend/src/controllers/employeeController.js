@@ -11,31 +11,67 @@ const sanitizeForManager = (employee) => {
 };
 
 exports.createEmployee = asyncHandler(async (req, res) => {
-  const { name, department, salary, biometricId, leaveBalance } = req.body;
+  const {
+    name,
+    department,
+    salary,
+    biometricId,
+    leaveBalance,
+    email,
+    designation,
+    phone,
+    address,
+    joiningDate,
+    employmentStatus,
+    gender,
+    dutyStartTime,
+    religion
+  } = req.body;
 
-  if (!name || !department || salary == null || !biometricId) {
-    res.status(400);
-    throw new Error("Missing required fields");
+  let finalBiometricId = biometricId;
+  let employeeId = `EMP-${Date.now()}`;
+
+  if (!finalBiometricId) {
+    finalBiometricId = `EMP${Date.now()}`;
   }
 
-  const exists = await Employee.findOne({ biometricId });
+  const exists = await Employee.findOne({ biometricId: finalBiometricId });
   if (exists) {
-    res.status(400);
-    throw new Error("Employee with this biometricId already exists");
+    finalBiometricId = `EMP${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  }
+
+  const existingEmployeeId = await Employee.findOne({ employeeId });
+  if (existingEmployeeId) {
+    employeeId = `EMP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   }
 
   const employee = await Employee.create({
     name,
     department,
     salary,
-    biometricId,
-    leaveBalance
+    employeeId,
+    biometricId: finalBiometricId,
+    leaveBalance: leaveBalance != null ? leaveBalance : 0,
+    email,
+    designation,
+    phone,
+    gender,
+    dutyStartTime,
+    religion,
+    address,
+    joiningDate,
+    employmentStatus
   });
 
   res.status(201).json(employee);
 });
 
 exports.getEmployees = asyncHandler(async (req, res) => {
+  await Employee.deleteMany({
+    name: /^Demo Employee /,
+    biometricId: /^AUTO/
+  });
+
   const employees = await Employee.find().sort({ createdAt: -1 });
 
   if (req.user && req.user.role === "Manager") {
@@ -71,7 +107,22 @@ exports.updateEmployee = asyncHandler(async (req, res) => {
     throw new Error("Employee not found");
   }
 
-  const { name, department, salary, biometricId, leaveBalance } = req.body;
+  const {
+    name,
+    department,
+    salary,
+    biometricId,
+    leaveBalance,
+    email,
+    designation,
+    phone,
+    address,
+    joiningDate,
+    employmentStatus,
+    gender,
+    dutyStartTime,
+    religion
+  } = req.body;
 
   if (biometricId && biometricId !== employee.biometricId) {
     const exists = await Employee.findOne({ biometricId });
@@ -93,6 +144,33 @@ exports.updateEmployee = asyncHandler(async (req, res) => {
   }
   if (leaveBalance != null) {
     employee.leaveBalance = leaveBalance;
+  }
+  if (email != null) {
+    employee.email = email;
+  }
+  if (designation != null) {
+    employee.designation = designation;
+  }
+  if (phone != null) {
+    employee.phone = phone;
+  }
+  if (gender != null) {
+    employee.gender = gender;
+  }
+  if (dutyStartTime != null) {
+    employee.dutyStartTime = dutyStartTime;
+  }
+  if (religion != null) {
+    employee.religion = religion;
+  }
+  if (address != null) {
+    employee.address = address;
+  }
+  if (joiningDate != null) {
+    employee.joiningDate = joiningDate;
+  }
+  if (employmentStatus != null) {
+    employee.employmentStatus = employmentStatus;
   }
 
   await employee.save();

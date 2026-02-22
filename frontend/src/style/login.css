@@ -23,7 +23,7 @@
 }
 
 .login-left-inner {
-  width: 360px;
+  width: 460px;
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -34,28 +34,31 @@
 }
 
 .login-hero-subtitle {
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #a7f3d0;
+  font-weight: 600;
 }
 
 .login-hero-title {
   margin-top: 10px;
-  font-size: 26px;
+  font-size: 32px;
   line-height: 1.4;
+  font-weight: 700;
 }
 
 .login-hero-subtext {
   margin-top: 6px;
-  font-size: 14px;
+  font-size: 16px;
   color: #d1fae5;
+  font-weight: 500;
 }
 
 .login-hero-glow {
   margin-top: 24px;
-  width: 180px;
-  height: 180px;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
   background: radial-gradient(circle at 30% 30%, #22c55e, transparent 60%);
   box-shadow: 0 0 40px rgba(16, 185, 129, 0.9), 0 0 80px rgba(5, 150, 105, 0.8);
@@ -74,15 +77,15 @@
 
 /* LOGIN CARD */
 .login-box {
-  width: 360px;
-  padding: 30px;
+  width: 460px;
+  padding: 50px 40px;
   background: rgba(2, 16, 36, 0.9);
   border-radius: 14px;
   color: white;
 }
 
 .login-logo-text {
-  font-size: 22px;
+  font-size: 24px;
   margin-bottom: 12px;
 }
 
@@ -169,8 +172,8 @@
 
   .login-hero-glow {
     margin: 28px auto 12px;
-    width: 220px;
-    height: 220px;
+    width: 260px;
+    height: 260px;
   }
 
   .login-box {

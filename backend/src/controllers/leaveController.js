@@ -98,7 +98,7 @@ exports.getAllLeaves = async (req, res) => {
   const leaves = await Leave.find()
     .populate({
       path: "employee",
-      select: "employeeId department",
+      select: "name department",
       populate: { path: "user", select: "name" }
     })
     .sort({ createdAt: -1 });

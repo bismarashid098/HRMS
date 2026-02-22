@@ -543,8 +543,14 @@ const Leaves = () => {
                                 <Tr key={leave._id}>
                                     {isAdmin && (
                                         <Td>
-                                            <Text fontWeight="medium">{leave.employee?.user?.name || "Unknown"}</Text>
-                                            <Text fontSize="xs" color="gray.500">{leave.employee?.department || "N/A"}</Text>
+                                            <Text fontWeight="medium">
+                                                {leave.employee?.user?.name ||
+                                                    leave.employee?.name ||
+                                                    "Unknown"}
+                                            </Text>
+                                            <Text fontSize="xs" color="gray.500">
+                                                {leave.employee?.department || "N/A"}
+                                            </Text>
                                         </Td>
                                     )}
                                     <Td>{leave.type}</Td>
@@ -616,7 +622,7 @@ const Leaves = () => {
                                 >
                                     {employees.map((emp) => (
                                         <option key={emp._id} value={emp._id}>
-                                            {emp.employeeId} - {emp.user?.name || emp.name}
+                                            {emp.user?.name || emp.name}
                                         </option>
                                     ))}
                                 </Select>

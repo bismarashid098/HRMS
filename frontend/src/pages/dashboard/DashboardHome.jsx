@@ -15,7 +15,6 @@ import {
   Avatar,
   Tag,
   TagLabel,
-  Badge,
 } from "@chakra-ui/react";
 import { FaUsers, FaCalendarCheck, FaClipboardList, FaMoneyBillWave } from "react-icons/fa";
 import {
@@ -29,6 +28,10 @@ import {
   Cell,
   AreaChart,
   Area,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
 } from "recharts";
 
 const COLORS = ["#065f46", "#FFBB28", "#FF8042", "#021024"];
@@ -91,6 +94,15 @@ const DashboardHome = () => {
     Present: item.present,
     Absent: item.absent,
   }));
+
+  const totalPresentMonth = attendanceChartData.reduce(
+    (sum, item) => sum + (item.Present || 0),
+    0
+  );
+  const totalAbsentMonth = attendanceChartData.reduce(
+    (sum, item) => sum + (item.Absent || 0),
+    0
+  );
 
   const leaveChartData = data.leaves.map((item) => ({
     name: item._id,
@@ -262,84 +274,42 @@ const DashboardHome = () => {
   }
 
   return (
-    <Box p={4}>
-      <Box
-        mb={6}
-        p={4}
-        borderRadius="2xl"
-        bgGradient="linear(to-r, blue.700, purple.600)"
-        color="white"
-      >
-        <Flex justify="space-between" align="center" gap={4} wrap="wrap">
-          <Box>
-            <Flex align="center" gap={2}>
-              <Text fontSize="xs" textTransform="uppercase" opacity={0.8}>
-                HRMS Overview
-              </Text>
-              <Badge colorScheme="green" variant="solid" fontSize="0.6em">v2.0 LIVE</Badge>
-            </Flex>
-            <Heading size="lg">
-              Good day, {user?.name || "User"}
-            </Heading>
-            <Text fontSize="sm" mt={1} opacity={0.9}>
-              Track attendance, leaves and payroll insights at a glance.
-            </Text>
+    <Box p={4} bg="#f5f7fb" minH="100%">
+      <Box className="dashboard-home">
+        <Box mb={4}>
+          <Text className="dashboard-title">
+            Dashboard
+          </Text>
+        </Box>
+        <Box className="dashboard-cards">
+          <Box className="card">
+            <h4>Total Employees</h4>
+            <p>{data.summary.totalEmployees}</p>
           </Box>
-          <Flex align="center" gap={3}>
-            <Box textAlign="right">
-              <Text fontSize="xs" opacity={0.8}>
-                Today
-              </Text>
-              <Text fontSize="sm" fontWeight="medium">
-                {today}
-              </Text>
-            </Box>
-            <Avatar size="md" name={user?.name} />
-          </Flex>
-        </Flex>
+          <Box className="card">
+            <h4>Attendance Today</h4>
+            <p>{data.summary.attendanceToday}</p>
+          </Box>
+          <Box className="card">
+            <h4>Pending Leaves</h4>
+            <p>{data.summary.pendingLeaves}</p>
+          </Box>
+          <Box className="card">
+            <h4>Monthly Payroll</h4>
+            <p>Rs {data.summary.monthlyPayroll.toLocaleString()}</p>
+          </Box>
+        </Box>
       </Box>
 
-      <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={4} mb={8}>
-        <SummaryCard
-          title="Active Employees"
-          value={data.summary.totalEmployees}
-          subtitle="Employees currently active in the system"
-          icon={FaUsers}
-          bg="#ECFDF5"
-          color="#065f46"
-          to="/dashboard/employees"
-        />
-        <SummaryCard
-          title="Present Today"
-          value={data.summary.attendanceToday}
-          subtitle="Employees marked Present, Late or Half Day"
-          icon={FaCalendarCheck}
-          bg="#E0F2FE"
-          color="#1D4ED8"
-          to="/dashboard/attendance/daily"
-        />
-        <SummaryCard
-          title="Pending Leaves"
-          value={data.summary.pendingLeaves}
-          subtitle="Leave requests waiting for approval"
-          icon={FaClipboardList}
-          bg="#FEF9C3"
-          color="#92400E"
-          to="/dashboard/leaves"
-        />
-        <SummaryCard
-          title="This Month Payroll"
-          value={`Rs ${data.summary.monthlyPayroll.toLocaleString()}`}
-          subtitle="Net salaries generated for current month"
-          icon={FaMoneyBillWave}
-          bg="#FEE2E2"
-          color="#B91C1C"
-          to="/dashboard/payroll"
-        />
-      </SimpleGrid>
-
-      <SimpleGrid columns={{ base: 1, xl: 3 }} spacing={6}>
-        <Box gridColumn={{ xl: "span 2" }} bg="white" p={5} borderRadius="lg" shadow="sm">
+      <SimpleGrid columns={{ base: 1, xl: 3 }} spacing={6} mb={6}>
+        <Box
+          gridColumn={{ xl: "span 2" }}
+          bg="white"
+          p={5}
+          borderRadius="lg"
+          shadow="sm"
+          minW={0}
+        >
           <Flex justify="space-between" align="center" mb={4}>
             <Heading size="sm" color="gray.600">
               Attendance This Month
@@ -348,52 +318,110 @@ const DashboardHome = () => {
               Present vs Absent by day
             </Text>
           </Flex>
-          <Box h="280px">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={attendanceChartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorPresent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#16A34A" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#16A34A" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorAbsent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#DC2626" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#DC2626" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
+
+          <Box w="100%" overflowX="auto">
+            <Box minW="700px">
+              <BarChart
+                width={700}
+                height={220}
+                data={attendanceChartData}
+                margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} />
                 <YAxis axisLine={false} tickLine={false} />
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <Tooltip />
-                <Area type="monotone" dataKey="Present" stroke="#16A34A" fillOpacity={1} fill="url(#colorPresent)" />
-                <Area type="monotone" dataKey="Absent" stroke="#DC2626" fillOpacity={0.9} fill="url(#colorAbsent)" />
-              </AreaChart>
-            </ResponsiveContainer>
+                <Bar dataKey="Present" fill="#16A34A" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Absent" fill="#DC2626" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </Box>
           </Box>
+
+          <Flex mt={6} gap={6} direction={{ base: "column", md: "row" }}>
+            <Box flex="1" minW={{ base: "100%", md: "320px" }}>
+              <LineChart
+                width={360}
+                height={180}
+                data={attendanceChartData}
+                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                <YAxis axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="Present"
+                  stroke="#16A34A"
+                  strokeWidth={2}
+                  dot={{ r: 2 }}
+                  activeDot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Absent"
+                  stroke="#DC2626"
+                  strokeWidth={2}
+                  dot={{ r: 2 }}
+                  activeDot={{ r: 4 }}
+                />
+              </LineChart>
+            </Box>
+
+            <Box
+              flex="1"
+              minW={{ base: "100%", md: "260px" }}
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <PieChart width={220} height={180}>
+                <Pie
+                  data={[
+                    { name: "Present", value: totalPresentMonth },
+                    { name: "Absent", value: totalAbsentMonth },
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={70}
+                  paddingAngle={3}
+                  dataKey="value"
+                >
+                  <Cell fill="#16A34A" />
+                  <Cell fill="#DC2626" />
+                </Pie>
+              </PieChart>
+            </Box>
+          </Flex>
         </Box>
 
-        <Box bg="white" p={5} borderRadius="lg" shadow="sm">
+        <Box
+          bg="white"
+          p={5}
+          borderRadius="lg"
+          shadow="sm"
+          minW={0}
+        >
           <Heading size="sm" color="gray.600" mb={4}>
             Leave Breakdown
           </Heading>
-          <Box h="220px" position="relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={leaveChartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={55}
-                  outerRadius={80}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {leaveChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
+          <Box w="100%" display="flex" justifyContent="center">
+            <PieChart width={260} height={220}>
+              <Pie
+                data={leaveChartData}
+                cx="50%"
+                cy="50%"
+                innerRadius={55}
+                outerRadius={80}
+                paddingAngle={4}
+                dataKey="value"
+              >
+                {leaveChartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+            </PieChart>
           </Box>
           <SimpleGrid columns={2} mt={4} spacing={2}>
             {leaveChartData.map((item, index) => (
@@ -405,10 +433,85 @@ const DashboardHome = () => {
               </Flex>
             ))}
           </SimpleGrid>
+
+          <Box mt={6}>
+            <Heading size="xs" color="gray.600" mb={2}>
+              Salary Distribution
+            </Heading>
+            <Box w="100%" display="flex" justifyContent="center">
+              <PieChart width={220} height={160}>
+                <Pie
+                  data={
+                    payrollTrendData.length
+                      ? payrollTrendData
+                      : [{ name: "No Salary Data", value: 1 }]
+                  }
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={45}
+                  outerRadius={65}
+                  paddingAngle={3}
+                  dataKey="value"
+                >
+                  {(payrollTrendData.length
+                    ? payrollTrendData
+                    : [{ name: "No Salary Data", value: 1 }]
+                  ).map((entry, index) => (
+                    <Cell
+                      key={`salary-cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </Box>
+          </Box>
         </Box>
       </SimpleGrid>
 
-      <SimpleGrid columns={{ base: 1, xl: 3 }} spacing={6} mt={6}>
+      <SimpleGrid columns={{ base: 1, xl: 3 }} spacing={6}>
+        <Box
+          gridColumn={{ xl: "span 2" }}
+          bg="white"
+          p={5}
+          borderRadius="lg"
+          shadow="sm"
+          minW={0}
+        >
+          <Flex justify="space-between" align="center" mb={4}>
+            <Heading size="sm" color="gray.600">
+              Payroll Trend
+            </Heading>
+            <Text fontSize="xs" color="gray.400">
+              Net salaries paid by month
+            </Text>
+          </Flex>
+          <Box w="100%" overflowX="auto">
+            <Box minW="600px">
+              <BarChart
+                width={600}
+                height={220}
+                data={payrollTrendData}
+                margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                <YAxis axisLine={false} tickLine={false} />
+                <Tooltip formatter={(value) => `Rs ${Number(value).toLocaleString()}`} />
+                <Bar dataKey="value" fill="#065f46" radius={[4, 4, 0, 0]} />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                  dot={{ r: 2 }}
+                  activeDot={{ r: 4 }}
+                />
+              </BarChart>
+            </Box>
+          </Box>
+        </Box>
+
         <Box bg="white" p={5} borderRadius="lg" shadow="sm">
           <Heading size="sm" color="gray.600" mb={3}>
             HRMS Modules
@@ -470,34 +573,6 @@ const DashboardHome = () => {
               ]}
             />
           </SimpleGrid>
-        </Box>
-
-        <Box gridColumn={{ xl: "span 2" }} bg="white" p={5} borderRadius="lg" shadow="sm">
-          <Flex justify="space-between" align="center" mb={4}>
-            <Heading size="sm" color="gray.600">
-              Payroll Trend
-            </Heading>
-            <Text fontSize="xs" color="gray.400">
-              Net salaries paid by month
-            </Text>
-          </Flex>
-          <Box h="220px">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={payrollTrendData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorPayroll" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.7} />
-                    <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} />
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <Tooltip formatter={(value) => `Rs ${Number(value).toLocaleString()}`} />
-                <Area type="monotone" dataKey="value" stroke="#4F46E5" fillOpacity={1} fill="url(#colorPayroll)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </Box>
         </Box>
       </SimpleGrid>
     </Box>

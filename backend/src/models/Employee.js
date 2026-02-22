@@ -2,6 +2,15 @@ const mongoose = require("mongoose");
 
 const employeeSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
+    employeeId: {
+      type: String,
+      unique: true,
+      trim: true
+    },
     name: {
       type: String,
       required: true,
@@ -15,6 +24,37 @@ const employeeSchema = new mongoose.Schema(
     salary: {
       type: Number,
       required: true
+    },
+    email: {
+      type: String,
+      trim: true
+    },
+    designation: {
+      type: String,
+      trim: true
+    },
+    phone: {
+      type: String,
+      trim: true
+    },
+    gender: {
+      type: String,
+      trim: true
+    },
+    dutyStartTime: {
+      type: String,
+      trim: true
+    },
+    religion: {
+      type: String,
+      trim: true
+    },
+    address: {
+      type: String,
+      trim: true
+    },
+    joiningDate: {
+      type: Date
     },
     biometricId: {
       type: String,

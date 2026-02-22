@@ -29,14 +29,16 @@ const EmployeeForm = () => {
   
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
     role: "",
     department: "",
     salary: "",
     phone: "",
     address: "",
-    joiningDate: new Date().toISOString().split("T")[0], // Default today
+    joiningDate: new Date().toISOString().split("T")[0],
     employmentStatus: "Active",
+    gender: "",
+    dutyStartTime: "",
+    religion: "",
   });
 
   const fetchEmployeeData = useCallback(async () => {
@@ -45,15 +47,19 @@ const EmployeeForm = () => {
     try {
       const { data } = await api.get(`/employees/${id}`);
       setFormData({
-        name: data.user?.name || "",
-        email: data.user?.email || "",
+        name: data.name || data.user?.name || "",
         role: data.designation || "",
         department: data.department || "",
-        salary: data.salary?.basic || "",
+        salary:
+          (typeof data.salary === "number" ? data.salary : data.salary?.basic) ||
+          "",
         phone: data.phone || "",
         address: data.address || "",
         joiningDate: data.joiningDate ? data.joiningDate.split("T")[0] : "",
         employmentStatus: data.employmentStatus || "Active",
+        gender: data.gender || "",
+        dutyStartTime: data.dutyStartTime || "",
+        religion: data.religion || "",
       });
     } catch {
       toast({
@@ -81,10 +87,10 @@ const EmployeeForm = () => {
   const handleSubmit = async () => {
     setLoading(true);
 
-    if (!formData.name || !formData.email || !formData.salary) {
+    if (!formData.name || !formData.salary) {
       toast({
         title: "Missing Fields",
-        description: "Please fill in Name, Email, and Salary.",
+        description: "Please fill in Name and Salary.",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -106,22 +112,9 @@ const EmployeeForm = () => {
       return;
     }
 
-    if (!formData.email.includes("@")) {
-      toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      setLoading(false);
-      return;
-    }
-
     try {
       const payload = {
         name: formData.name,
-        email: formData.email,
         department: formData.department,
         designation: formData.role,
         salary: salaryNumber,
@@ -129,6 +122,9 @@ const EmployeeForm = () => {
         phone: formData.phone,
         address: formData.address,
         employmentStatus: formData.employmentStatus,
+        gender: formData.gender,
+        dutyStartTime: formData.dutyStartTime,
+        religion: formData.religion,
       };
 
       if (id) {
@@ -214,25 +210,56 @@ const EmployeeForm = () => {
         <GridItem>
           <VStack spacing={4} align="stretch">
             <FormControl isRequired>
-              <FormLabel>Full Name</FormLabel>
+              <FormLabel> Name</FormLabel>
               <Input
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="e.g. John Doe"
+                placeholder="Enter Your Full Name "
+              />
+            </FormControl>
+              <FormControl>
+                <FormLabel>Father Name</FormLabel>
+                <Input
+                  name="fatherName"
+                  value={formData.fatherName}
+                  onChange={handleChange}
+                  placeholder="Enter Your Father Name "
+                />
+              </FormControl>
+              
+
+            <FormControl>
+              <FormLabel>Gender</FormLabel>
+              <Select
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                placeholder="Select gender"
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </Select>
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Duty Time Start</FormLabel>
+              <Input
+                type="time"
+                name="dutyStartTime"
+                value={formData.dutyStartTime}
+                onChange={handleChange}
               />
             </FormControl>
 
-            <FormControl isRequired>
-              <FormLabel>Email Address</FormLabel>
+            <FormControl>
+              <FormLabel>Religion</FormLabel>
               <Input
-                type="email"
-                name="email"
-                value={formData.email}
+                name="religion"
+                value={formData.religion}
                 onChange={handleChange}
-                placeholder="john@company.com"
-                // Disable email editing if updating to prevent auth issues, or keep enabled if backend handles it safely
-                // isDisabled={!!id} 
+                placeholder="e.g"
               />
             </FormControl>
 
@@ -242,7 +269,7 @@ const EmployeeForm = () => {
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                placeholder="e.g. Software Engineer"
+                placeholder="Enter Your Designation"
               />
             </FormControl>
 
@@ -252,7 +279,7 @@ const EmployeeForm = () => {
                 name="department"
                 value={formData.department}
                 onChange={handleChange}
-                placeholder="e.g. Engineering"
+                placeholder="Enter Your Department"
               />
             </FormControl>
 
@@ -283,7 +310,7 @@ const EmployeeForm = () => {
                 name="salary"
                 value={formData.salary}
                 onChange={handleChange}
-                placeholder="e.g. 50000"
+                placeholder="Basic Salary"
               />
             </FormControl>
 
@@ -303,7 +330,7 @@ const EmployeeForm = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="e.g. 0300-1234567"
+                placeholder=" 0300-1234567"
               />
             </FormControl>
 
@@ -313,7 +340,7 @@ const EmployeeForm = () => {
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                placeholder="e.g. 123 Main St, City"
+                placeholder="H-No- 123 Street and City"
               />
             </FormControl>
           </VStack>

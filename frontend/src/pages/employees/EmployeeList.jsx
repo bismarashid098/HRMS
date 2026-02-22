@@ -115,12 +115,13 @@ const EmployeeList = () => {
   const filteredEmployees = employees.filter((employee) => {
     const query = search.trim().toLowerCase();
 
+    const nameValue = (employee.name ?? employee.user?.name ?? "").toString().toLowerCase();
+    const emailValue = (employee.email ?? employee.user?.email ?? "").toString().toLowerCase();
+
     const matchesSearch =
       !query ||
-      (employee.user?.name &&
-        employee.user.name.toLowerCase().includes(query)) ||
-      (employee.user?.email &&
-        employee.user.email.toLowerCase().includes(query)) ||
+      nameValue.includes(query) ||
+      emailValue.includes(query) ||
       (employee.department &&
         employee.department.toLowerCase().includes(query)) ||
       (employee.designation &&
@@ -138,10 +139,10 @@ const EmployeeList = () => {
   const sortedEmployees = [...filteredEmployees].sort((a, b) => {
     const getValue = (employee) => {
       if (sortField === "name") {
-        return employee.user?.name || "";
+        return employee.name || employee.user?.name || "";
       }
       if (sortField === "email") {
-        return employee.user?.email || "";
+        return employee.email || employee.user?.email || "";
       }
       if (sortField === "department") {
         return employee.department || "";
@@ -222,8 +223,8 @@ const EmployeeList = () => {
 
     const rows = sortedEmployees.map((employee) => ({
       "Employee ID": employee.employeeId,
-      Name: employee.user?.name || "",
-      Email: employee.user?.email || "",
+      Name: employee.name || employee.user?.name || "",
+      Email: employee.email || employee.user?.email || "",
       Department: employee.department || "",
       Role: employee.designation || "",
       Status: employee.employmentStatus || ""
@@ -408,10 +409,12 @@ const EmployeeList = () => {
                         )
                       }
                     >
-                      {employee.user?.name || "N/A"}
+                      {employee.name || employee.user?.name || "N/A"}
                     </Button>
                   </Td>
-                  <Td color="gray.600">{employee.user?.email || "N/A"}</Td>
+                  <Td color="gray.600">
+                    {employee.email || employee.user?.email || "N/A"}
+                  </Td>
                   <Td>{employee.designation}</Td>
                   <Td>{employee.department}</Td>
                   <Td>

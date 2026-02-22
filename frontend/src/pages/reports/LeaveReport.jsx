@@ -83,12 +83,14 @@ const LeaveReport = () => {
 
       const query = search.trim().toLowerCase();
       if (query) {
-        const employeeName =
-          leave.employee &&
-          leave.employee.user &&
-          leave.employee.user.name
-            ? leave.employee.user.name.toLowerCase()
-            : "";
+        const employeeName = (
+          (leave.employee && leave.employee.user && leave.employee.user.name) ||
+          (leave.employee && leave.employee.name) ||
+          ""
+        )
+          .toString()
+          .toLowerCase();
+
         const department =
           leave.employee && leave.employee.department
             ? leave.employee.department.toLowerCase()
@@ -130,9 +132,11 @@ const LeaveReport = () => {
 
     const rows = filteredLeaves.map((leave) => ({
       Employee:
-        leave.employee && leave.employee.user
-          ? leave.employee.user.name
-          : "",
+        (leave.employee &&
+          leave.employee.user &&
+          leave.employee.user.name) ||
+        (leave.employee && leave.employee.name) ||
+        "",
       Department:
         leave.employee && leave.employee.department
           ? leave.employee.department
@@ -343,9 +347,11 @@ const LeaveReport = () => {
                 <Tr key={leave._id}>
                   <Td>
                     <Text fontWeight="medium">
-                      {leave.employee && leave.employee.user
-                        ? leave.employee.user.name
-                        : "Unknown"}
+                      {(leave.employee &&
+                        leave.employee.user &&
+                        leave.employee.user.name) ||
+                        (leave.employee && leave.employee.name) ||
+                        "Unknown"}
                     </Text>
                     <Text fontSize="xs" color="gray.500">
                       {leave.employee && leave.employee.department

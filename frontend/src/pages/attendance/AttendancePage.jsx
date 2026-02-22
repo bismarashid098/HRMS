@@ -157,8 +157,8 @@ const AttendancePage = () => {
     const search = employeeSearch.trim().toLowerCase();
     const found = employees.find(
       (emp) =>
-        (emp.user?.name && emp.user.name.toLowerCase().includes(search)) ||
-        (emp.employeeId && emp.employeeId.toLowerCase().includes(search))
+        (emp.name && emp.name.toLowerCase().includes(search)) ||
+        (emp.user?.name && emp.user.name.toLowerCase().includes(search))
     );
     if (found) {
       setEmployeeId(found._id);
@@ -399,14 +399,14 @@ const AttendancePage = () => {
                 >
                   {employees.map((emp) => (
                     <option key={emp._id} value={emp._id}>
-                      {emp.user?.name || "N/A"} ({emp.employeeId})
+                      {emp.name || emp.user?.name || "Unknown"}
                     </option>
                   ))}
                 </Select>
                 <Input
                   value={employeeSearch}
                   onChange={(e) => setEmployeeSearch(e.target.value)}
-                  placeholder="Type name or ID"
+                  placeholder="Type employee name"
                   maxW="220px"
                 />
               </Flex>
@@ -570,7 +570,7 @@ const AttendancePage = () => {
           <Table variant="simple">
             <Thead bg="gray.50">
               <Tr>
-                <Th>Date</Th>
+                <Th>Employee</Th>
                 <Th>Punch In</Th>
                 <Th>Punch Out</Th>
                 <Th>Status</Th>
@@ -580,7 +580,14 @@ const AttendancePage = () => {
             <Tbody>
               {filteredRecords.map((record) => (
                 <Tr key={record._id}>
-                  <Td>{formatDate(record.date)}</Td>
+                  <Td>
+                    {isAdmin
+                      ? (employees.find((e) => e._id === employeeId)?.name ||
+                          employees.find((e) => e._id === employeeId)?.user
+                            ?.name ||
+                          "Unknown")
+                      : user?.name || "Unknown"}
+                  </Td>
                   <Td>{formatTime(record.punchIn)}</Td>
                   <Td>{formatTime(record.punchOut)}</Td>
                   <Td>

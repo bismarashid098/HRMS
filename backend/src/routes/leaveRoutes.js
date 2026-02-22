@@ -7,18 +7,17 @@ const {
 } = require("../controllers/leaveController");
 
 const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
 router.use(protect);
 
 router.post("/", applyLeave);
-router.get("/my/:employeeId", authorize("Employee"), getMyLeaves);
-
-router.get("/", authorize("Admin", "HR", "Manager"), getAllLeaves);
-router.put("/:id", authorize("Admin", "HR", "Manager"), updateLeaveStatus);
+router.get("/my/:employeeId", getMyLeaves);
+router.get("/", getAllLeaves);
+router.put("/:id", updateLeaveStatus);
 module.exports = router;
+
 
 
 // Yes Committed
