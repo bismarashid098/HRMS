@@ -1,11 +1,7 @@
 const authorize = (...roles) => {
     return (req, res, next) => {
-        if (
-            req.user &&
-            req.user.role === "Manager" &&
-            (req.baseUrl === "/api/leaves" || req.baseUrl === "/api/attendance")
-        ) {
-            return next();
+        if (!req.user) {
+            return res.status(401).json({ message: "Not authorized" });
         }
 
         if (!roles.includes(req.user.role)) {

@@ -3,34 +3,55 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import * as XLSX from "xlsx";
 import {
-  Box,
-  Button,
-  Flex,
-  Heading,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Badge,
-  HStack,
-  Spinner,
-  Text,
-  useToast,
-  IconButton,
-  Tooltip,
-  Input,
-  Select
+  Box, Button, Flex, Grid, GridItem, Table, Thead, Tbody, Tr, Th, Td,
+  Badge, HStack, Spinner, Text, useToast, IconButton, Tooltip, Input,
+  Select, Avatar, InputGroup, InputLeftElement, Icon,
 } from "@chakra-ui/react";
-import { FaPlus, FaEdit, FaTrash, FaEye } from "react-icons/fa";
+import {
+  FaPlus, FaEdit, FaTrash, FaEye, FaSearch, FaFilter,
+  FaFileExcel, FaUsers, FaUserCheck, FaUserTimes, FaUserClock,
+} from "react-icons/fa";
 import { AuthContext } from "../../context/AuthContext";
+
+const StatCard = ({ label, value, icon, color, bg }) => (
+  <Box
+    bg="white" borderRadius="2xl" p={4}
+    shadow="sm" border="1px solid" borderColor="gray.100"
+    borderLeft="4px solid" borderLeftColor={color}
+  >
+    <Flex align="center" justify="space-between">
+      <Box>
+        <Text fontSize="xs" color="gray.500" fontWeight="medium" textTransform="uppercase" letterSpacing="wide">{label}</Text>
+        <Text fontSize="2xl" fontWeight="bold" color="gray.800" mt={1}>{value}</Text>
+      </Box>
+      <Flex w={10} h={10} borderRadius="xl" bg={bg} align="center" justify="center">
+        <Icon as={icon} color={color} fontSize="16px" />
+      </Flex>
+    </Flex>
+  </Box>
+);
+
+const getInitials = (name = "") =>
+  name.trim().split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
+
+const avatarColors = ["#065f46", "#1d4ed8", "#7c3aed", "#d97706", "#dc2626", "#0891b2"];
+const getAvatarColor = (name = "") => avatarColors[name.charCodeAt(0) % avatarColors.length];
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case "Active": return "green";
+    case "Resigned": return "orange";
+    case "Terminated": return "red";
+    default: return "gray";
+  }
+};
 
 const EmployeeList = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { user } = useContext(AuthContext);
   const isManager = user?.role === "Manager";
+
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,227 +68,133 @@ const EmployeeList = () => {
       const { data } = await api.get("/employees");
       setEmployees(data);
       setError(null);
-    } catch (error) {
-      const message =
-        error?.response?.data?.message || "Failed to load employees.";
+    } catch (err) {
+      const message = err?.response?.data?.message || "Failed to load employees.";
       setError(message);
-      toast({
-        title: "Error",
-        description: message,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      toast({ title: "Error", description: message, status: "error", duration: 3000, isClosable: true });
     } finally {
       setLoading(false);
     }
   }, [toast]);
 
-  useEffect(() => {
-    fetchEmployees();
-  }, [fetchEmployees]);
+  useEffect(() => { fetchEmployees(); }, [fetchEmployees]);
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this employee?")) {
-      try {
-        await api.delete(`/employees/${id}`);
-        setEmployees((prev) => prev.filter((emp) => emp._id !== id));
-        toast({
-          title: "Deleted",
-          description: "Employee has been removed.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch {
-        toast({
-          title: "Error",
-          description: "Failed to delete employee.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Active":
-        return "green";
-      case "Resigned":
-        return "orange";
-      case "Terminated":
-        return "red";
-      default:
-        return "gray";
+    if (!window.confirm("Are you sure you want to delete this employee?")) return;
+    try {
+      await api.delete(`/employees/${id}`);
+      setEmployees((prev) => prev.filter((e) => e._id !== id));
+      toast({ title: "Deleted", description: "Employee removed successfully.", status: "success", duration: 3000, isClosable: true });
+    } catch {
+      toast({ title: "Error", description: "Failed to delete employee.", status: "error", duration: 3000, isClosable: true });
     }
   };
 
   const departmentOptions = Array.from(
-    new Set(
-      employees
-        .map((employee) => employee.department)
-        .filter((department) => department && department.trim() !== "")
-    )
+    new Set(employees.map((e) => e.department).filter(Boolean))
   ).sort((a, b) => a.localeCompare(b));
 
-  const filteredEmployees = employees.filter((employee) => {
-    const query = search.trim().toLowerCase();
-
-    const nameValue = (employee.name ?? employee.user?.name ?? "").toString().toLowerCase();
-    const emailValue = (employee.email ?? employee.user?.email ?? "").toString().toLowerCase();
-
-    const matchesSearch =
-      !query ||
-      nameValue.includes(query) ||
-      emailValue.includes(query) ||
-      (employee.department &&
-        employee.department.toLowerCase().includes(query)) ||
-      (employee.designation &&
-        employee.designation.toLowerCase().includes(query));
-
-    const matchesStatus =
-      statusFilter === "All" || employee.employmentStatus === statusFilter;
-
-    const matchesDepartment =
-      departmentFilter === "All" || employee.department === departmentFilter;
-
-    return matchesSearch && matchesStatus && matchesDepartment;
+  const filteredEmployees = employees.filter((e) => {
+    const q = search.trim().toLowerCase();
+    const name = (e.name ?? e.user?.name ?? "").toLowerCase();
+    const email = (e.email ?? e.user?.email ?? "").toLowerCase();
+    const matchSearch = !q || name.includes(q) || email.includes(q) ||
+      (e.department && e.department.toLowerCase().includes(q)) ||
+      (e.designation && e.designation.toLowerCase().includes(q));
+    const matchStatus = statusFilter === "All" || e.employmentStatus === statusFilter;
+    const matchDept = departmentFilter === "All" || e.department === departmentFilter;
+    return matchSearch && matchStatus && matchDept;
   });
 
   const sortedEmployees = [...filteredEmployees].sort((a, b) => {
-    const getValue = (employee) => {
-      if (sortField === "name") {
-        return employee.name || employee.user?.name || "";
-      }
-      if (sortField === "email") {
-        return employee.email || employee.user?.email || "";
-      }
-      if (sortField === "department") {
-        return employee.department || "";
-      }
-      if (sortField === "status") {
-        return employee.employmentStatus || "";
-      }
-      if (sortField === "role") {
-        return employee.designation || "";
-      }
-      return employee.user?.name || "";
+    const get = (e) => {
+      if (sortField === "name") return e.name || e.user?.name || "";
+      if (sortField === "email") return e.email || e.user?.email || "";
+      if (sortField === "department") return e.department || "";
+      if (sortField === "status") return e.employmentStatus || "";
+      if (sortField === "role") return e.designation || "";
+      return "";
     };
-
-    const aValue = getValue(a).toString().toLowerCase();
-    const bValue = getValue(b).toString().toLowerCase();
-
-    if (aValue < bValue) {
-      return sortDirection === "asc" ? -1 : 1;
-    }
-    if (aValue > bValue) {
-      return sortDirection === "asc" ? 1 : -1;
-    }
+    const av = get(a).toLowerCase(), bv = get(b).toLowerCase();
+    if (av < bv) return sortDirection === "asc" ? -1 : 1;
+    if (av > bv) return sortDirection === "asc" ? 1 : -1;
     return 0;
   });
 
-  const pageSizeNumber =
-    pageSize === "All" ? (sortedEmployees.length || 1) : Number(pageSize);
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(sortedEmployees.length / pageSizeNumber)
-  );
-
-  const safeCurrentPage =
-    currentPage > totalPages ? totalPages : currentPage;
-
-  const startIndex = (safeCurrentPage - 1) * pageSizeNumber;
-  const employeesToShow = sortedEmployees.slice(
-    startIndex,
-    startIndex + pageSizeNumber
-  );
+  const pageSizeNum = pageSize === "All" ? (sortedEmployees.length || 1) : Number(pageSize);
+  const totalPages = Math.max(1, Math.ceil(sortedEmployees.length / pageSizeNum));
+  const safePage = currentPage > totalPages ? totalPages : currentPage;
+  const startIdx = (safePage - 1) * pageSizeNum;
+  const pageEmployees = sortedEmployees.slice(startIdx, startIdx + pageSizeNum);
 
   const handleSort = (field) => {
-    setSortField((prevField) => {
-      if (prevField === field) {
-        setSortDirection((prevDirection) =>
-          prevDirection === "asc" ? "desc" : "asc"
-        );
-        return prevField;
-      }
+    setSortField((prev) => {
+      if (prev === field) { setSortDirection((d) => d === "asc" ? "desc" : "asc"); return prev; }
       setSortDirection("asc");
       return field;
     });
   };
 
-  const renderSortLabel = (label, field) => {
-    const isActive = sortField === field;
-    const arrow = !isActive ? "" : sortDirection === "asc" ? " ↑" : " ↓";
+  const sortLabel = (label, field) => {
+    const arrow = sortField !== field ? "" : sortDirection === "asc" ? " ↑" : " ↓";
     return `${label}${arrow}`;
   };
 
-  const handleChangePageSize = (value) => {
-    setPageSize(value === "All" ? "All" : Number(value));
-    setCurrentPage(1);
-  };
-
   const handleExport = () => {
-    if (sortedEmployees.length === 0) {
-      toast({
-        title: "No data",
-        description: "There are no employees to export.",
-        status: "info",
-        duration: 3000,
-        isClosable: true
-      });
+    if (!sortedEmployees.length) {
+      toast({ title: "No data to export", status: "info", duration: 3000, isClosable: true });
       return;
     }
-
-    const rows = sortedEmployees.map((employee) => ({
-      "Employee ID": employee.employeeId,
-      Name: employee.name || employee.user?.name || "",
-      Email: employee.email || employee.user?.email || "",
-      Department: employee.department || "",
-      Role: employee.designation || "",
-      Status: employee.employmentStatus || ""
+    const rows = sortedEmployees.map((e) => ({
+      "Employee ID": e.employeeId,
+      Name: e.name || e.user?.name || "",
+      Email: e.email || e.user?.email || "",
+      Department: e.department || "",
+      Designation: e.designation || "",
+      Status: e.employmentStatus || "",
     }));
-
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
-    XLSX.writeFile(workbook, "employees.xlsx");
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Employees");
+    XLSX.writeFile(wb, "employees.xlsx");
   };
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, statusFilter, departmentFilter, employees.length]);
+  useEffect(() => { setCurrentPage(1); }, [search, statusFilter, departmentFilter, employees.length]);
 
-  const totalEmployees = employees.length;
-  const activeEmployees = employees.filter(
-    (employee) => employee.employmentStatus === "Active"
-  ).length;
+  const total = employees.length;
+  const active = employees.filter((e) => e.employmentStatus === "Active").length;
+  const resigned = employees.filter((e) => e.employmentStatus === "Resigned").length;
+  const terminated = employees.filter((e) => e.employmentStatus === "Terminated").length;
 
   return (
-    <Box p={6}>
-      <Flex justify="space-between" align="center" mb={4} wrap="wrap" gap={3}>
+    <Box>
+      {/* Header */}
+      <Flex justify="space-between" align="center" mb={5} wrap="wrap" gap={3}>
         <Box>
-          <Heading size="lg" color="gray.700">
-            Employees
-          </Heading>
-          <Text fontSize="sm" color="gray.500">
-            Manage your employee directory with quick filters and actions.
-          </Text>
+          <Text fontSize="xl" fontWeight="bold" color="gray.800">Employee Directory</Text>
+          <Text fontSize="sm" color="gray.400">Manage and track all employees in your organization</Text>
         </Box>
         <HStack spacing={3}>
           <Button
+            leftIcon={<FaFileExcel />}
             variant="outline"
+            colorScheme="green"
+            borderRadius="xl"
+            size="sm"
             onClick={handleExport}
-            isDisabled={employees.length === 0}
+            isDisabled={!employees.length}
           >
             Export Excel
           </Button>
           {!isManager && (
             <Button
               leftIcon={<FaPlus />}
-              colorScheme="green"
+              bg="#065f46"
+              color="white"
+              _hover={{ bg: "#047857" }}
+              borderRadius="xl"
+              size="sm"
+              fontWeight="bold"
               onClick={() => navigate("/dashboard/employees/create")}
             >
               Add Employee
@@ -276,219 +203,251 @@ const EmployeeList = () => {
         </HStack>
       </Flex>
 
-      <Flex
-        mb={6}
-        gap={4}
-        direction={{ base: "column", md: "row" }}
-        align={{ base: "stretch", md: "center" }}
-      >
-        <Box flex="1" minW="0">
-          <Text fontSize="sm" mb={1}>
-            Search
-          </Text>
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, email, department or role"
-          />
-        </Box>
-        <Box w={{ base: "100%", md: "220px" }}>
-          <Text fontSize="sm" mb={1}>
-            Status
-          </Text>
-          <Select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            bg="white"
-          >
-            <option value="All">All</option>
-            <option value="Active">Active</option>
-            <option value="Resigned">Resigned</option>
-            <option value="Terminated">Terminated</option>
-          </Select>
-        </Box>
-        <Box w={{ base: "100%", md: "220px" }}>
-          <Text fontSize="sm" mb={1}>
-            Department
-          </Text>
+      {/* Stat Cards */}
+      <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(4, 1fr)" }} gap={4} mb={5}>
+        <StatCard label="Total Staff" value={total} icon={FaUsers} color="#065f46" bg="#f0fdf4" />
+        <StatCard label="Active" value={active} icon={FaUserCheck} color="#1d4ed8" bg="#eff6ff" />
+        <StatCard label="Resigned" value={resigned} icon={FaUserClock} color="#d97706" bg="#fffbeb" />
+        <StatCard label="Terminated" value={terminated} icon={FaUserTimes} color="#dc2626" bg="#fef2f2" />
+      </Grid>
+
+      {/* Filters */}
+      <Box bg="white" borderRadius="2xl" p={4} mb={4} shadow="sm" border="1px solid" borderColor="gray.100">
+        <Flex gap={3} wrap="wrap" align="center">
+          <InputGroup flex="1" minW="200px">
+            <InputLeftElement pointerEvents="none">
+              <Icon as={FaSearch} color="gray.300" fontSize="13px" />
+            </InputLeftElement>
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, email, department or role..."
+              borderRadius="xl"
+              bg="gray.50"
+              border="1px solid"
+              borderColor="gray.200"
+              _focus={{ bg: "white", borderColor: "#065f46" }}
+              fontSize="sm"
+            />
+          </InputGroup>
+
+          <InputGroup w={{ base: "full", md: "180px" }}>
+            <InputLeftElement pointerEvents="none">
+              <Icon as={FaFilter} color="gray.300" fontSize="12px" />
+            </InputLeftElement>
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              borderRadius="xl"
+              bg="gray.50"
+              fontSize="sm"
+              pl={8}
+            >
+              <option value="All">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Resigned">Resigned</option>
+              <option value="Terminated">Terminated</option>
+            </Select>
+          </InputGroup>
+
           <Select
             value={departmentFilter}
             onChange={(e) => setDepartmentFilter(e.target.value)}
-            bg="white"
+            w={{ base: "full", md: "200px" }}
+            borderRadius="xl"
+            bg="gray.50"
+            fontSize="sm"
           >
-            <option value="All">All</option>
-            {departmentOptions.map((department) => (
-              <option key={department} value={department}>
-                {department}
-              </option>
+            <option value="All">All Departments</option>
+            {departmentOptions.map((d) => (
+              <option key={d} value={d}>{d}</option>
             ))}
           </Select>
-        </Box>
-        <Box w={{ base: "100%", md: "220px" }}>
-          <Text fontSize="sm" mb={1}>
-            Summary
-          </Text>
-          <Box
-            bg="white"
-            borderRadius="lg"
-            borderWidth="1px"
-            borderColor="gray.100"
-            px={4}
-            py={2}
-          >
-            <Text fontSize="xs" color="gray.500">
-              Total:{" "}
-              <Text as="span" fontWeight="semibold" color="gray.700">
-                {totalEmployees}
-              </Text>{" "}
-              • Active:{" "}
-              <Text as="span" fontWeight="semibold" color="green.600">
-                {activeEmployees}
-              </Text>
-            </Text>
-          </Box>
-        </Box>
-      </Flex>
 
+          {(search || statusFilter !== "All" || departmentFilter !== "All") && (
+            <Button
+              size="sm" variant="ghost" colorScheme="gray" borderRadius="xl"
+              onClick={() => { setSearch(""); setStatusFilter("All"); setDepartmentFilter("All"); }}
+            >
+              Clear
+            </Button>
+          )}
+        </Flex>
+      </Box>
+
+      {/* Table */}
       {loading ? (
-        <Flex justify="center" align="center" h="200px">
-          <Spinner size="xl" color="green.400" />
+        <Flex justify="center" align="center" h="250px" direction="column" gap={3}>
+          <Spinner size="xl" color="#065f46" thickness="3px" />
+          <Text color="gray.400" fontSize="sm">Loading employees...</Text>
         </Flex>
       ) : error ? (
-        <Text color="red.500">{error}</Text>
+        <Box bg="red.50" borderRadius="xl" p={6} textAlign="center">
+          <Text color="red.500">{error}</Text>
+        </Box>
       ) : employees.length === 0 ? (
-        <Text color="gray.500">No employees added yet.</Text>
+        <Box bg="white" borderRadius="2xl" p={12} textAlign="center" shadow="sm">
+          <Icon as={FaUsers} fontSize="48px" color="gray.200" mb={4} />
+          <Text color="gray.500" fontWeight="medium">No employees added yet.</Text>
+          {!isManager && (
+            <Button mt={4} size="sm" bg="#065f46" color="white" borderRadius="xl" leftIcon={<FaPlus />}
+              onClick={() => navigate("/dashboard/employees/create")}>
+              Add First Employee
+            </Button>
+          )}
+        </Box>
       ) : (
-        <Box overflowX="auto" bg="white" shadow="sm" borderRadius="lg">
-          <Table variant="simple">
-            <Thead bg="gray.50">
-              <Tr>
-                <Th
-                  cursor="pointer"
-                  onClick={() => handleSort("name")}
-                >
-                  {renderSortLabel("Name", "name")}
-                </Th>
-                <Th
-                  cursor="pointer"
-                  onClick={() => handleSort("email")}
-                >
-                  {renderSortLabel("Email", "email")}
-                </Th>
-                <Th
-                  cursor="pointer"
-                  onClick={() => handleSort("role")}
-                >
-                  {renderSortLabel("Role", "role")}
-                </Th>
-                <Th
-                  cursor="pointer"
-                  onClick={() => handleSort("department")}
-                >
-                  {renderSortLabel("Department", "department")}
-                </Th>
-                <Th
-                  cursor="pointer"
-                  onClick={() => handleSort("status")}
-                >
-                  {renderSortLabel("Status", "status")}
-                </Th>
-                <Th>Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {employeesToShow.map((employee) => (
-                <Tr key={employee._id}>
-                  <Td fontWeight="medium">
-                    <Button
-                      variant="link"
-                      colorScheme="blue"
-                      onClick={() =>
-                        navigate(
-                          `/dashboard/attendance?employeeId=${employee._id}`
-                        )
-                      }
-                    >
-                      {employee.name || employee.user?.name || "N/A"}
-                    </Button>
-                  </Td>
-                  <Td color="gray.600">
-                    {employee.email || employee.user?.email || "N/A"}
-                  </Td>
-                  <Td>{employee.designation}</Td>
-                  <Td>{employee.department}</Td>
-                  <Td>
-                    <Badge colorScheme={getStatusColor(employee.employmentStatus)}>
-                      {employee.employmentStatus}
-                    </Badge>
-                  </Td>
-                  <Td>
-                    <HStack spacing={2}>
-                      <Tooltip label="View Details">
-                        <IconButton
-                          icon={<FaEye />}
-                          size="sm"
-                          colorScheme="blue"
-                          variant="ghost"
-                          onClick={() =>
-                            navigate(`/dashboard/employees/${employee._id}`)
-                          }
-                          aria-label="View"
-                        />
-                      </Tooltip>
-                      {!isManager && (
-                        <>
-                          <Tooltip label="Edit">
-                            <IconButton
-                              icon={<FaEdit />}
-                              size="sm"
-                              colorScheme="orange"
-                              variant="ghost"
-                              onClick={() =>
-                                navigate(
-                                  `/dashboard/employees/edit/${employee._id}`
-                                )
-                              }
-                              aria-label="Edit"
-                            />
-                          </Tooltip>
-                          <Tooltip label="Delete">
-                            <IconButton
-                              icon={<FaTrash />}
-                              size="sm"
-                              colorScheme="red"
-                              variant="ghost"
-                              onClick={() => handleDelete(employee._id)}
-                              aria-label="Delete"
-                            />
-                          </Tooltip>
-                        </>
-                      )}
-                    </HStack>
-                  </Td>
+        <Box bg="white" shadow="sm" borderRadius="2xl" border="1px solid" borderColor="gray.100" overflow="hidden">
+          <Box overflowX="auto">
+            <Table variant="simple" size="sm">
+              <Thead>
+                <Tr bg="gray.50">
+                  <Th py={4} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                    Employee
+                  </Th>
+                  <Th
+                    py={4} fontSize="xs" color="gray.500" fontWeight="semibold"
+                    textTransform="uppercase" letterSpacing="wider"
+                    cursor="pointer" onClick={() => handleSort("role")}
+                    _hover={{ color: "gray.700" }}
+                  >
+                    {sortLabel("Designation", "role")}
+                  </Th>
+                  <Th
+                    py={4} fontSize="xs" color="gray.500" fontWeight="semibold"
+                    textTransform="uppercase" letterSpacing="wider"
+                    cursor="pointer" onClick={() => handleSort("department")}
+                    _hover={{ color: "gray.700" }}
+                  >
+                    {sortLabel("Department", "department")}
+                  </Th>
+                  <Th
+                    py={4} fontSize="xs" color="gray.500" fontWeight="semibold"
+                    textTransform="uppercase" letterSpacing="wider"
+                    cursor="pointer" onClick={() => handleSort("status")}
+                    _hover={{ color: "gray.700" }}
+                  >
+                    {sortLabel("Status", "status")}
+                  </Th>
+                  <Th py={4} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                    Actions
+                  </Th>
                 </Tr>
-              ))}
-            </Tbody>
-          </Table>
+              </Thead>
+              <Tbody>
+                {pageEmployees.map((emp, idx) => {
+                  const name = emp.name || emp.user?.name || "N/A";
+                  const email = emp.email || emp.user?.email || "";
+                  const initials = getInitials(name);
+                  const avatarBg = getAvatarColor(name);
+                  return (
+                    <Tr
+                      key={emp._id}
+                      _hover={{ bg: "gray.50" }}
+                      transition="background 0.15s"
+                      borderBottom="1px solid"
+                      borderColor="gray.50"
+                    >
+                      <Td py={3}>
+                        <Flex align="center" gap={3}>
+                          <Avatar
+                            size="sm"
+                            name={name}
+                            bg={avatarBg}
+                            color="white"
+                            fontSize="xs"
+                            fontWeight="bold"
+                          />
+                          <Box>
+                            <Button
+                              variant="link"
+                              color="gray.800"
+                              fontWeight="semibold"
+                              fontSize="sm"
+                              _hover={{ color: "#065f46" }}
+                              onClick={() => navigate(`/dashboard/attendance?employeeId=${emp._id}`)}
+                              height="auto"
+                              lineHeight="1.3"
+                            >
+                              {name}
+                            </Button>
+                            <Text fontSize="xs" color="gray.400" lineHeight="1.3">{email || "—"}</Text>
+                          </Box>
+                        </Flex>
+                      </Td>
+                      <Td py={3}>
+                        <Text fontSize="sm" color="gray.700">{emp.designation || "—"}</Text>
+                      </Td>
+                      <Td py={3}>
+                        {emp.department ? (
+                          <Badge
+                            bg="gray.100" color="gray.600"
+                            borderRadius="full" px={2} py={0.5} fontSize="xs"
+                          >
+                            {emp.department}
+                          </Badge>
+                        ) : <Text fontSize="sm" color="gray.400">—</Text>}
+                      </Td>
+                      <Td py={3}>
+                        <Badge
+                          colorScheme={getStatusColor(emp.employmentStatus)}
+                          borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold"
+                        >
+                          {emp.employmentStatus || "—"}
+                        </Badge>
+                      </Td>
+                      <Td py={3}>
+                        <HStack spacing={1}>
+                          <Tooltip label="View Profile" hasArrow>
+                            <IconButton
+                              icon={<FaEye />} size="sm" variant="ghost" colorScheme="blue"
+                              borderRadius="lg"
+                              onClick={() => navigate(`/dashboard/employees/${emp._id}`)}
+                              aria-label="View"
+                            />
+                          </Tooltip>
+                          {!isManager && (
+                            <>
+                              <Tooltip label="Edit Employee" hasArrow>
+                                <IconButton
+                                  icon={<FaEdit />} size="sm" variant="ghost" colorScheme="orange"
+                                  borderRadius="lg"
+                                  onClick={() => navigate(`/dashboard/employees/edit/${emp._id}`)}
+                                  aria-label="Edit"
+                                />
+                              </Tooltip>
+                              <Tooltip label="Delete Employee" hasArrow>
+                                <IconButton
+                                  icon={<FaTrash />} size="sm" variant="ghost" colorScheme="red"
+                                  borderRadius="lg"
+                                  onClick={() => handleDelete(emp._id)}
+                                  aria-label="Delete"
+                                />
+                              </Tooltip>
+                            </>
+                          )}
+                        </HStack>
+                      </Td>
+                    </Tr>
+                  );
+                })}
+              </Tbody>
+            </Table>
+          </Box>
+
+          {/* Pagination */}
           <Flex
-            justify="space-between"
-            align="center"
-            px={4}
-            py={3}
-            borderTopWidth="1px"
-            borderColor="gray.100"
-            gap={3}
-            flexWrap="wrap"
+            justify="space-between" align="center"
+            px={5} py={3}
+            borderTop="1px solid" borderColor="gray.100"
+            flexWrap="wrap" gap={3}
           >
             <HStack spacing={2}>
-              <Text fontSize="sm" color="gray.500">
-                Rows per page
-              </Text>
+              <Text fontSize="xs" color="gray.400">Rows per page</Text>
               <Select
-                size="sm"
+                size="xs" w="70px" borderRadius="lg"
                 value={pageSize === "All" ? "All" : pageSize}
-                onChange={(e) => handleChangePageSize(e.target.value)}
-                w="80px"
+                onChange={(e) => { setPageSize(e.target.value === "All" ? "All" : Number(e.target.value)); setCurrentPage(1); }}
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
@@ -496,31 +455,43 @@ const EmployeeList = () => {
                 <option value="All">All</option>
               </Select>
             </HStack>
-            <HStack spacing={2}>
-              <Text fontSize="sm" color="gray.500">
-                Page {safeCurrentPage} of {totalPages}
-              </Text>
+
+            <Text fontSize="xs" color="gray.400">
+              Showing <Text as="span" fontWeight="semibold" color="gray.600">
+                {startIdx + 1}–{Math.min(startIdx + pageSizeNum, sortedEmployees.length)}
+              </Text> of <Text as="span" fontWeight="semibold" color="gray.600">{sortedEmployees.length}</Text> employees
+            </Text>
+
+            <HStack spacing={1}>
               <Button
-                size="sm"
-                variant="outline"
-                isDisabled={safeCurrentPage === 1}
-                onClick={() =>
-                  setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev))
-                }
+                size="xs" variant="outline" borderRadius="lg"
+                isDisabled={safePage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               >
-                Prev
+                ← Prev
               </Button>
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                const page = i + 1;
+                return (
+                  <Button
+                    key={page} size="xs" borderRadius="lg"
+                    variant={safePage === page ? "solid" : "outline"}
+                    bg={safePage === page ? "#065f46" : undefined}
+                    color={safePage === page ? "white" : undefined}
+                    borderColor={safePage === page ? "#065f46" : undefined}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </Button>
+                );
+              })}
+              {totalPages > 5 && <Text fontSize="xs" color="gray.400">...</Text>}
               <Button
-                size="sm"
-                variant="outline"
-                isDisabled={safeCurrentPage === totalPages}
-                onClick={() =>
-                  setCurrentPage((prev) =>
-                    prev < totalPages ? prev + 1 : prev
-                  )
-                }
+                size="xs" variant="outline" borderRadius="lg"
+                isDisabled={safePage === totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               >
-                Next
+                Next →
               </Button>
             </HStack>
           </Flex>

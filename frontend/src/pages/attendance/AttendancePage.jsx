@@ -1,651 +1,343 @@
 import { useContext, useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import {
-  Box,
-  Heading,
-  Flex,
-  Button,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Select,
-  Input,
-  Badge,
-  Spinner,
-  Text,
-  useToast,
-  SimpleGrid,
-  Stat,
-  StatLabel,
-  StatNumber,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  Textarea,
-  useDisclosure
+  Box, Flex, Button, Table, Thead, Tbody, Tr, Th, Td, Select, Input,
+  Badge, Spinner, Text, useToast, Grid, GridItem, Icon, InputGroup,
+  InputLeftElement, Modal, ModalOverlay, ModalContent, ModalHeader,
+  ModalFooter, ModalBody, ModalCloseButton, Textarea, useDisclosure,
+  Avatar, Progress
 } from "@chakra-ui/react";
 import api from "../../api/axios";
 import { AuthContext } from "../../context/AuthContext";
-import {
-  punchIn,
-  punchOut,
-  getMonthlyAttendance,
-  requestCorrection
-} from "../../services/attendanceService";
+import { punchIn, punchOut, getMonthlyAttendance, requestCorrection } from "../../services/attendanceService";
 import * as XLSX from "xlsx";
+import {
+  FaSearch, FaFilter, FaFileExcel, FaClock, FaUserCheck,
+  FaUserTimes, FaExclamationTriangle, FaCalendarAlt, FaPlay, FaStop
+} from "react-icons/fa";
 
-const formatDate = (value) => {
-  if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleDateString();
-};
+const formatDate = (v) => { if (!v) return "-"; const d = new Date(v); return isNaN(d) ? "-" : d.toLocaleDateString("en-PK"); };
+const formatTime = (v) => { if (!v) return "-"; const d = new Date(v); return isNaN(d) ? "-" : d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); };
 
-const formatTime = (value) => {
-  if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-};
+const statusColors = { Present: "green", Late: "orange", "Half Day": "yellow", Absent: "red" };
+const statusBg = { Present: "#f0fdf4", Late: "#fff7ed", "Half Day": "#fefce8", Absent: "#fef2f2" };
+const statusBorder = { Present: "#065f46", Late: "#ea580c", "Half Day": "#ca8a04", Absent: "#dc2626" };
 
-const getStatusColor = (status) => {
-  if (status === "Present") return "green";
-  if (status === "Late") return "orange";
-  if (status === "Half Day") return "yellow";
-  if (status === "Absent") return "red";
-  return "gray";
-};
+const buildSummary = (items) =>
+  items.reduce((acc, r) => {
+    acc.totalDays++;
+    if (r.status === "Present") acc.present++;
+    else if (r.status === "Absent") acc.absent++;
+    else if (r.status === "Late") acc.late++;
+    else if (r.status === "Half Day") acc.halfDay++;
+    return acc;
+  }, { totalDays: 0, present: 0, absent: 0, late: 0, halfDay: 0 });
 
-const buildSummary = (items) => {
-  return items.reduce(
-    (acc, record) => {
-      acc.totalDays += 1;
-      if (record.status === "Present") acc.present += 1;
-      else if (record.status === "Absent") acc.absent += 1;
-      else if (record.status === "Late") acc.late += 1;
-      else if (record.status === "Half Day") acc.halfDay += 1;
-      return acc;
-    },
-    { totalDays: 0, present: 0, absent: 0, late: 0, halfDay: 0 }
-  );
-};
+const StatCard = ({ label, value, color, bg, icon }) => (
+  <Box bg="white" borderRadius="2xl" p={4} shadow="sm" border="1px solid" borderColor="gray.100" borderLeft="4px solid" borderLeftColor={color}>
+    <Flex align="center" justify="space-between">
+      <Box>
+        <Text fontSize="xs" color="gray.500" fontWeight="medium" textTransform="uppercase" letterSpacing="wide">{label}</Text>
+        <Text fontSize="2xl" fontWeight="bold" color="gray.800" mt={1}>{value}</Text>
+      </Box>
+      <Flex w={10} h={10} borderRadius="xl" bg={bg} align="center" justify="center">
+        <Icon as={icon} color={color} fontSize="16px" />
+      </Flex>
+    </Flex>
+  </Box>
+);
 
 const AttendancePage = () => {
   const { user } = useContext(AuthContext);
   const toast = useToast();
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const employeeIdFromQuery = searchParams.get("employeeId") || "";
+  const employeeIdFromQuery = new URLSearchParams(location.search).get("employeeId") || "";
 
   const today = new Date();
-  const [employeeId, setEmployeeId] = useState(
-    employeeIdFromQuery || user?.employeeId || ""
-  );
+  const [employeeId, setEmployeeId] = useState(employeeIdFromQuery || user?.employeeId || "");
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [year, setYear] = useState(today.getFullYear());
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [punchLoading, setPunchLoading] = useState(false);
-  const [summary, setSummary] = useState({
-    totalDays: 0,
-    present: 0,
-    absent: 0,
-    late: 0,
-    halfDay: 0
-  });
+  const [summary, setSummary] = useState({ totalDays: 0, present: 0, absent: 0, late: 0, halfDay: 0 });
   const [correctionRecord, setCorrectionRecord] = useState(null);
   const [correctionReason, setCorrectionReason] = useState("");
   const [employees, setEmployees] = useState([]);
-  const [employeesLoading, setEmployeesLoading] = useState(false);
-  const [employeeSearch, setEmployeeSearch] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const {
-    isOpen: isCorrectionOpen,
-    onOpen: openCorrection,
-    onClose: closeCorrection
-  } = useDisclosure();
+  const { isOpen: isCorrOpen, onOpen: openCorr, onClose: closeCorr } = useDisclosure();
 
-  const isAdmin = user?.role === "Admin" || user?.role === "HR";
-  const effectiveEmployeeId = isAdmin
-    ? employeeId
-    : user?.employeeId || employeeId || "";
-  const canPunch = !!effectiveEmployeeId;
+  const isAdmin = user?.role === "Admin" || user?.role === "Manager";
+  const effectiveEmployeeId = isAdmin ? employeeId : user?.employeeId || "";
+  const canPunch = user?.role === "Admin" && !!effectiveEmployeeId;
+
+  useEffect(() => { if (employeeIdFromQuery) setEmployeeId(employeeIdFromQuery); }, [employeeIdFromQuery]);
 
   useEffect(() => {
-    if (employeeIdFromQuery) {
-      setEmployeeId(employeeIdFromQuery);
-    }
-  }, [employeeIdFromQuery]);
-
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      if (!isAdmin) {
-        return;
-      }
-      setEmployeesLoading(true);
-      try {
-        const { data } = await api.get("/employees");
-        setEmployees(data);
-      } catch {
-        toast({
-          title: "Error",
-          description: "Failed to load employees.",
-          status: "error",
-          duration: 3000,
-          isClosable: true
-        });
-      } finally {
-        setEmployeesLoading(false);
-      }
-    };
-
-    fetchEmployees();
-  }, [isAdmin, toast]);
-
-  useEffect(() => {
-    if (!isAdmin || !employeeSearch.trim() || employees.length === 0) {
-      return;
-    }
-    const search = employeeSearch.trim().toLowerCase();
-    const found = employees.find(
-      (emp) =>
-        (emp.name && emp.name.toLowerCase().includes(search)) ||
-        (emp.user?.name && emp.user.name.toLowerCase().includes(search))
-    );
-    if (found) {
-      setEmployeeId(found._id);
-    }
-  }, [employeeSearch, employees, isAdmin]);
-
-  const handleDateChange = (value) => {
-    setSelectedDate(value);
-    if (!value) {
-      return;
-    }
-    const d = new Date(value);
-    if (!Number.isNaN(d.getTime())) {
-      setMonth(d.getMonth() + 1);
-      setYear(d.getFullYear());
-    }
-  };
+    if (!isAdmin) return;
+    api.get("/employees").then(({ data }) => setEmployees(data)).catch(() => {});
+  }, [isAdmin]);
 
   const loadAttendance = useCallback(async () => {
     if (!effectiveEmployeeId) {
-      toast({
-        title: "Employee required",
-        description: "Please select or enter an employee first.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true
-      });
+      toast({ title: "Select an employee first", status: "warning", duration: 3000, isClosable: true });
       return;
     }
-
     setLoading(true);
     try {
-      const params = {
-        employeeId: effectiveEmployeeId,
-        month,
-        year
-      };
-
-      if (selectedDate) {
-        const d = new Date(selectedDate);
-        if (!Number.isNaN(d.getTime())) {
-          params.day = d.getDate();
-        }
-      }
-
-      const { data } = await getMonthlyAttendance(params);
+      const { data } = await getMonthlyAttendance({ employeeId: effectiveEmployeeId, month, year });
       setRecords(data);
       setSummary(buildSummary(data));
     } catch {
-      toast({
-        title: "Error",
-        description: "Failed to load attendance records.",
-        status: "error",
-        duration: 3000,
-        isClosable: true
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [effectiveEmployeeId, month, year, selectedDate, toast]);
+      toast({ title: "Failed to load attendance", status: "error", duration: 3000, isClosable: true });
+    } finally { setLoading(false); }
+  }, [effectiveEmployeeId, month, year, toast]);
+
+  useEffect(() => { if (effectiveEmployeeId) loadAttendance(); }, [effectiveEmployeeId, loadAttendance]);
 
   const handlePunch = async (type) => {
-    if (!effectiveEmployeeId) {
-      toast({
-        title: "Employee required",
-        description: "Please select or enter an employee first.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true
-      });
-      return;
-    }
-
+    if (!effectiveEmployeeId) return;
     setPunchLoading(true);
     try {
-      if (type === "in") {
-        await punchIn(effectiveEmployeeId);
-        toast({
-          title: "Punch in",
-          description: "Punch in successful.",
-          status: "success",
-          duration: 3000,
-          isClosable: true
-        });
-      } else {
-        await punchOut(effectiveEmployeeId);
-        toast({
-          title: "Punch out",
-          description: "Punch out successful.",
-          status: "success",
-          duration: 3000,
-          isClosable: true
-        });
-      }
+      if (type === "in") await punchIn(effectiveEmployeeId);
+      else await punchOut(effectiveEmployeeId);
+      toast({ title: type === "in" ? "Punched In" : "Punched Out", status: "success", duration: 3000, isClosable: true });
       await loadAttendance();
-    } catch (error) {
-      const message =
-        error?.response?.data?.message ||
-        (type === "in" ? "Punch in failed." : "Punch out failed.");
-      toast({
-        title: "Error",
-        description: message,
-        status: "error",
-        duration: 3000,
-        isClosable: true
-      });
-    } finally {
-      setPunchLoading(false);
-    }
+    } catch (err) {
+      toast({ title: "Error", description: err?.response?.data?.message || "Punch failed", status: "error", duration: 3000, isClosable: true });
+    } finally { setPunchLoading(false); }
   };
 
-  const handleSubmitCorrection = async () => {
-    if (!correctionRecord || !correctionReason.trim()) {
-      return;
-    }
+  const handleCorrection = async () => {
+    if (!correctionRecord || !correctionReason.trim()) return;
     try {
       await requestCorrection(correctionRecord._id, correctionReason.trim());
-      toast({
-        title: "Request sent",
-        description: "Your correction request has been submitted.",
-        status: "success",
-        duration: 3000,
-        isClosable: true
-      });
-      closeCorrection();
+      toast({ title: "Correction request sent", status: "success", duration: 3000, isClosable: true });
+      closeCorr();
       setCorrectionReason("");
-    } catch (error) {
-      const message =
-        error?.response?.data?.message ||
-        "Failed to submit correction request.";
-      toast({
-        title: "Error",
-        description: message,
-        status: "error",
-        duration: 3000,
-        isClosable: true
-      });
+    } catch (err) {
+      toast({ title: "Error", description: err?.response?.data?.message || "Failed", status: "error", duration: 3000, isClosable: true });
     }
   };
 
-  useEffect(() => {
-    if (effectiveEmployeeId) {
-      loadAttendance();
-    }
-  }, [effectiveEmployeeId, loadAttendance]);
-
-  const filteredRecords = records.filter((record) => {
-    if (statusFilter === "All") {
-      return true;
-    }
-    if (statusFilter === "Not Marked") {
-      return !record.status;
-    }
-    return record.status === statusFilter;
+  const filteredRecords = records.filter((r) => {
+    if (statusFilter === "All") return true;
+    if (statusFilter === "Not Marked") return !r.status;
+    return r.status === statusFilter;
   });
 
   const handleExport = () => {
-    if (filteredRecords.length === 0) {
-      toast({
-        title: "No data",
-        description: "There are no attendance records to export.",
-        status: "info",
-        duration: 3000,
-        isClosable: true
-      });
-      return;
-    }
-
-    const rows = filteredRecords.map((record) => ({
-      Date: formatDate(record.date),
-      "Punch In": formatTime(record.punchIn),
-      "Punch Out": formatTime(record.punchOut),
-      Status: record.status || ""
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
-    XLSX.writeFile(
-      workbook,
-      `attendance-${month}-${year}-${effectiveEmployeeId || "employee"}.xlsx`
-    );
+    if (!filteredRecords.length) { toast({ title: "No data to export", status: "info", duration: 3000, isClosable: true }); return; }
+    const rows = filteredRecords.map((r) => ({ Date: formatDate(r.date), "Punch In": formatTime(r.punchIn), "Punch Out": formatTime(r.punchOut), Status: r.status || "" }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+    XLSX.writeFile(wb, `attendance-${month}-${year}.xlsx`);
   };
 
+  const attendanceRate = summary.totalDays > 0 ? Math.round(((summary.present + summary.late * 0.5) / summary.totalDays) * 100) : 0;
+  const selectedEmployee = employees.find((e) => e._id === employeeId);
+  const empName = selectedEmployee?.name || selectedEmployee?.user?.name || user?.name || "—";
+
+  const monthNames = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
   return (
-    <Box p={6}>
-      <Flex
-        justify="space-between"
-        align="center"
-        mb={4}
-        gap={3}
-        wrap="wrap"
-      >
-        <Box>
-          <Heading size="lg" color="gray.700">
-            Attendance
-          </Heading>
-          <Text fontSize="sm" color="gray.500">
-            Monthly attendance ledger with punch in/out and smart summary.
-          </Text>
-        </Box>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExport}
-          isDisabled={records.length === 0}
-        >
-          Export Excel
-        </Button>
-      </Flex>
-
-      <Box
-        mb={6}
-        bg="white"
-        p={4}
-        borderRadius="lg"
-        shadow="sm"
-      >
-        <Flex
-          gap={4}
-          direction={{ base: "column", md: "row" }}
-          align={{ base: "stretch", md: "center" }}
-        >
+    <Box>
+      {/* Header Banner */}
+      <Box bgGradient="linear(135deg, #021024 0%, #065f46 100%)" borderRadius="2xl" p={6} mb={5} position="relative" overflow="hidden">
+        <Box position="absolute" top={-8} right={-8} w="140px" h="140px" borderRadius="full" bg="whiteAlpha.100" />
+        <Flex justify="space-between" align="center" wrap="wrap" gap={4} position="relative">
           <Box>
-            <Text fontSize="sm" mb={1}>
-              Employee
+            <Text fontSize="2xl" fontWeight="bold" color="white">Attendance Ledger</Text>
+            <Text fontSize="sm" color="whiteAlpha.700" mt={1}>
+              Monthly punch record · {monthNames[month]} {year}
+              {empName !== "—" && ` · ${empName}`}
             </Text>
-            {isAdmin ? (
-              <Flex gap={2}>
-                <Select
-                  value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
-                  placeholder={
-                    employeesLoading ? "Loading employees..." : "Select Employee"
-                  }
-                  maxW="220px"
-                  isDisabled={employeesLoading}
-                >
-                  {employees.map((emp) => (
-                    <option key={emp._id} value={emp._id}>
-                      {emp.name || emp.user?.name || "Unknown"}
-                    </option>
-                  ))}
-                </Select>
-                <Input
-                  value={employeeSearch}
-                  onChange={(e) => setEmployeeSearch(e.target.value)}
-                  placeholder="Type employee name"
-                  maxW="220px"
-                />
-              </Flex>
-            ) : (
-              <Input
-                value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
-                placeholder="Your Employee ID"
-                maxW="260px"
-                isDisabled
-              />
+          </Box>
+          <Flex gap={2} wrap="wrap">
+            {user?.role === "Admin" && (
+              <>
+                <Button leftIcon={<FaPlay />} bg="white" color="#065f46" _hover={{ bg: "gray.100" }} size="sm" fontWeight="bold" borderRadius="xl"
+                  onClick={() => handlePunch("in")} isLoading={punchLoading} isDisabled={!canPunch}>
+                  Punch In
+                </Button>
+                <Button leftIcon={<FaStop />} bg="red.500" color="white" _hover={{ bg: "red.600" }} size="sm" fontWeight="bold" borderRadius="xl"
+                  onClick={() => handlePunch("out")} isLoading={punchLoading} isDisabled={!canPunch}>
+                  Punch Out
+                </Button>
+              </>
             )}
-          </Box>
-
-          <Box>
-            <Text fontSize="sm" mb={1}>
-              Date (optional)
-            </Text>
-            <Input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => handleDateChange(e.target.value)}
-              maxW="180px"
-            />
-          </Box>
-
-          <Box>
-            <Text fontSize="sm" mb={1}>
-              Month
-            </Text>
-            <Select
-              value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
-              maxW="140px"
-            >
-              <option value={1}>January</option>
-              <option value={2}>February</option>
-              <option value={3}>March</option>
-              <option value={4}>April</option>
-              <option value={5}>May</option>
-              <option value={6}>June</option>
-              <option value={7}>July</option>
-              <option value={8}>August</option>
-              <option value={9}>September</option>
-              <option value={10}>October</option>
-              <option value={11}>November</option>
-              <option value={12}>December</option>
-            </Select>
-          </Box>
-
-          <Box>
-            <Text fontSize="sm" mb={1}>
-              Year
-            </Text>
-            <Input
-              type="number"
-              value={year}
-              onChange={(e) => {
-                const inputYear = Number(e.target.value);
-                if (
-                  !Number.isNaN(inputYear) &&
-                  inputYear > 1990 &&
-                  inputYear < 2100
-                ) {
-                  setYear(inputYear);
-                }
-              }}
-              maxW="120px"
-            />
-          </Box>
-
-          <Flex gap={3} mt={{ base: 2, md: 6 }}>
-            <Button
-              colorScheme="green"
-              onClick={loadAttendance}
-              isLoading={loading}
-            >
-              Load Attendance
-            </Button>
-            <Button
-              colorScheme="green"
-              onClick={() => handlePunch("in")}
-              isLoading={punchLoading}
-              isDisabled={!canPunch}
-            >
-              Punch In
-            </Button>
-            <Button
-              colorScheme="red"
-              onClick={() => handlePunch("out")}
-              isLoading={punchLoading}
-              isDisabled={!canPunch}
-            >
-              Punch Out
+            <Button leftIcon={<FaFileExcel />} variant="outline" borderColor="whiteAlpha.400" color="white" _hover={{ bg: "whiteAlpha.200" }} size="sm" borderRadius="xl"
+              onClick={handleExport} isDisabled={!records.length}>
+              Export
             </Button>
           </Flex>
         </Flex>
       </Box>
 
+      {/* Filters */}
+      <Box bg="white" borderRadius="2xl" p={4} mb={4} shadow="sm" border="1px solid" borderColor="gray.100">
+        <Flex gap={3} wrap="wrap" align="flex-end">
+          {isAdmin && (
+            <Box>
+              <Text fontSize="xs" fontWeight="semibold" color="gray.500" mb={1} textTransform="uppercase">Employee</Text>
+              <Select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="Select Employee" w="200px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46">
+                {employees.map((emp) => (
+                  <option key={emp._id} value={emp._id}>{emp.name || emp.user?.name}</option>
+                ))}
+              </Select>
+            </Box>
+          )}
+          <Box>
+            <Text fontSize="xs" fontWeight="semibold" color="gray.500" mb={1} textTransform="uppercase">Month</Text>
+            <Select value={month} onChange={(e) => setMonth(Number(e.target.value))} w="140px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46">
+              {monthNames.slice(1).map((m, i) => <option key={i+1} value={i+1}>{m}</option>)}
+            </Select>
+          </Box>
+          <Box>
+            <Text fontSize="xs" fontWeight="semibold" color="gray.500" mb={1} textTransform="uppercase">Year</Text>
+            <Input type="number" value={year} onChange={(e) => { const v = Number(e.target.value); if (v > 1990 && v < 2100) setYear(v); }}
+              w="100px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46" />
+          </Box>
+          <Button bg="#065f46" color="white" _hover={{ bg: "#047857" }} borderRadius="xl" size="md"
+            onClick={loadAttendance} isLoading={loading} leftIcon={<FaCalendarAlt />}>
+            Load
+          </Button>
+        </Flex>
+      </Box>
+
+      {/* Summary Cards */}
       {records.length > 0 && (
-        <SimpleGrid columns={{ base: 2, md: 5 }} spacing={4} mb={6}>
-          <Stat bg="white" p={4} borderRadius="lg" shadow="sm">
-            <StatLabel>Total Days</StatLabel>
-            <StatNumber>{summary.totalDays}</StatNumber>
-          </Stat>
-          <Stat bg="white" p={4} borderRadius="lg" shadow="sm">
-            <StatLabel>Present</StatLabel>
-            <StatNumber color="green.500">{summary.present}</StatNumber>
-          </Stat>
-          <Stat bg="white" p={4} borderRadius="lg" shadow="sm">
-            <StatLabel>Absent</StatLabel>
-            <StatNumber color="red.500">{summary.absent}</StatNumber>
-          </Stat>
-          <Stat bg="white" p={4} borderRadius="lg" shadow="sm">
-            <StatLabel>Late</StatLabel>
-            <StatNumber color="orange.400">{summary.late}</StatNumber>
-          </Stat>
-          <Stat bg="white" p={4} borderRadius="lg" shadow="sm">
-            <StatLabel>Half Day</StatLabel>
-            <StatNumber color="yellow.500">{summary.halfDay}</StatNumber>
-          </Stat>
-        </SimpleGrid>
+        <>
+          <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(5, 1fr)" }} gap={4} mb={4}>
+            <StatCard label="Total Days" value={summary.totalDays} color="#1d4ed8" bg="#eff6ff" icon={FaCalendarAlt} />
+            <StatCard label="Present" value={summary.present} color="#065f46" bg="#f0fdf4" icon={FaUserCheck} />
+            <StatCard label="Absent" value={summary.absent} color="#dc2626" bg="#fef2f2" icon={FaUserTimes} />
+            <StatCard label="Late" value={summary.late} color="#ea580c" bg="#fff7ed" icon={FaClock} />
+            <StatCard label="Half Day" value={summary.halfDay} color="#ca8a04" bg="#fefce8" icon={FaExclamationTriangle} />
+          </Grid>
+          <Box bg="white" borderRadius="2xl" p={4} mb={4} shadow="sm" border="1px solid" borderColor="gray.100">
+            <Flex justify="space-between" align="center" mb={2}>
+              <Text fontSize="sm" fontWeight="semibold" color="gray.700">Attendance Rate</Text>
+              <Text fontSize="sm" fontWeight="bold" color="#065f46">{attendanceRate}%</Text>
+            </Flex>
+            <Progress value={attendanceRate} colorScheme="green" borderRadius="full" size="sm" bg="gray.100" />
+            <Text fontSize="xs" color="gray.400" mt={1}>Based on {summary.totalDays} working days recorded</Text>
+          </Box>
+        </>
       )}
 
+      {/* Table */}
       {loading ? (
-        <Flex justify="center" align="center" h="200px">
-          <Spinner size="xl" color="green.400" />
+        <Flex justify="center" align="center" h="250px" direction="column" gap={3}>
+          <Spinner size="xl" color="#065f46" thickness="3px" />
+          <Text color="gray.400" fontSize="sm">Loading attendance records...</Text>
         </Flex>
       ) : records.length === 0 ? (
-        <Text color="gray.500">No attendance records for this period.</Text>
+        <Box bg="white" borderRadius="2xl" p={12} textAlign="center" shadow="sm">
+          <Icon as={FaCalendarAlt} fontSize="48px" color="gray.200" mb={4} />
+          <Text color="gray.500" fontWeight="medium">No attendance records for this period.</Text>
+          <Text fontSize="sm" color="gray.400" mt={1}>Select an employee and month, then click Load.</Text>
+        </Box>
       ) : (
-        <Box overflowX="auto" bg="white" shadow="sm" borderRadius="lg">
-          <Box p={4} borderBottomWidth="1px" borderColor="gray.100">
-            <Flex
-              gap={4}
-              direction={{ base: "column", md: "row" }}
-              align={{ base: "stretch", md: "center" }}
-            >
-              <Box maxW={{ base: "100%", md: "220px" }}>
-                <Text fontSize="sm" mb={1}>
-                  Filter by Status
-                </Text>
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  bg="white"
-                >
-                  <option value="All">All</option>
-                  <option value="Present">Present</option>
-                  <option value="Absent">Absent</option>
-                  <option value="Late">Late</option>
-                  <option value="Half Day">Half Day</option>
-                  <option value="Not Marked">Not Marked</option>
-                </Select>
-              </Box>
-              <Text fontSize="sm" color="gray.500">
-                Showing {filteredRecords.length} of {records.length} records
-              </Text>
-            </Flex>
-          </Box>
-          <Table variant="simple">
-            <Thead bg="gray.50">
-              <Tr>
-                <Th>Employee</Th>
-                <Th>Punch In</Th>
-                <Th>Punch Out</Th>
-                <Th>Status</Th>
-                {!isAdmin && <Th>Actions</Th>}
-              </Tr>
-            </Thead>
-            <Tbody>
-              {filteredRecords.map((record) => (
-                <Tr key={record._id}>
-                  <Td>
-                    {isAdmin
-                      ? (employees.find((e) => e._id === employeeId)?.name ||
-                          employees.find((e) => e._id === employeeId)?.user
-                            ?.name ||
-                          "Unknown")
-                      : user?.name || "Unknown"}
-                  </Td>
-                  <Td>{formatTime(record.punchIn)}</Td>
-                  <Td>{formatTime(record.punchOut)}</Td>
-                  <Td>
-                    <Badge colorScheme={getStatusColor(record.status)}>
-                      {record.status || "-"}
-                    </Badge>
-                  </Td>
-                  {!isAdmin && (
-                    <Td>
-                      <Button
-                        size="xs"
-                        variant="outline"
-                        onClick={() => {
-                          setCorrectionRecord(record);
-                          setCorrectionReason("");
-                          openCorrection();
-                        }}
-                      >
-                        Request Correction
-                      </Button>
-                    </Td>
-                  )}
+        <Box bg="white" shadow="sm" borderRadius="2xl" border="1px solid" borderColor="gray.100" overflow="hidden">
+          <Flex px={5} py={3} align="center" borderBottom="1px solid" borderColor="gray.100" gap={3} wrap="wrap">
+            <InputGroup w="200px">
+              <InputLeftElement pointerEvents="none"><Icon as={FaFilter} color="gray.300" fontSize="12px" /></InputLeftElement>
+              <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} pl={8} borderRadius="xl" fontSize="sm" bg="gray.50">
+                <option value="All">All Status</option>
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+                <option value="Late">Late</option>
+                <option value="Half Day">Half Day</option>
+                <option value="Not Marked">Not Marked</option>
+              </Select>
+            </InputGroup>
+            <Text fontSize="xs" color="gray.400" ml="auto">
+              {filteredRecords.length} of {records.length} records
+            </Text>
+          </Flex>
+          <Box overflowX="auto">
+            <Table variant="simple" size="sm">
+              <Thead>
+                <Tr bg="gray.50">
+                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Date</Th>
+                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Punch In</Th>
+                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Punch Out</Th>
+                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Duration</Th>
+                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Status</Th>
+                  {!isAdmin && <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Action</Th>}
                 </Tr>
-              ))}
-            </Tbody>
-          </Table>
+              </Thead>
+              <Tbody>
+                {filteredRecords.map((record) => {
+                  const duration = record.punchIn && record.punchOut
+                    ? (() => { const diff = (new Date(record.punchOut) - new Date(record.punchIn)) / 60000; const h = Math.floor(diff / 60); const m = Math.round(diff % 60); return `${h}h ${m}m`; })()
+                    : "—";
+                  return (
+                    <Tr key={record._id} _hover={{ bg: "gray.50" }} transition="background 0.15s">
+                      <Td py={3}>
+                        <Text fontSize="sm" fontWeight="semibold" color="gray.700">{formatDate(record.date)}</Text>
+                      </Td>
+                      <Td py={3}>
+                        <Text fontSize="sm" color="gray.600">{formatTime(record.punchIn)}</Text>
+                      </Td>
+                      <Td py={3}>
+                        <Text fontSize="sm" color="gray.600">{formatTime(record.punchOut)}</Text>
+                      </Td>
+                      <Td py={3}>
+                        <Text fontSize="sm" color="gray.500">{duration}</Text>
+                      </Td>
+                      <Td py={3}>
+                        <Badge
+                          colorScheme={statusColors[record.status] || "gray"}
+                          borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold"
+                        >
+                          {record.status || "Not Marked"}
+                        </Badge>
+                      </Td>
+                      {!isAdmin && (
+                        <Td py={3}>
+                          <Button size="xs" variant="outline" colorScheme="orange" borderRadius="lg"
+                            onClick={() => { setCorrectionRecord(record); setCorrectionReason(""); openCorr(); }}>
+                            Correct
+                          </Button>
+                        </Td>
+                      )}
+                    </Tr>
+                  );
+                })}
+              </Tbody>
+            </Table>
+          </Box>
         </Box>
       )}
 
-      <Modal isOpen={isCorrectionOpen} onClose={closeCorrection} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Request Attendance Correction</ModalHeader>
+      {/* Correction Modal */}
+      <Modal isOpen={isCorrOpen} onClose={closeCorr} isCentered>
+        <ModalOverlay bg="blackAlpha.400" />
+        <ModalContent borderRadius="2xl" shadow="xl">
+          <ModalHeader borderBottom="1px solid" borderColor="gray.100" fontSize="md" fontWeight="bold">
+            Request Attendance Correction
+          </ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <Text mb={3} fontSize="sm" color="gray.600">
-              {correctionRecord
-                ? `${formatDate(correctionRecord.date)} • ${formatTime(
-                    correctionRecord.punchIn
-                  )} - ${formatTime(correctionRecord.punchOut)}`
-                : ""}
-            </Text>
-            <Textarea
-              value={correctionReason}
-              onChange={(e) => setCorrectionReason(e.target.value)}
-              placeholder="Explain what needs to be corrected (time, status, etc.)"
-              rows={4}
-            />
+          <ModalBody py={5}>
+            {correctionRecord && (
+              <Box bg="gray.50" borderRadius="xl" p={3} mb={4}>
+                <Text fontSize="sm" color="gray.500">Record</Text>
+                <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                  {formatDate(correctionRecord.date)} &nbsp;·&nbsp; {formatTime(correctionRecord.punchIn)} – {formatTime(correctionRecord.punchOut)}
+                </Text>
+              </Box>
+            )}
+            <Text fontSize="sm" fontWeight="semibold" color="gray.600" mb={2}>Reason for correction</Text>
+            <Textarea value={correctionReason} onChange={(e) => setCorrectionReason(e.target.value)}
+              placeholder="Explain what needs to be corrected..." rows={4} borderRadius="xl" focusBorderColor="#065f46" />
           </ModalBody>
-          <ModalFooter>
-            <Button mr={3} variant="ghost" onClick={closeCorrection}>
-              Cancel
-            </Button>
-            <Button
-              colorScheme="green"
-              onClick={handleSubmitCorrection}
-              isDisabled={!correctionReason.trim()}
-            >
+          <ModalFooter borderTop="1px solid" borderColor="gray.100" gap={2}>
+            <Button variant="ghost" onClick={closeCorr} borderRadius="xl">Cancel</Button>
+            <Button bg="#065f46" color="white" _hover={{ bg: "#047857" }} borderRadius="xl"
+              onClick={handleCorrection} isDisabled={!correctionReason.trim()}>
               Submit Request
             </Button>
           </ModalFooter>

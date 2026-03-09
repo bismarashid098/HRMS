@@ -1,691 +1,337 @@
 import {
-    Box,
-    Button,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Badge,
-    Heading,
-    HStack,
-    Text,
-    useToast,
-    Spinner,
-    Flex,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalFooter,
-    ModalBody,
-    ModalCloseButton,
-    useDisclosure,
-    FormControl,
-    FormLabel,
-    Input,
-    Select,
-    Textarea,
-
-    SimpleGrid,
-    Stat,
-    StatLabel,
-    StatNumber
+  Box, Button, Table, Thead, Tbody, Tr, Th, Td, Badge, HStack, Text,
+  useToast, Spinner, Flex, Modal, ModalOverlay, ModalContent, ModalHeader,
+  ModalFooter, ModalBody, ModalCloseButton, useDisclosure, FormControl,
+  FormLabel, Input, Select, Textarea, Grid, Icon, InputGroup, InputLeftElement, Avatar
 } from "@chakra-ui/react";
 import { useState, useEffect, useContext, useCallback } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import api from "../../api/axios";
-import { FaPlus, FaCheck, FaTimes } from "react-icons/fa";
 import * as XLSX from "xlsx";
+import {
+  FaPlus, FaCheck, FaTimes, FaSearch, FaFilter, FaFileExcel,
+  FaCalendarCheck, FaClock, FaCalendarTimes, FaCalendarAlt, FaMoneyBillWave
+} from "react-icons/fa";
+
+const statusColors = { Approved: "green", Rejected: "red", Pending: "yellow" };
+const typeColors = { Casual: "blue", Sick: "red", Annual: "green" };
+const avatarBgColors = ["#065f46", "#1d4ed8", "#7c3aed", "#d97706", "#dc2626"];
+const getAvatarBg = (name = "") => avatarBgColors[name.charCodeAt(0) % avatarBgColors.length];
+
+const StatCard = ({ label, value, color, bg, icon }) => (
+  <Box bg="white" borderRadius="2xl" p={4} shadow="sm" border="1px solid" borderColor="gray.100" borderLeft="4px solid" borderLeftColor={color}>
+    <Flex align="center" justify="space-between">
+      <Box>
+        <Text fontSize="xs" color="gray.500" fontWeight="medium" textTransform="uppercase" letterSpacing="wide">{label}</Text>
+        <Text fontSize="2xl" fontWeight="bold" color="gray.800" mt={1}>{value}</Text>
+      </Box>
+      <Flex w={10} h={10} borderRadius="xl" bg={bg} align="center" justify="center">
+        <Icon as={icon} color={color} fontSize="16px" />
+      </Flex>
+    </Flex>
+  </Box>
+);
 
 const Leaves = () => {
-    const { user } = useContext(AuthContext);
-    const [leaves, setLeaves] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [employees, setEmployees] = useState([]);
-    const [employeesLoading, setEmployeesLoading] = useState(false);
-    const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
-    const toast = useToast();
-    const { isOpen, onOpen, onClose } = useDisclosure();
+  const { user } = useContext(AuthContext);
+  const [leaves, setLeaves] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [employees, setEmployees] = useState([]);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
-    // Form State
-    const [formData, setFormData] = useState({
-        type: "",
-        fromDate: "",
-        toDate: "",
-        reason: ""
-    });
-    const [submitting, setSubmitting] = useState(false);
-    const [actionLoading, setActionLoading] = useState(null); // track which leave is being updated
-    const [statusFilter, setStatusFilter] = useState("All");
-    const [typeFilter, setTypeFilter] = useState("All");
-    const [search, setSearch] = useState("");
-    const [fromFilter, setFromFilter] = useState("");
-    const [toFilter, setToFilter] = useState("");
+  const [formData, setFormData] = useState({ type: "", fromDate: "", toDate: "", reason: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [typeFilter, setTypeFilter] = useState("All");
+  const [search, setSearch] = useState("");
+  const [fromFilter, setFromFilter] = useState("");
+  const [toFilter, setToFilter] = useState("");
+  const [empFilter, setEmpFilter] = useState("");
 
-    const isEmployee = user?.role === "Employee";
-    const isAdmin = user?.role === "Admin" || user?.role === "HR" || user?.role === "Manager";
+  const isAdmin = user?.role === "Admin" || user?.role === "Manager";
 
-    useEffect(() => {
-        if (!isAdmin) return;
-        const loadEmployees = async () => {
-            setEmployeesLoading(true);
-            try {
-                const { data } = await api.get("/employees");
-                setEmployees(data);
-            } catch (err) {
-                toast({
-                    title: "Error loading employees",
-                    description: err.response?.data?.message || "Failed to load employees list.",
-                    status: "error",
-                    duration: 3000,
-                    isClosable: true
-                });
-            } finally {
-                setEmployeesLoading(false);
-            }
-        };
-        loadEmployees();
-    }, [isAdmin, toast]);
+  useEffect(() => {
+    if (!isAdmin) return;
+    setEmployeesLoading(true);
+    api.get("/employees").then(({ data }) => setEmployees(data)).catch(() => {}).finally(() => setEmployeesLoading(false));
+  }, [isAdmin]);
 
-    const fetchLeaves = useCallback(async () => {
-        try {
-            let endpoint = "/leaves";
-            if (isEmployee && user?.employeeId) {
-                endpoint = `/leaves/my/${user.employeeId}`;
-            }
-            const { data } = await api.get(endpoint);
-            setLeaves(data);
-        } catch (err) {
-            console.error(err);
-            toast({
-                title: "Error fetching leaves",
-                description: err.response?.data?.message || "Failed to load leave records.",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-        } finally {
-            setLoading(false);
-        }
-    }, [isEmployee, user, toast]);
+  const fetchLeaves = useCallback(async () => {
+    try {
+      const { data } = await api.get("/leaves");
+      setLeaves(data);
+    } catch (err) {
+      toast({ title: "Error fetching leaves", description: err.response?.data?.message || "Failed to load.", status: "error", duration: 3000, isClosable: true });
+    } finally { setLoading(false); }
+  }, [toast]);
 
-    useEffect(() => {
-        fetchLeaves();
-    }, [fetchLeaves]);
+  useEffect(() => { fetchLeaves(); }, [fetchLeaves]);
 
-    const handleApplyLeave = async () => {
-        if (isAdmin && !selectedEmployeeId) {
-            toast({
-                title: "Employee required",
-                description: "Please select an employee.",
-                status: "warning",
-                duration: 3000,
-                isClosable: true
-            });
-            return;
-        }
+  const handleApplyLeave = async () => {
+    if (isAdmin && !selectedEmployeeId) { toast({ title: "Select an employee", status: "warning", duration: 3000, isClosable: true }); return; }
+    if (!formData.type || !formData.fromDate || !formData.toDate || !formData.reason) { toast({ title: "Fill all required fields", status: "warning", duration: 3000, isClosable: true }); return; }
+    if (new Date(formData.toDate) < new Date(formData.fromDate)) { toast({ title: "To Date cannot be before From Date", status: "error", duration: 3000, isClosable: true }); return; }
 
-        if (!formData.type || !formData.fromDate || !formData.toDate || !formData.reason) {
-            toast({
-                title: "Missing Fields",
-                description: "Please fill all required fields.",
-                status: "warning",
-                duration: 3000,
-                isClosable: true,
-            });
-            return;
-        }
+    setSubmitting(true);
+    try {
+      await api.post("/leaves", { employeeId: selectedEmployeeId, ...formData });
+      toast({ title: "Leave Added", status: "success", duration: 3000, isClosable: true });
+      onClose();
+      setFormData({ type: "", fromDate: "", toDate: "", reason: "" });
+      setSelectedEmployeeId("");
+      fetchLeaves();
+    } catch (err) {
+      toast({ title: "Error", description: err.response?.data?.message || "Failed.", status: "error", duration: 3000, isClosable: true });
+    } finally { setSubmitting(false); }
+  };
 
-        if (new Date(formData.toDate) < new Date(formData.fromDate)) {
-            toast({
-                title: "Invalid Dates",
-                description: "'To Date' cannot be before 'From Date'.",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-            return;
-        }
+  const updateStatus = async (id, status) => {
+    setActionLoading(id);
+    try {
+      await api.put(`/leaves/${id}`, { status });
+      toast({ title: `Leave ${status}`, status: "success", duration: 3000, isClosable: true });
+      fetchLeaves();
+    } catch { toast({ title: "Error updating status", status: "error", duration: 3000, isClosable: true }); }
+    finally { setActionLoading(null); }
+  };
 
-        setSubmitting(true);
-        try {
-            const employeeId = isEmployee ? user.employeeId : selectedEmployeeId;
-            await api.post("/leaves", {
-                employeeId,
-                ...formData
-            });
-            toast({
-                title: "Leave Applied",
-                description: "Your leave request has been submitted successfully.",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-            onClose();
-            setFormData({ type: "", fromDate: "", toDate: "", reason: "" });
-            if (isAdmin) {
-                setSelectedEmployeeId("");
-            }
-            fetchLeaves();
-        } catch (err) {
-            toast({
-                title: "Error",
-                description: err.response?.data?.message || "Failed to apply leave.",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-        } finally {
-            setSubmitting(false);
-        }
-    };
+  const summary = {
+    total: leaves.length,
+    pending: leaves.filter((l) => l.status === "Pending").length,
+    approved: leaves.filter((l) => l.status === "Approved").length,
+    rejected: leaves.filter((l) => l.status === "Rejected").length,
+    paid: leaves.filter((l) => l.paid).length,
+    unpaid: leaves.filter((l) => l.paid === false).length,
+  };
 
-    const updateStatus = async (id, status) => {
-        setActionLoading(id);
-        try {
-            await api.put(`/leaves/${id}`, { status });
-            toast({
-                title: `Leave ${status}`,
-                description: `The leave request has been marked as ${status}.`,
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-            fetchLeaves();
-        } catch {
-            toast({
-                title: "Error",
-                description: "Failed to update leave status.",
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
-        } finally {
-            setActionLoading(null);
-        }
-    };
+  const filteredLeaves = leaves.filter((leave) => {
+    if (empFilter && leave.employee?._id !== empFilter) return false;
+    if (statusFilter !== "All" && leave.status !== statusFilter) return false;
+    if (typeFilter !== "All" && leave.type !== typeFilter) return false;
+    if (fromFilter && new Date(leave.fromDate) < new Date(fromFilter)) return false;
+    if (toFilter && new Date(leave.toDate) > new Date(toFilter)) return false;
+    const q = search.trim().toLowerCase();
+    if (q) {
+      const name = (leave.employee?.user?.name || leave.employee?.name || "").toLowerCase();
+      const dept = (leave.employee?.department || "").toLowerCase();
+      if (!name.includes(q) && !dept.includes(q) && !(leave.type || "").toLowerCase().includes(q) && !(leave.reason || "").toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case "Approved": return "green";
-            case "Rejected": return "red";
-            default: return "yellow";
-        }
-    };
+  const handleExport = () => {
+    if (!filteredLeaves.length) { toast({ title: "No data to export", status: "info", duration: 3000, isClosable: true }); return; }
+    const rows = filteredLeaves.map((l) => ({
+      Employee: l.employee?.user?.name || "", Department: l.employee?.department || "",
+      Type: l.type, "From Date": new Date(l.fromDate).toLocaleDateString(),
+      "To Date": new Date(l.toDate).toLocaleDateString(), Days: l.totalDays,
+      Status: l.status, Paid: l.paid ? "Paid" : "Unpaid", Reason: l.reason || ""
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Leaves");
+    XLSX.writeFile(wb, "leaves.xlsx");
+  };
 
-    const summary = {
-        total: leaves.length,
-        pending: leaves.filter((leave) => leave.status === "Pending").length,
-        approved: leaves.filter((leave) => leave.status === "Approved").length,
-        rejected: leaves.filter((leave) => leave.status === "Rejected").length,
-        paid: leaves.filter((leave) => leave.paid).length,
-        unpaid: leaves.filter((leave) => leave.paid === false).length
-    };
+  if (loading) return <Flex justify="center" align="center" h="300px"><Spinner size="xl" color="#065f46" thickness="3px" /></Flex>;
 
-    const filteredLeaves = leaves.filter((leave) => {
-        if (isAdmin && selectedEmployeeId && leave.employee && leave.employee._id) {
-            if (leave.employee._id.toString() !== selectedEmployeeId) {
-                return false;
-            }
-        }
-
-        if (statusFilter !== "All" && leave.status !== statusFilter) {
-            if (statusFilter === "Pending+Approved") {
-                if (leave.status !== "Pending" && leave.status !== "Approved") {
-                    return false;
-                }
-            } else {
-                if (leave.status !== statusFilter) {
-                    return false;
-                }
-            }
-        }
-
-        if (typeFilter !== "All" && leave.type !== typeFilter) {
-            return false;
-        }
-
-        if (fromFilter) {
-            const from = new Date(fromFilter);
-            const leaveFrom = new Date(leave.fromDate);
-            if (leaveFrom < from) {
-                return false;
-            }
-        }
-
-        if (toFilter) {
-            const to = new Date(toFilter);
-            const leaveTo = new Date(leave.toDate);
-            if (leaveTo > to) {
-                return false;
-            }
-        }
-
-        const query = search.trim().toLowerCase();
-        if (query) {
-            const employeeName =
-                leave.employee && leave.employee.user && leave.employee.user.name
-                    ? leave.employee.user.name.toLowerCase()
-                    : "";
-            const department =
-                leave.employee && leave.employee.department
-                    ? leave.employee.department.toLowerCase()
-                    : "";
-            const type = leave.type ? leave.type.toLowerCase() : "";
-            const reason = leave.reason ? leave.reason.toLowerCase() : "";
-
-            const matchesQuery =
-                employeeName.includes(query) ||
-                department.includes(query) ||
-                type.includes(query) ||
-                reason.includes(query);
-
-            if (!matchesQuery) {
-                return false;
-            }
-        }
-
-        return true;
-    });
-
-    const handleExport = () => {
-        if (filteredLeaves.length === 0) {
-            toast({
-                title: "No data",
-                description: "There are no leave records to export for current filters.",
-                status: "info",
-                duration: 3000,
-                isClosable: true
-            });
-            return;
-        }
-
-        const rows = filteredLeaves.map((leave) => {
-            const base = {
-                Type: leave.type,
-                "From Date": new Date(leave.fromDate).toLocaleDateString(),
-                "To Date": new Date(leave.toDate).toLocaleDateString(),
-                Days: leave.totalDays,
-                Status: leave.status,
-                Paid: leave.paid ? "Paid" : "Unpaid",
-                Reason: leave.reason || ""
-            };
-
-            if (isAdmin) {
-                return {
-                    Employee: leave.employee && leave.employee.user
-                        ? leave.employee.user.name
-                        : "",
-                    Department: leave.employee && leave.employee.department
-                        ? leave.employee.department
-                        : "",
-                    ...base
-                };
-            }
-
-            return base;
-        });
-
-        const worksheet = XLSX.utils.json_to_sheet(rows);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Leaves");
-
-        const suffix = isAdmin
-            ? "all"
-            : (user && user.employeeId) ? user.employeeId : "me";
-
-        XLSX.writeFile(workbook, `leaves-${suffix}.xlsx`);
-    };
-
-    if (loading) return (
-        <Flex justify="center" align="center" h="200px">
-            <Spinner size="xl" color="green.500" />
-        </Flex>
-    );
-
-    return (
-        <Box p={6}>
-            <Flex justify="space-between" align="center" mb={6} gap={4} wrap="wrap">
-                <Box>
-                    <Heading size="lg" color="gray.700">Leave Management</Heading>
-                    <Text fontSize="sm" color="gray.500">
-                        Leave requests with approval workflow and quick stats.
-                    </Text>
-                </Box>
-                <HStack spacing={3}>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleExport}
-                        isDisabled={filteredLeaves.length === 0}
-                    >
-                        Export Excel
-                    </Button>
-                    {(isEmployee || isAdmin) && (
-                        <Button
-                            leftIcon={<FaPlus />}
-                            colorScheme="green"
-                            onClick={onOpen}
-                            _hover={{ bg: "green.600" }}
-                        >
-                            {isEmployee ? "Apply Leave" : "Add Manual Leave"}
-                        </Button>
-                    )}
-                </HStack>
-            </Flex>
-
-            {leaves.length > 0 && (
-                <SimpleGrid columns={{ base: 2, md: 3 }} spacing={4} mb={6}>
-                    <Stat bg="white" p={4} borderRadius="lg" shadow="sm">
-                        <StatLabel>Total Requests</StatLabel>
-                        <StatNumber>{summary.total}</StatNumber>
-                    </Stat>
-                    <Stat bg="white" p={4} borderRadius="lg" shadow="sm">
-                        <StatLabel>Approved</StatLabel>
-                        <StatNumber color="green.500">{summary.approved}</StatNumber>
-                    </Stat>
-                    <Stat bg="white" p={4} borderRadius="lg" shadow="sm">
-                        <StatLabel>Pending</StatLabel>
-                        <StatNumber color="orange.400">{summary.pending}</StatNumber>
-                    </Stat>
-                    <Stat bg="white" p={4} borderRadius="lg" shadow="sm">
-                        <StatLabel>Rejected</StatLabel>
-                        <StatNumber color="red.500">{summary.rejected}</StatNumber>
-                    </Stat>
-                    <Stat bg="white" p={4} borderRadius="lg" shadow="sm">
-                        <StatLabel>Paid Leaves</StatLabel>
-                        <StatNumber color="green.600">{summary.paid}</StatNumber>
-                    </Stat>
-                    <Stat bg="white" p={4} borderRadius="lg" shadow="sm">
-                        <StatLabel>Unpaid Leaves</StatLabel>
-                        <StatNumber color="purple.500">{summary.unpaid}</StatNumber>
-                    </Stat>
-                </SimpleGrid>
+  return (
+    <Box>
+      {/* Header Banner */}
+      <Box bgGradient="linear(135deg, #021024 0%, #065f46 100%)" borderRadius="2xl" p={6} mb={5} position="relative" overflow="hidden">
+        <Box position="absolute" top={-8} right={-8} w="140px" h="140px" borderRadius="full" bg="whiteAlpha.100" />
+        <Flex justify="space-between" align="center" wrap="wrap" gap={4} position="relative">
+          <Box>
+            <Text fontSize="2xl" fontWeight="bold" color="white">Leave Management</Text>
+            <Text fontSize="sm" color="whiteAlpha.700" mt={1}>Track and manage employee leave requests with approval workflow</Text>
+          </Box>
+          <Flex gap={2}>
+            <Button leftIcon={<FaFileExcel />} variant="outline" borderColor="whiteAlpha.400" color="white" _hover={{ bg: "whiteAlpha.200" }} size="sm" borderRadius="xl" onClick={handleExport} isDisabled={!filteredLeaves.length}>Export</Button>
+            {isAdmin && (
+              <Button leftIcon={<FaPlus />} bg="white" color="#065f46" _hover={{ bg: "gray.100" }} size="sm" fontWeight="bold" borderRadius="xl" onClick={onOpen}>
+                Add Leave
+              </Button>
             )}
+          </Flex>
+        </Flex>
+      </Box>
 
-            <Box
-                mb={4}
-                bg="white"
-                p={4}
-                borderRadius="lg"
-                shadow="sm"
-            >
-                <Flex
-                    gap={4}
-                    direction={{ base: "column", md: "row" }}
-                    align={{ base: "stretch", md: "center" }}
-                    flexWrap="wrap"
-                >
-                    <Box minW={{ base: "100%", md: "180px" }}>
-                        <Text fontSize="sm" mb={1}>
-                            Status
-                        </Text>
-                        <Select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            bg="white"
-                        >
-                            <option value="All">All</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
-                        </Select>
-                    </Box>
-                    <Box minW={{ base: "100%", md: "180px" }}>
-                        <Text fontSize="sm" mb={1}>
-                            Type
-                        </Text>
-                        <Select
-                            value={typeFilter}
-                            onChange={(e) => setTypeFilter(e.target.value)}
-                            bg="white"
-                        >
-                            <option value="All">All</option>
-                            <option value="Casual">Casual</option>
-                            <option value="Sick">Sick</option>
-                            <option value="Annual">Annual</option>
-                        </Select>
-                    </Box>
-                    <Box minW={{ base: "100%", md: "180px" }}>
-                        <Text fontSize="sm" mb={1}>
-                            From
-                        </Text>
-                        <Input
-                            type="date"
-                            value={fromFilter}
-                            onChange={(e) => setFromFilter(e.target.value)}
-                        />
-                    </Box>
-                    <Box minW={{ base: "100%", md: "180px" }}>
-                        <Text fontSize="sm" mb={1}>
-                            To
-                        </Text>
-                        <Input
-                            type="date"
-                            value={toFilter}
-                            onChange={(e) => setToFilter(e.target.value)}
-                        />
-                    </Box>
-                    {isAdmin && (
-                        <Box minW={{ base: "100%", md: "220px" }}>
-                            <Text fontSize="sm" mb={1}>
-                                Employee
-                            </Text>
-                            <Select
-                                value={selectedEmployeeId}
-                                onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                                placeholder={
-                                    employeesLoading
-                                        ? "Loading employees..."
-                                        : "All employees"
-                                }
-                            >
-                                <option value="">All employees</option>
-                                {employees.map((emp) => (
-                                    <option key={emp._id} value={emp._id}>
-                                        {emp.employeeId} - {emp.user?.name || emp.name}
-                                    </option>
-                                ))}
-                            </Select>
-                        </Box>
-                    )}
-                    <Box flex="1" minW={{ base: "100%", md: "220px" }}>
-                        <Text fontSize="sm" mb={1}>
-                            Search
-                        </Text>
-                        <Input
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder={
-                                isAdmin
-                                    ? "Search by employee, department, type or reason"
-                                    : "Search by type or reason"
-                            }
-                        />
-                    </Box>
-                </Flex>
-                <Text mt={2} fontSize="xs" color="gray.500">
-                    Showing {filteredLeaves.length} of {leaves.length} requests
-                </Text>
-            </Box>
+      {/* Stats */}
+      <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(3, 1fr)", lg: "repeat(6, 1fr)" }} gap={3} mb={4}>
+        <StatCard label="Total" value={summary.total} color="#065f46" bg="#f0fdf4" icon={FaCalendarAlt} />
+        <StatCard label="Pending" value={summary.pending} color="#d97706" bg="#fffbeb" icon={FaClock} />
+        <StatCard label="Approved" value={summary.approved} color="#1d4ed8" bg="#eff6ff" icon={FaCalendarCheck} />
+        <StatCard label="Rejected" value={summary.rejected} color="#dc2626" bg="#fef2f2" icon={FaCalendarTimes} />
+        <StatCard label="Paid" value={summary.paid} color="#065f46" bg="#f0fdf4" icon={FaMoneyBillWave} />
+        <StatCard label="Unpaid" value={summary.unpaid} color="#7c3aed" bg="#f5f3ff" icon={FaCalendarTimes} />
+      </Grid>
 
-            <Box overflowX="auto" bg="white" shadow="sm" borderRadius="lg">
-                <Table variant="simple">
-                    <Thead bg="gray.50">
-                        <Tr>
-                            {isAdmin && <Th>Employee</Th>}
-                            <Th>Type</Th>
-                            <Th>From</Th>
-                            <Th>To</Th>
-                            <Th>Days</Th>
-                            <Th>Reason</Th>
-                            <Th>Status</Th>
-                            {isAdmin && <Th>Actions</Th>}
-                        </Tr>
-                    </Thead>
-                    <Tbody>
-                        {leaves.length === 0 ? (
-                            <Tr>
-                                <Td colSpan={isAdmin ? 8 : 7} textAlign="center" color="gray.500" py={8}>
-                                    No leave records found.
-                                </Td>
-                            </Tr>
-                        ) : filteredLeaves.length === 0 ? (
-                            <Tr>
-                                <Td colSpan={isAdmin ? 8 : 7} textAlign="center" color="gray.500" py={8}>
-                                    No leaves match the current filters.
-                                </Td>
-                            </Tr>
-                        ) : (
-                            filteredLeaves.map((leave) => (
-                                <Tr key={leave._id}>
-                                    {isAdmin && (
-                                        <Td>
-                                            <Text fontWeight="medium">
-                                                {leave.employee?.user?.name ||
-                                                    leave.employee?.name ||
-                                                    "Unknown"}
-                                            </Text>
-                                            <Text fontSize="xs" color="gray.500">
-                                                {leave.employee?.department || "N/A"}
-                                            </Text>
-                                        </Td>
-                                    )}
-                                    <Td>{leave.type}</Td>
-                                    <Td>{new Date(leave.fromDate).toLocaleDateString()}</Td>
-                                    <Td>{new Date(leave.toDate).toLocaleDateString()}</Td>
-                                    <Td>{leave.totalDays}</Td>
-                                    <Td maxW="200px" isTruncated title={leave.reason}>{leave.reason}</Td>
-                                    <Td>
-                                        <Badge colorScheme={getStatusColor(leave.status)}>
-                                            {leave.status}
-                                        </Badge>
-                                    </Td>
-                                    {isAdmin && (
-                                        <Td>
-                                            {leave.status === "Pending" && (
-                                                <HStack spacing={2}>
-                                                    <Button
-                                                        size="xs"
-                                                        colorScheme="green"
-                                                        leftIcon={<FaCheck />}
-                                                        onClick={() => updateStatus(leave._id, "Approved")}
-                                                        isLoading={actionLoading === leave._id}
-                                                        isDisabled={actionLoading && actionLoading !== leave._id}
-                                                    >
-                                                        Approve
-                                                    </Button>
-                                                    <Button
-                                                        size="xs"
-                                                        colorScheme="red"
-                                                        leftIcon={<FaTimes />}
-                                                        onClick={() => updateStatus(leave._id, "Rejected")}
-                                                        isLoading={actionLoading === leave._id}
-                                                        isDisabled={actionLoading && actionLoading !== leave._id}
-                                                    >
-                                                        Reject
-                                                    </Button>
-                                                </HStack>
-                                            )}
-                                        </Td>
-                                    )}
-                                </Tr>
-                            ))
-                        )}
-                    </Tbody>
-                </Table>
-            </Box>
+      {/* Filters */}
+      <Box bg="white" borderRadius="2xl" p={4} mb={4} shadow="sm" border="1px solid" borderColor="gray.100">
+        <Flex gap={3} wrap="wrap" align="flex-end">
+          <InputGroup flex="1" minW="200px">
+            <InputLeftElement pointerEvents="none"><Icon as={FaSearch} color="gray.300" fontSize="13px" /></InputLeftElement>
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, department, type..."
+              borderRadius="xl" bg="gray.50" fontSize="sm" focusBorderColor="#065f46" />
+          </InputGroup>
+          <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} w="150px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46">
+            <option value="All">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+          </Select>
+          <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} w="150px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46">
+            <option value="All">All Types</option>
+            <option value="Casual">Casual</option>
+            <option value="Sick">Sick</option>
+            <option value="Annual">Annual</option>
+          </Select>
+          {isAdmin && (
+            <Select value={empFilter} onChange={(e) => setEmpFilter(e.target.value)} w="200px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46">
+              <option value="">All Employees</option>
+              {employees.map((emp) => <option key={emp._id} value={emp._id}>{emp.user?.name || emp.name}</option>)}
+            </Select>
+          )}
+          <Input type="date" value={fromFilter} onChange={(e) => setFromFilter(e.target.value)} w="160px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46" placeholder="From" />
+          <Input type="date" value={toFilter} onChange={(e) => setToFilter(e.target.value)} w="160px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46" placeholder="To" />
+          {(search || statusFilter !== "All" || typeFilter !== "All" || empFilter || fromFilter || toFilter) && (
+            <Button size="sm" variant="ghost" borderRadius="xl" onClick={() => { setSearch(""); setStatusFilter("All"); setTypeFilter("All"); setEmpFilter(""); setFromFilter(""); setToFilter(""); }}>Clear</Button>
+          )}
+        </Flex>
+        <Text mt={2} fontSize="xs" color="gray.400">Showing {filteredLeaves.length} of {leaves.length} requests</Text>
+      </Box>
 
-            {/* Apply Leave Modal */}
-            <Modal isOpen={isOpen} onClose={onClose} size="lg">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader borderBottomWidth="1px">
-                        {isEmployee ? "Apply for Leave" : "Add Manual Leave"}
-                    </ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody py={6}>
-                        {isAdmin && (
-                            <FormControl mb={4} isRequired>
-                                <FormLabel>Employee</FormLabel>
-                                <Select
-                                    placeholder={
-                                        employeesLoading
-                                            ? "Loading employees..."
-                                            : "Select employee"
-                                    }
-                                    value={selectedEmployeeId}
-                                    onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                                    isDisabled={employeesLoading || employees.length === 0}
-                                >
-                                    {employees.map((emp) => (
-                                        <option key={emp._id} value={emp._id}>
-                                            {emp.user?.name || emp.name}
-                                        </option>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        )}
-                        <FormControl mb={4} isRequired>
-                            <FormLabel>Leave Type</FormLabel>
-                            <Select
-                                placeholder="Select leave type"
-                                value={formData.type}
-                                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                            >
-                                <option value="Casual">Casual Leave</option>
-                                <option value="Sick">Sick Leave</option>
-                                <option value="Annual">Annual Leave</option>
-                            </Select>
-                        </FormControl>
-
-                        <HStack mb={4} spacing={4} align="start">
-                            <FormControl isRequired>
-                                <FormLabel>From Date</FormLabel>
-                                <Input
-                                    type="date"
-                                    value={formData.fromDate}
-                                    onChange={(e) => setFormData({ ...formData, fromDate: e.target.value })}
-                                />
-                            </FormControl>
-                            <FormControl isRequired>
-                                <FormLabel>To Date</FormLabel>
-                                <Input
-                                    type="date"
-                                    value={formData.toDate}
-                                    onChange={(e) => setFormData({ ...formData, toDate: e.target.value })}
-                                />
-                            </FormControl>
-                        </HStack>
-
-                        <FormControl isRequired>
-                            <FormLabel>Reason</FormLabel>
-                            <Textarea
-                                placeholder="Reason for leave request..."
-                                value={formData.reason}
-                                onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                                rows={3}
-                            />
-                        </FormControl>
-                    </ModalBody>
-
-                    <ModalFooter borderTopWidth="1px">
-                        <Button variant="ghost" mr={3} onClick={onClose}>Cancel</Button>
-                        <Button 
-                            colorScheme="green" 
-                            onClick={handleApplyLeave} 
-                            isLoading={submitting}
-                            loadingText="Submitting"
-                        >
-                            Submit Request
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+      {/* Table */}
+      <Box bg="white" shadow="sm" borderRadius="2xl" border="1px solid" borderColor="gray.100" overflow="hidden">
+        <Box overflowX="auto">
+          <Table variant="simple" size="sm">
+            <Thead>
+              <Tr bg="gray.50">
+                {isAdmin && <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Employee</Th>}
+                <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Type</Th>
+                <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Period</Th>
+                <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Days</Th>
+                <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Reason</Th>
+                <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Status</Th>
+                {isAdmin && <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Actions</Th>}
+              </Tr>
+            </Thead>
+            <Tbody>
+              {leaves.length === 0 ? (
+                <Tr><Td colSpan={isAdmin ? 7 : 5} textAlign="center" py={12}>
+                  <Icon as={FaCalendarAlt} fontSize="40px" color="gray.200" mb={3} display="block" mx="auto" />
+                  <Text color="gray.400" fontWeight="medium">No leave records found.</Text>
+                </Td></Tr>
+              ) : filteredLeaves.length === 0 ? (
+                <Tr><Td colSpan={isAdmin ? 7 : 5} textAlign="center" color="gray.400" py={8}>No leaves match the current filters.</Td></Tr>
+              ) : (
+                filteredLeaves.map((leave) => {
+                  const name = leave.employee?.user?.name || leave.employee?.name || "Unknown";
+                  return (
+                    <Tr key={leave._id} _hover={{ bg: "gray.50" }} transition="background 0.15s">
+                      {isAdmin && (
+                        <Td py={3}>
+                          <Flex align="center" gap={3}>
+                            <Avatar size="xs" name={name} bg={getAvatarBg(name)} color="white" fontSize="10px" />
+                            <Box>
+                              <Text fontSize="sm" fontWeight="semibold" color="gray.800">{name}</Text>
+                              <Text fontSize="xs" color="gray.400">{leave.employee?.department || "N/A"}</Text>
+                            </Box>
+                          </Flex>
+                        </Td>
+                      )}
+                      <Td py={3}>
+                        <Badge colorScheme={typeColors[leave.type] || "gray"} borderRadius="full" px={2} py={0.5} fontSize="xs">{leave.type}</Badge>
+                      </Td>
+                      <Td py={3}>
+                        <Text fontSize="sm" color="gray.700">{new Date(leave.fromDate).toLocaleDateString()}</Text>
+                        <Text fontSize="xs" color="gray.400">to {new Date(leave.toDate).toLocaleDateString()}</Text>
+                      </Td>
+                      <Td py={3}>
+                        <Text fontSize="sm" fontWeight="bold" color="gray.700">{leave.totalDays}</Text>
+                        <Text fontSize="xs" color={leave.paid ? "green.500" : "purple.500"}>{leave.paid ? "Paid" : "Unpaid"}</Text>
+                      </Td>
+                      <Td py={3} maxW="200px">
+                        <Text fontSize="sm" color="gray.600" noOfLines={2} title={leave.reason}>{leave.reason}</Text>
+                      </Td>
+                      <Td py={3}>
+                        <Badge colorScheme={statusColors[leave.status] || "gray"} borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold">{leave.status}</Badge>
+                      </Td>
+                      {isAdmin && (
+                        <Td py={3}>
+                          {leave.status === "Pending" && (
+                            <HStack spacing={1}>
+                              <Button size="xs" colorScheme="green" leftIcon={<FaCheck />} borderRadius="lg"
+                                onClick={() => updateStatus(leave._id, "Approved")} isLoading={actionLoading === leave._id}
+                                isDisabled={actionLoading && actionLoading !== leave._id}>Approve</Button>
+                              <Button size="xs" colorScheme="red" leftIcon={<FaTimes />} borderRadius="lg"
+                                onClick={() => updateStatus(leave._id, "Rejected")} isLoading={actionLoading === leave._id}
+                                isDisabled={actionLoading && actionLoading !== leave._id}>Reject</Button>
+                            </HStack>
+                          )}
+                        </Td>
+                      )}
+                    </Tr>
+                  );
+                })
+              )}
+            </Tbody>
+          </Table>
         </Box>
-    );
+      </Box>
+
+      {/* Apply Leave Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="md" isCentered>
+        <ModalOverlay bg="blackAlpha.400" />
+        <ModalContent borderRadius="2xl" shadow="xl">
+          <ModalHeader borderBottom="1px solid" borderColor="gray.100" fontSize="md" fontWeight="bold">Add Manual Leave</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody py={5}>
+            {isAdmin && (
+              <FormControl mb={4} isRequired>
+                <FormLabel fontSize="sm" fontWeight="semibold" color="gray.600">Employee</FormLabel>
+                <Select placeholder={employeesLoading ? "Loading..." : "Select employee"} value={selectedEmployeeId}
+                  onChange={(e) => setSelectedEmployeeId(e.target.value)} borderRadius="xl" focusBorderColor="#065f46" isDisabled={employeesLoading}>
+                  {employees.map((emp) => <option key={emp._id} value={emp._id}>{emp.user?.name || emp.name}</option>)}
+                </Select>
+              </FormControl>
+            )}
+            <FormControl mb={4} isRequired>
+              <FormLabel fontSize="sm" fontWeight="semibold" color="gray.600">Leave Type</FormLabel>
+              <Select placeholder="Select type" value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} borderRadius="xl" focusBorderColor="#065f46">
+                <option value="Casual">Casual Leave</option>
+                <option value="Sick">Sick Leave</option>
+                <option value="Annual">Annual Leave</option>
+              </Select>
+            </FormControl>
+            <Grid templateColumns="1fr 1fr" gap={4} mb={4}>
+              <FormControl isRequired>
+                <FormLabel fontSize="sm" fontWeight="semibold" color="gray.600">From Date</FormLabel>
+                <Input type="date" value={formData.fromDate} onChange={(e) => setFormData({ ...formData, fromDate: e.target.value })} borderRadius="xl" focusBorderColor="#065f46" />
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel fontSize="sm" fontWeight="semibold" color="gray.600">To Date</FormLabel>
+                <Input type="date" value={formData.toDate} onChange={(e) => setFormData({ ...formData, toDate: e.target.value })} borderRadius="xl" focusBorderColor="#065f46" />
+              </FormControl>
+            </Grid>
+            <FormControl isRequired>
+              <FormLabel fontSize="sm" fontWeight="semibold" color="gray.600">Reason</FormLabel>
+              <Textarea value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                placeholder="Reason for leave..." rows={3} borderRadius="xl" focusBorderColor="#065f46" />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter borderTop="1px solid" borderColor="gray.100" gap={2}>
+            <Button variant="ghost" onClick={onClose} borderRadius="xl">Cancel</Button>
+            <Button bg="#065f46" color="white" _hover={{ bg: "#047857" }} borderRadius="xl" onClick={handleApplyLeave} isLoading={submitting} loadingText="Submitting">Submit Request</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </Box>
+  );
 };
 
 export default Leaves;

@@ -16,7 +16,7 @@ exports.register = asyncHandler(async (req, res) => {
         name,
         email,
         password,
-        role: "Employee"
+        role: "Manager"
     });
 
     res.status(201).json({

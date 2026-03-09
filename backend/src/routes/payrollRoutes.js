@@ -14,14 +14,10 @@ const router = express.Router();
 
 router.use(protect);
 
-router.post("/generate", authorize("Admin", "HR"), generatePayroll);
-router.get("/", authorize("Admin", "HR"), getAllPayrolls);
-router.get("/overview", authorize("Admin", "HR"), getPayrollOverview);
-router.put("/:id/approve", authorize("Admin", "HR"), approvePayroll);
-router.get(
-  "/employee/:employeeId",
-  authorize("Admin", "HR", "Employee"),
-  getPayrollHistory
-);
+router.post("/generate", authorize("Admin"), generatePayroll);
+router.get("/", authorize("Admin"), getAllPayrolls);
+router.get("/overview", authorize("Admin"), getPayrollOverview);
+router.put("/:id/approve", authorize("Admin"), approvePayroll);
+router.get("/employee/:employeeId", authorize("Admin"), getPayrollHistory);
 
 module.exports = router;

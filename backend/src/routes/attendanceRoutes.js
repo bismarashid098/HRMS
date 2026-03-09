@@ -16,19 +16,17 @@ const router = express.Router();
 
 router.use(protect);
 
-router.post("/punch-in", authorize("Admin", "HR", "Employee"), punchIn);
-router.post("/punch-out", authorize("Admin", "HR", "Employee"), punchOut);
+// Admin only - write operations
+router.post("/punch-in", authorize("Admin"), punchIn);
+router.post("/punch-out", authorize("Admin"), punchOut);
+router.post("/manual", authorize("Admin"), manualMark);
+router.put("/correction/:id", authorize("Admin"), approveCorrection);
 
-router.get("/", authorize("Admin", "HR", "Employee"), getMonthlyAttendance);
-router.get(
-  "/daily",
-  authorize("Admin", "HR", "Manager"),
-  getDailyAttendanceList
-);
+// Admin & Manager - read operations
+router.get("/", authorize("Admin", "Manager"), getMonthlyAttendance);
+router.get("/daily", authorize("Admin", "Manager"), getDailyAttendanceList);
 
-router.post("/correction", authorize("Employee"), requestCorrection);
-router.put("/correction/:id", authorize("Admin", "HR"), approveCorrection);
-
-router.post("/manual", authorize("Admin", "HR"), manualMark);
+// Correction request (no role in original, keep open for any authenticated)
+router.post("/correction", protect, requestCorrection);
 
 module.exports = router;

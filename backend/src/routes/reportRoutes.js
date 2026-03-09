@@ -11,10 +11,12 @@ const authorize = require("../middleware/roleMiddleware");
 const router = express.Router();
 
 router.use(protect);
-router.use(authorize("Admin", "HR"));
 
-router.get("/attendance", attendanceReport);
-router.get("/leaves", leaveReport);
-router.get("/payroll", payrollReport);
+// Admin & Manager can access attendance and leave reports
+router.get("/attendance", authorize("Admin", "Manager"), attendanceReport);
+router.get("/leaves", authorize("Admin", "Manager"), leaveReport);
+
+// Admin only for payroll reports
+router.get("/payroll", authorize("Admin"), payrollReport);
 
 module.exports = router;

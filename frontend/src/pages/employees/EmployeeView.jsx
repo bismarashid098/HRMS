@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
 import {
     Box,
     Heading,
@@ -18,6 +19,8 @@ import api from "../../api/axios";
 const EmployeeView = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user } = useContext(AuthContext);
+    const isManager = user?.role === "Manager";
     const [employee, setEmployee] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -104,10 +107,12 @@ const EmployeeView = () => {
                 </VStack>
 
                 <VStack align="start" spacing={4}>
-                    <Box>
-                        <Text fontWeight="bold" color="gray.500">Basic Salary</Text>
-                        <Text fontSize="lg">Rs {employee.salary?.basic}</Text>
-                    </Box>
+                    {!isManager && (
+                        <Box>
+                            <Text fontWeight="bold" color="gray.500">Basic Salary</Text>
+                            <Text fontSize="lg">Rs {employee.salary?.basic}</Text>
+                        </Box>
+                    )}
                     <Box>
                         <Text fontWeight="bold" color="gray.500">Phone</Text>
                         <Text fontSize="lg">{employee.phone || "N/A"}</Text>
@@ -168,41 +173,44 @@ const EmployeeView = () => {
                             </Button>
                         </HStack>
                     </Box>
-                    <Box>
-                        <Text fontSize="sm" fontWeight="semibold" mb={2}>
-                            Advances and Payroll
-                        </Text>
-                        <HStack spacing={3}>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                colorScheme="green"
-                                onClick={() => navigate("/dashboard/reports/advances")}
-                            >
-                                Advance / Loan Ledger
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                colorScheme="green"
-                                onClick={() => navigate("/dashboard/reports/payroll")}
-                            >
-                                Payroll History
-                            </Button>
-                        </HStack>
-                    </Box>
+                    {!isManager && (
+                        <Box>
+                            <Text fontSize="sm" fontWeight="semibold" mb={2}>
+                                Advances and Payroll
+                            </Text>
+                            <HStack spacing={3}>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    colorScheme="green"
+                                    onClick={() => navigate("/dashboard/reports/advances")}
+                                >
+                                    Advance / Loan Ledger
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    colorScheme="green"
+                                    onClick={() => navigate("/dashboard/reports/payroll")}
+                                >
+                                    Payroll History
+                                </Button>
+                            </HStack>
+                        </Box>
+                    )}
                 </SimpleGrid>
             </Box>
 
             <Box>
-                <Button
-                    colorScheme="blue"
-                    mr="3"
-                    onClick={() => navigate(`/dashboard/employees/edit/${employee._id}`)}
-                >
-                    Edit Employee
-                </Button>
-
+                {!isManager && (
+                    <Button
+                        colorScheme="blue"
+                        mr="3"
+                        onClick={() => navigate(`/dashboard/employees/edit/${employee._id}`)}
+                    >
+                        Edit Employee
+                    </Button>
+                )}
                 <Button
                     variant="outline"
                     onClick={() => navigate("/dashboard/employees")}

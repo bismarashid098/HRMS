@@ -16,6 +16,7 @@ const seedUser = async () => {
         if (existingUser) {
             console.log("⚠️ Admin user already exists. Updating password...");
             existingUser.password = "123"; // Will be hashed by pre-save hook
+            existingUser.isActive = true;
             await existingUser.save();
             console.log("✅ Admin password updated to '123'");
         } else {
