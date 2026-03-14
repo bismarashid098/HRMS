@@ -12,7 +12,7 @@ import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import {
   FaFilePdf, FaFileExcel, FaSyncAlt, FaMoneyBillWave, FaSearch,
-  FaFilter, FaUsers, FaCheckCircle, FaClock, FaWallet
+  FaFilter, FaUsers, FaCheckCircle, FaClock, FaWallet, FaBookOpen
 } from "react-icons/fa";
 
 const StatCard = ({ label, value, color, bg, icon }) => (
@@ -50,9 +50,28 @@ const Payroll = () => {
   const [departmentFilter, setDepartmentFilter] = useState("All");
   const [search, setSearch] = useState("");
 
+  const [ledger, setLedger] = useState(null);
+  const [ledgerLoading, setLedgerLoading] = useState(false);
+
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isLedgerOpen, onOpen: onLedgerOpen, onClose: onLedgerClose } = useDisclosure();
   const isAdmin = user?.role === "Admin";
+
+  const handleOpenLedger = async (payrollId) => {
+    setLedger(null);
+    onLedgerOpen();
+    setLedgerLoading(true);
+    try {
+      const { data } = await api.get(`/payroll/${payrollId}/breakdown`);
+      setLedger(data);
+    } catch {
+      toast({ title: "Failed to load ledger", status: "error", duration: 3000, isClosable: true });
+      onLedgerClose();
+    } finally {
+      setLedgerLoading(false);
+    }
+  };
 
   const fetchPayrolls = useCallback(async () => {
     setLoading(true);
@@ -367,6 +386,10 @@ const Payroll = () => {
                             <Button size="xs" colorScheme="green" borderRadius="lg" onClick={() => handleApprove(p._id)}
                               isLoading={actionLoadingId === p._id} isDisabled={actionLoadingId && actionLoadingId !== p._id}>Approve</Button>
                           )}
+                          <Tooltip label="Salary Ledger" hasArrow>
+                            <IconButton icon={<FaBookOpen />} colorScheme="blue" variant="ghost" size="sm" borderRadius="lg"
+                              onClick={() => handleOpenLedger(p._id)} aria-label="Ledger" />
+                          </Tooltip>
                           <Tooltip label="Download Payslip PDF" hasArrow>
                             <IconButton icon={<FaFilePdf />} colorScheme="red" variant="ghost" size="sm" borderRadius="lg"
                               onClick={() => generatePDF(p)} aria-label="PDF" />
@@ -381,6 +404,117 @@ const Payroll = () => {
           </Box>
         </Box>
       )}
+
+      {/* ── Ledger Modal ── */}
+      <Modal isOpen={isLedgerOpen} onClose={onLedgerClose} isCentered size="md">
+        <ModalOverlay bg="blackAlpha.500" backdropFilter="blur(4px)" />
+        <ModalContent borderRadius="2xl" shadow="2xl" overflow="hidden">
+          {/* Header */}
+          <Box bgGradient="linear(135deg, #021024, #065f46)" px={6} py={5}>
+            <Flex align="center" gap={3}>
+              <Flex w={10} h={10} borderRadius="xl" bg="whiteAlpha.200" align="center" justify="center">
+                <Icon as={FaBookOpen} color="white" fontSize="16px" />
+              </Flex>
+              <Box>
+                <Text fontWeight="bold" fontSize="md" color="white">Salary Ledger</Text>
+                <Text fontSize="xs" color="whiteAlpha.700">
+                  {ledger ? `${ledger.employeeName} — ${new Date(ledger.year, ledger.month - 1).toLocaleString("default", { month: "long", year: "numeric" })}` : "Loading..."}
+                </Text>
+              </Box>
+            </Flex>
+            <ModalCloseButton color="white" top={4} right={4} />
+          </Box>
+
+          <ModalBody px={6} py={5}>
+            {ledgerLoading ? (
+              <Flex justify="center" align="center" h="200px" direction="column" gap={3}>
+                <Spinner color="#065f46" size="lg" thickness="3px" />
+                <Text fontSize="sm" color="gray.400">Loading ledger...</Text>
+              </Flex>
+            ) : ledger && (
+              <Box>
+                {/* Employee Info */}
+                <Flex align="center" gap={3} mb={5} p={3} bg="gray.50" borderRadius="xl">
+                  <Avatar size="sm" name={ledger.employeeName} bg={getAvatarBg(ledger.employeeName)} color="white" />
+                  <Box>
+                    <Text fontWeight="bold" fontSize="sm" color="gray.800">{ledger.employeeName}</Text>
+                    <Text fontSize="xs" color="gray.400">{ledger.designation} · {ledger.department}</Text>
+                  </Box>
+                  <Badge ml="auto" colorScheme={ledger.status === "Approved" ? "green" : "orange"} borderRadius="full" px={3} fontSize="xs">{ledger.status}</Badge>
+                </Flex>
+
+                {/* Earnings */}
+                <Text fontSize="xs" fontWeight="700" color="gray.400" textTransform="uppercase" letterSpacing="wider" mb={2}>Earnings</Text>
+                <Box bg="green.50" border="1px solid" borderColor="green.100" borderRadius="xl" overflow="hidden" mb={4}>
+                  <Flex justify="space-between" px={4} py={3} borderBottom="1px solid" borderColor="green.100">
+                    <Text fontSize="sm" color="gray.600">Basic Salary</Text>
+                    <Text fontSize="sm" fontWeight="semibold" color="gray.800">Rs {ledger.basicSalary.toLocaleString()}</Text>
+                  </Flex>
+                  <Flex justify="space-between" px={4} py={3} borderBottom="1px solid" borderColor="green.100">
+                    <Text fontSize="sm" color="gray.600">Allowance</Text>
+                    <Text fontSize="sm" fontWeight="semibold" color="gray.800">Rs {ledger.allowance.toLocaleString()}</Text>
+                  </Flex>
+                  <Flex justify="space-between" px={4} py={3} bg="green.100">
+                    <Text fontSize="sm" fontWeight="bold" color="green.800">Gross Total</Text>
+                    <Text fontSize="sm" fontWeight="bold" color="green.800">Rs {ledger.grossSalary.toLocaleString()}</Text>
+                  </Flex>
+                </Box>
+
+                {/* Deductions */}
+                <Text fontSize="xs" fontWeight="700" color="gray.400" textTransform="uppercase" letterSpacing="wider" mb={2}>Deductions</Text>
+                <Box bg="red.50" border="1px solid" borderColor="red.100" borderRadius="xl" overflow="hidden" mb={4}>
+                  <Flex justify="space-between" px={4} py={3} borderBottom="1px solid" borderColor="red.100">
+                    <Box>
+                      <Text fontSize="sm" color="gray.600">Advance Deduction</Text>
+                    </Box>
+                    <Text fontSize="sm" fontWeight="semibold" color="red.600">
+                      {ledger.advanceDeduction > 0 ? `- Rs ${ledger.advanceDeduction.toLocaleString()}` : "—"}
+                    </Text>
+                  </Flex>
+                  <Flex justify="space-between" px={4} py={3} borderBottom="1px solid" borderColor="red.100">
+                    <Box>
+                      <Text fontSize="sm" color="gray.600">Leave Deduction</Text>
+                      {ledger.unpaidDays > 0 && (
+                        <Text fontSize="xs" color="gray.400">{ledger.unpaidDays} unpaid day{ledger.unpaidDays !== 1 ? "s" : ""}</Text>
+                      )}
+                    </Box>
+                    <Text fontSize="sm" fontWeight="semibold" color="red.600">
+                      {ledger.leaveDeduction > 0 ? `- Rs ${Math.round(ledger.leaveDeduction).toLocaleString()}` : "—"}
+                    </Text>
+                  </Flex>
+                  <Flex justify="space-between" px={4} py={3} borderBottom="1px solid" borderColor="red.100">
+                    <Text fontSize="sm" color="gray.600">Tax Deduction</Text>
+                    <Text fontSize="sm" fontWeight="semibold" color="red.600">
+                      {ledger.taxDeduction > 0 ? `- Rs ${Math.round(ledger.taxDeduction).toLocaleString()}` : "—"}
+                    </Text>
+                  </Flex>
+                  <Flex justify="space-between" px={4} py={3} bg="red.100">
+                    <Text fontSize="sm" fontWeight="bold" color="red.800">Total Deductions</Text>
+                    <Text fontSize="sm" fontWeight="bold" color="red.800">- Rs {Math.round(ledger.totalDeductions).toLocaleString()}</Text>
+                  </Flex>
+                </Box>
+
+                {/* Net Pay */}
+                <Box bgGradient="linear(135deg, #021024, #065f46)" borderRadius="xl" px={5} py={4}>
+                  <Flex justify="space-between" align="center">
+                    <Box>
+                      <Text fontSize="xs" color="whiteAlpha.700" textTransform="uppercase" letterSpacing="wider">Net Remaining Pay</Text>
+                      <Text fontSize="xs" color="whiteAlpha.500" mt={0.5}>Gross − All Deductions</Text>
+                    </Box>
+                    <Text fontSize="2xl" fontWeight="extrabold" color="white">
+                      Rs {Math.round(ledger.netSalary).toLocaleString()}
+                    </Text>
+                  </Flex>
+                </Box>
+              </Box>
+            )}
+          </ModalBody>
+
+          <ModalFooter borderTop="1px solid" borderColor="gray.100">
+            <Button variant="ghost" onClick={onLedgerClose} borderRadius="xl" size="sm">Close</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       {/* Generate Modal */}
       <Modal isOpen={isOpen} onClose={onClose} isCentered>

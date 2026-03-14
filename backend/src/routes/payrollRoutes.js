@@ -4,7 +4,8 @@ const {
   approvePayroll,
   getPayrollHistory,
   getAllPayrolls,
-  getPayrollOverview
+  getPayrollOverview,
+  getPayrollBreakdown
 } = require("../controllers/payrollController");
 
 const protect = require("../middleware/authMiddleware");
@@ -18,6 +19,7 @@ router.post("/generate", authorize("Admin"), generatePayroll);
 router.get("/", authorize("Admin"), getAllPayrolls);
 router.get("/overview", authorize("Admin"), getPayrollOverview);
 router.put("/:id/approve", authorize("Admin"), approvePayroll);
+router.get("/:id/breakdown", authorize("Admin"), getPayrollBreakdown);
 router.get("/employee/:employeeId", authorize("Admin"), getPayrollHistory);
 
 module.exports = router;

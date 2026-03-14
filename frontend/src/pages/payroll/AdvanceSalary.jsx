@@ -2,12 +2,12 @@ import {
   Box, Flex, Table, Thead, Tbody, Tr, Th, Td, Button, Badge, HStack,
   Spinner, Text, useToast, Modal, ModalOverlay, ModalContent, ModalHeader,
   ModalFooter, ModalBody, ModalCloseButton, useDisclosure, FormControl,
-  FormLabel, Input, Textarea, Select, Grid, Icon, Avatar
+  FormLabel, Input, Textarea, Select, Grid, Icon, Avatar, InputGroup, InputLeftElement
 } from "@chakra-ui/react";
 import { useState, useEffect, useContext, useCallback } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import api from "../../api/axios";
-import { FaCheck, FaTimes, FaMoneyBillWave, FaClock, FaCheckCircle, FaTimesCircle, FaPlus } from "react-icons/fa";
+import { FaCheck, FaTimes, FaMoneyBillWave, FaClock, FaCheckCircle, FaTimesCircle, FaPlus, FaSearch } from "react-icons/fa";
 
 const statusColors = { Approved: "green", Rejected: "red", Pending: "orange" };
 const avatarBgColors = ["#065f46", "#1d4ed8", "#7c3aed", "#d97706", "#dc2626"];
@@ -47,6 +47,7 @@ const AdvanceSalary = () => {
     date: new Date().toISOString().split("T")[0]
   });
 
+  const [search, setSearch] = useState("");
   const isAdmin = user?.role === "Admin";
 
   const fetchAdvances = useCallback(async () => {
@@ -99,8 +100,17 @@ const AdvanceSalary = () => {
     } finally { setActionLoading(null); }
   };
 
+  const filteredAdvances = isAdmin && search.trim()
+    ? advances.filter((a) => {
+        const q = search.trim().toLowerCase();
+        const name = (a.employee?.user?.name || "").toLowerCase();
+        const dept = (a.employee?.department || "").toLowerCase();
+        return name.includes(q) || dept.includes(q);
+      })
+    : advances;
+
   const totalAmount = advances.reduce((sum, a) => sum + (a.amount || 0), 0);
-  const pending = advances.filter((a) => !a.status || a.status === "Pending").length;
+  const pending  = advances.filter((a) => !a.status || a.status === "Pending").length;
   const approved = advances.filter((a) => a.status === "Approved").length;
   const rejected = advances.filter((a) => a.status === "Rejected").length;
 
@@ -150,7 +160,31 @@ const AdvanceSalary = () => {
             </Select>
           </Box>
           <Button bg="#7c3aed" color="white" _hover={{ bg: "#6d28d9" }} borderRadius="xl" size="md" onClick={fetchAdvances} isLoading={loading}>Filter</Button>
+          {isAdmin && (
+            <Box flex={1} minW="200px">
+              <Text fontSize="xs" fontWeight="semibold" color="gray.500" mb={1} textTransform="uppercase">Search Employee</Text>
+              <InputGroup>
+                <InputLeftElement pointerEvents="none" h="full">
+                  <Icon as={FaSearch} color="gray.300" fontSize="12px" />
+                </InputLeftElement>
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name or department..."
+                  borderRadius="xl"
+                  fontSize="sm"
+                  focusBorderColor="#7c3aed"
+                  bg="gray.50"
+                />
+              </InputGroup>
+            </Box>
+          )}
         </Flex>
+        {isAdmin && search && (
+          <Text mt={2} fontSize="xs" color="gray.400">
+            Showing results for "{search}"
+          </Text>
+        )}
       </Box>
 
       {/* Stats */}
@@ -196,7 +230,11 @@ const AdvanceSalary = () => {
                 </Tr>
               </Thead>
               <Tbody>
-                {advances.map((adv) => {
+                {filteredAdvances.length === 0 ? (
+                  <Tr><Td colSpan={6} textAlign="center" color="gray.400" py={8}>
+                    No results found for "{search}"
+                  </Td></Tr>
+                ) : filteredAdvances.map((adv) => {
                   const name = adv.employee?.user?.name || "Unknown";
                   return (
                     <Tr key={adv._id} _hover={{ bg: "gray.50" }} transition="background 0.15s">

@@ -154,6 +154,50 @@ exports.getPayrollOverview = asyncHandler(async (req, res) => {
 });
 
 // ===============================
+// Payroll Ledger Breakdown
+// ===============================
+exports.getPayrollBreakdown = asyncHandler(async (req, res) => {
+  const payroll = await Payroll.findById(req.params.id)
+    .populate({
+      path: "employee",
+      select: "employeeId department designation salary",
+      populate: { path: "user", select: "name" }
+    });
+
+  if (!payroll) return res.status(404).json({ message: "Payroll not found" });
+
+  const emp = payroll.employee;
+  const rawSalary = emp.salary;
+  const basic = typeof rawSalary === "number" ? rawSalary
+    : rawSalary?.basic ?? 0;
+  const allowance = typeof rawSalary === "object" && typeof rawSalary?.allowance === "number"
+    ? rawSalary.allowance : 0;
+
+  const deductionResult = await calculateDeductions(
+    emp._id, payroll.month, payroll.year, basic
+  );
+
+  res.json({
+    employeeName: emp.user?.name || "",
+    employeeCode: emp.employeeId,
+    department: emp.department,
+    designation: emp.designation,
+    month: payroll.month,
+    year: payroll.year,
+    status: payroll.status,
+    basicSalary: basic,
+    allowance,
+    grossSalary: basic + allowance,
+    leaveDeduction: deductionResult.leaveDeduction,
+    unpaidDays: deductionResult.unpaidDays,
+    advanceDeduction: deductionResult.advanceDeduction,
+    taxDeduction: deductionResult.taxDeduction,
+    totalDeductions: deductionResult.total,
+    netSalary: basic + allowance - deductionResult.total,
+  });
+});
+
+// ===============================
 // Approve Payroll
 // ===============================
 exports.approvePayroll = asyncHandler(async (req, res) => {
