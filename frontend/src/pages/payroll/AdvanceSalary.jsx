@@ -103,7 +103,7 @@ const AdvanceSalary = () => {
   const filteredAdvances = isAdmin && search.trim()
     ? advances.filter((a) => {
         const q = search.trim().toLowerCase();
-        const name = (a.employee?.user?.name || "").toLowerCase();
+        const name = (a.employee?.name || a.employee?.user?.name || "").toLowerCase();
         const dept = (a.employee?.department || "").toLowerCase();
         return name.includes(q) || dept.includes(q);
       })
@@ -235,7 +235,7 @@ const AdvanceSalary = () => {
                     No results found for "{search}"
                   </Td></Tr>
                 ) : filteredAdvances.map((adv) => {
-                  const name = adv.employee?.user?.name || "Unknown";
+                  const name = adv.employee?.name || adv.employee?.user?.name || "Unknown";
                   return (
                     <Tr key={adv._id} _hover={{ bg: "gray.50" }} transition="background 0.15s">
                       {isAdmin && (
@@ -311,7 +311,7 @@ const AdvanceSalary = () => {
                 >
                   {employees.map((emp) => (
                     <option key={emp._id} value={emp._id}>
-                      {emp.user?.name || emp.employeeId} — {emp.department}
+                      {emp.name} — {emp.department}
                     </option>
                   ))}
                 </Select>

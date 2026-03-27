@@ -107,7 +107,7 @@ const AdvanceReport = () => {
   const filteredAdvances = advances.filter((a) => {
     const matchStatus = statusFilter === "All" || a.status === statusFilter;
     const q = search.trim().toLowerCase();
-    const matchSearch = !q || (a.employee?.user?.name || "").toLowerCase().includes(q) || (a.employee?.department || "").toLowerCase().includes(q);
+    const matchSearch = !q || (a.employee?.name || a.employee?.user?.name || "").toLowerCase().includes(q) || (a.employee?.department || "").toLowerCase().includes(q);
     return matchStatus && matchSearch;
   });
 
@@ -119,7 +119,7 @@ const AdvanceReport = () => {
 
   const exportExcel = () => {
     const rows = filteredAdvances.map((a) => ({
-      Employee: a.employee?.user?.name || "Unknown",
+      Employee: a.employee?.name || a.employee?.user?.name || "Unknown",
       Department: a.employee?.department || "N/A",
       Amount: a.amount,
       Reason: a.reason,
@@ -229,7 +229,7 @@ const AdvanceReport = () => {
               </Thead>
               <Tbody>
                 {filteredAdvances.map((adv) => {
-                  const name = adv.employee?.user?.name || "Unknown";
+                  const name = adv.employee?.name || adv.employee?.user?.name || "Unknown";
                   return (
                     <Tr key={adv._id} _hover={{ bg: "gray.50" }} transition="background 0.15s">
                       <Td py={3}>
@@ -296,7 +296,7 @@ const AdvanceReport = () => {
                 >
                   {employees.map((emp) => (
                     <option key={emp._id} value={emp._id}>
-                      {emp.user?.name || emp.employeeId} — {emp.department}
+                      {emp.name} — {emp.department}
                     </option>
                   ))}
                 </Select>

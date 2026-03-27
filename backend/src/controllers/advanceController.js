@@ -18,13 +18,17 @@ exports.requestAdvance = asyncHandler(async (req, res) => {
   const month = advanceDate.getMonth() + 1;
   const year = advanceDate.getFullYear();
 
+  // Admin-added advances are auto-approved; employee requests stay Pending
+  const isAdmin = req.user && req.user.role === "Admin";
+
   const advance = await Advance.create({
     employee: employeeId,
     amount,
     reason,
     date: advanceDate,
     month,
-    year
+    year,
+    status: isAdmin ? "Approved" : "Pending"
   });
 
   res.status(201).json(advance);
@@ -37,8 +41,8 @@ exports.getAdvances = asyncHandler(async (req, res) => {
   const { month, year, employeeId } = req.query;
   const query = {};
 
-  if (month) query.month = month;
-  if (year) query.year = year;
+  if (month) query.month = Number(month);
+  if (year)  query.year  = Number(year);
   if (employeeId) query.employee = employeeId;
 
   if (req.user.role === "Employee") {
@@ -53,6 +57,7 @@ exports.getAdvances = asyncHandler(async (req, res) => {
   const advances = await Advance.find(query)
     .populate({
       path: "employee",
+      select: "name department",
       populate: { path: "user", select: "name" }
     })
     .sort({ date: -1 });

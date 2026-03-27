@@ -116,7 +116,7 @@ const Leaves = () => {
     if (toFilter && new Date(leave.toDate) > new Date(toFilter)) return false;
     const q = search.trim().toLowerCase();
     if (q) {
-      const name = (leave.employee?.user?.name || leave.employee?.name || "").toLowerCase();
+      const name = (leave.employee?.name || leave.employee?.user?.name || "").toLowerCase();
       const dept = (leave.employee?.department || "").toLowerCase();
       if (!name.includes(q) && !dept.includes(q) && !(leave.type || "").toLowerCase().includes(q) && !(leave.reason || "").toLowerCase().includes(q)) return false;
     }
@@ -126,7 +126,7 @@ const Leaves = () => {
   const handleExport = () => {
     if (!filteredLeaves.length) { toast({ title: "No data to export", status: "info", duration: 3000, isClosable: true }); return; }
     const rows = filteredLeaves.map((l) => ({
-      Employee: l.employee?.user?.name || "", Department: l.employee?.department || "",
+      Employee: l.employee?.name || l.employee?.user?.name || "", Department: l.employee?.department || "",
       Type: l.type, "From Date": new Date(l.fromDate).toLocaleDateString(),
       "To Date": new Date(l.toDate).toLocaleDateString(), Days: l.totalDays,
       Status: l.status, Paid: l.paid ? "Paid" : "Unpaid", Reason: l.reason || ""
@@ -193,7 +193,7 @@ const Leaves = () => {
           {isAdmin && (
             <Select value={empFilter} onChange={(e) => setEmpFilter(e.target.value)} w="200px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46">
               <option value="">All Employees</option>
-              {employees.map((emp) => <option key={emp._id} value={emp._id}>{emp.user?.name || emp.name}</option>)}
+              {employees.map((emp) => <option key={emp._id} value={emp._id}>{emp.name}</option>)}
             </Select>
           )}
           <Input type="date" value={fromFilter} onChange={(e) => setFromFilter(e.target.value)} w="160px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46" placeholder="From" />
@@ -230,7 +230,7 @@ const Leaves = () => {
                 <Tr><Td colSpan={isAdmin ? 7 : 5} textAlign="center" color="gray.400" py={8}>No leaves match the current filters.</Td></Tr>
               ) : (
                 filteredLeaves.map((leave) => {
-                  const name = leave.employee?.user?.name || leave.employee?.name || "Unknown";
+                  const name = leave.employee?.name || leave.employee?.user?.name || "Unknown";
                   return (
                     <Tr key={leave._id} _hover={{ bg: "gray.50" }} transition="background 0.15s">
                       {isAdmin && (
@@ -296,7 +296,7 @@ const Leaves = () => {
                 <FormLabel fontSize="sm" fontWeight="semibold" color="gray.600">Employee</FormLabel>
                 <Select placeholder={employeesLoading ? "Loading..." : "Select employee"} value={selectedEmployeeId}
                   onChange={(e) => setSelectedEmployeeId(e.target.value)} borderRadius="xl" focusBorderColor="#065f46" isDisabled={employeesLoading}>
-                  {employees.map((emp) => <option key={emp._id} value={emp._id}>{emp.user?.name || emp.name}</option>)}
+                  {employees.map((emp) => <option key={emp._id} value={emp._id}>{emp.name}</option>)}
                 </Select>
               </FormControl>
             )}

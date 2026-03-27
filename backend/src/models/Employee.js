@@ -62,6 +62,10 @@ const employeeSchema = new mongoose.Schema(
       unique: true,
       trim: true
     },
+    monthlyOffDays: {
+      type: Number,
+      default: 3
+    },
     leaveBalance: {
       type: Number,
       default: 0

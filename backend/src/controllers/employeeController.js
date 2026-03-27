@@ -25,7 +25,8 @@ exports.createEmployee = asyncHandler(async (req, res) => {
     employmentStatus,
     gender,
     dutyStartTime,
-    religion
+    religion,
+    monthlyOffDays
   } = req.body;
 
   let finalBiometricId = biometricId;
@@ -60,7 +61,8 @@ exports.createEmployee = asyncHandler(async (req, res) => {
     religion,
     address,
     joiningDate,
-    employmentStatus
+    employmentStatus,
+    monthlyOffDays: monthlyOffDays != null ? Number(monthlyOffDays) : 3
   });
 
   res.status(201).json(employee);
@@ -121,7 +123,8 @@ exports.updateEmployee = asyncHandler(async (req, res) => {
     employmentStatus,
     gender,
     dutyStartTime,
-    religion
+    religion,
+    monthlyOffDays
   } = req.body;
 
   if (biometricId && biometricId !== employee.biometricId) {
@@ -171,6 +174,9 @@ exports.updateEmployee = asyncHandler(async (req, res) => {
   }
   if (employmentStatus != null) {
     employee.employmentStatus = employmentStatus;
+  }
+  if (monthlyOffDays != null) {
+    employee.monthlyOffDays = Number(monthlyOffDays);
   }
 
   await employee.save();

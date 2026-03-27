@@ -15,6 +15,12 @@ const payrollSchema = new mongoose.Schema(
     allowance: { type: Number, default: 0 },
 
     deductions: { type: Number, default: 0 },
+    advanceDeduction:  { type: Number, default: 0 },
+    leaveDeduction:    { type: Number, default: 0 },
+    extraOffDeduction: { type: Number, default: 0 },
+    extraOffDays:      { type: Number, default: 0 },
+    workingDays:       { type: Number, default: 26 },
+    presentDays:       { type: Number, default: 0 },
     netSalary: { type: Number, required: true },
 
     status: {

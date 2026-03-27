@@ -8,7 +8,7 @@ import {
 } from "@chakra-ui/react";
 import {
   FaSave, FaArrowLeft, FaUser, FaBriefcase, FaPhone,
-  FaMoneyBillWave, FaCalendarAlt, FaClock, FaBuilding,
+  FaMoneyBillWave, FaCalendarAlt, FaClock, FaBuilding, FaUmbrellaBeach,
 } from "react-icons/fa";
 
 const SectionHeader = ({ icon, title, subtitle, color = "#065f46" }) => (
@@ -51,6 +51,7 @@ const EmployeeForm = () => {
     dutyStartTime: "",
     employmentStatus: "Active",
     salary: "",
+    monthlyOffDays: "3",
     joiningDate: new Date().toISOString().split("T")[0],
     phone: "",
     address: "",
@@ -71,6 +72,7 @@ const EmployeeForm = () => {
         dutyStartTime: data.dutyStartTime || "",
         employmentStatus: data.employmentStatus || "Active",
         salary: (typeof data.salary === "number" ? data.salary : data.salary?.basic) || "",
+        monthlyOffDays: String(data.monthlyOffDays ?? 3),
         joiningDate: data.joiningDate ? data.joiningDate.split("T")[0] : "",
         phone: data.phone || "",
         address: data.address || "",
@@ -112,7 +114,8 @@ const EmployeeForm = () => {
         department: formData.department,
         dutyStartTime: formData.dutyStartTime,
         employmentStatus: formData.employmentStatus,
-        salary: salaryNumber,
+        salary:         salaryNumber,
+        monthlyOffDays: Number(formData.monthlyOffDays) || 3,
         joiningDate: formData.joiningDate,
         phone: formData.phone,
         address: formData.address,
@@ -413,6 +416,26 @@ const EmployeeForm = () => {
                   ≈ Rs {Number(formData.salary).toLocaleString()} / month
                 </Text>
               )}
+            </FormControl>
+
+            <FormControl>
+              <FieldLabel>Monthly Company Off Days</FieldLabel>
+              <Select
+                name="monthlyOffDays"
+                value={formData.monthlyOffDays}
+                onChange={handleChange}
+                borderRadius="lg"
+                focusBorderColor="#d97706"
+              >
+                {[0,1,2,3,4,5,6,7,8].map(n => (
+                  <option key={n} value={n}>
+                    {n} day{n !== 1 ? "s" : ""} off{n === 3 ? " (default)" : ""}
+                  </option>
+                ))}
+              </Select>
+              <Text fontSize="xs" color="gray.400" mt={1}>
+                Company-given off days per month. Absent days beyond this are deducted from salary.
+              </Text>
             </FormControl>
 
             <Box bg="amber.50" bgColor="#fffbeb" borderRadius="xl" p={4} border="1px dashed" borderColor="#fcd34d">

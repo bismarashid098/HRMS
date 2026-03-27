@@ -1,6 +1,7 @@
 const Attendance = require("../models/Attendance");
 const Employee = require("../models/Employee");
 const Settings = require("../models/Settings");
+const Leave = require("../models/Leave");
 
 const normalizeDate = (d) => {
   const date = new Date(d);
@@ -226,26 +227,129 @@ exports.getDailyAttendanceList = async (req, res) => {
     date: { $gte: start, $lte: end }
   });
 
+  const leaveRecords = await Leave.find({
+    status: "Approved",
+    fromDate: { $lte: end },
+    toDate: { $gte: start }
+  });
+
   const attendanceMap = new Map();
   attendanceRecords.forEach((record) => {
     attendanceMap.set(record.employee.toString(), record);
   });
 
+  const leaveMap = new Map();
+  leaveRecords.forEach((leave) => {
+    leaveMap.set(leave.employee.toString(), leave);
+  });
+
   const list = employees.map((emp) => {
     const record = attendanceMap.get(emp._id.toString());
+    const leave = leaveMap.get(emp._id.toString());
+
+    let status = record ? record.status : "Not Marked";
+    let onLeave = false;
+    let leaveType = null;
+
+    if ((!record || record.status === "Not Marked") && leave) {
+      status = "On Leave";
+      onLeave = true;
+      leaveType = leave.type;
+    }
+
     return {
       employee: emp._id,
       employeeCode: emp.employeeId,
-      name: emp.user ? emp.user.name : "",
+      name: emp.name || (emp.user && emp.user.name) || "",
       department: emp.department,
       designation: emp.designation,
-      status: record ? record.status : "Not Marked",
+      status,
+      onLeave,
+      leaveType,
       punchIn: record ? record.punchIn : null,
-      punchOut: record ? record.punchOut : null
+      punchOut: record ? record.punchOut : null,
+      attendanceId: record ? record._id : null
     };
   });
 
   res.json(list);
+};
+
+/* ── Range Summary: GET /attendance/range?from=&to= ── */
+exports.getAttendanceRange = async (req, res) => {
+  const { from, to } = req.query;
+  if (!from || !to) return res.status(400).json({ message: "from and to dates are required" });
+
+  const start = new Date(from);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(to);
+  end.setHours(23, 59, 59, 999);
+
+  const totalDays = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+  const employees = await Employee.find({
+    isDeleted: false,
+    employmentStatus: "Active"
+  }).populate("user", "name");
+
+  const attendanceRecords = await Attendance.find({
+    date: { $gte: start, $lte: end }
+  });
+
+  const leaveRecords = await Leave.find({
+    status: "Approved",
+    fromDate: { $lte: end },
+    toDate: { $gte: start }
+  });
+
+  // Group attendance by employee
+  const attByEmp = {};
+  attendanceRecords.forEach((r) => {
+    const id = r.employee.toString();
+    if (!attByEmp[id]) attByEmp[id] = [];
+    attByEmp[id].push(r);
+  });
+
+  // Calculate leave days per employee within the range
+  const leaveByEmp = {};
+  leaveRecords.forEach((l) => {
+    const id = l.employee.toString();
+    const lFrom = new Date(Math.max(new Date(l.fromDate), start));
+    const lTo   = new Date(Math.min(new Date(l.toDate), end));
+    const days  = Math.round((lTo - lFrom) / (1000 * 60 * 60 * 24)) + 1;
+    leaveByEmp[id] = (leaveByEmp[id] || 0) + Math.max(0, days);
+  });
+
+  const result = employees.map((emp) => {
+    const id   = emp._id.toString();
+    const recs = attByEmp[id] || [];
+    const present  = recs.filter((r) => r.status === "Present").length;
+    const late     = recs.filter((r) => r.status === "Late").length;
+    const halfDay  = recs.filter((r) => r.status === "Half Day").length;
+    const absent   = recs.filter((r) => r.status === "Absent").length;
+    const onLeave  = leaveByEmp[id] || 0;
+    const marked   = present + late + halfDay + absent;
+    const notMarked = Math.max(0, totalDays - marked - onLeave);
+    const rate     = totalDays > 0 ? Math.round(((present + late * 0.5 + halfDay * 0.5) / totalDays) * 100) : 0;
+
+    return {
+      employee:     emp._id,
+      employeeCode: emp.employeeId,
+      name:         emp.name || (emp.user && emp.user.name) || "",
+      department:   emp.department,
+      designation:  emp.designation,
+      totalDays,
+      present,
+      late,
+      halfDay,
+      absent,
+      onLeave,
+      notMarked,
+      rate
+    };
+  });
+
+  res.json(result);
 };
 
 /**

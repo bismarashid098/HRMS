@@ -133,8 +133,16 @@ const Payroll = () => {
 
   const exportExcel = () => {
     const rows = filteredPayrolls.map((p) => ({
-      Employee: p.employee?.user?.name || "", Department: p.employee?.department || "",
-      Basic: p.basicSalary, Allowance: p.allowance, Deductions: p.deductions, Net: p.netSalary, Status: p.status
+      Employee:          p.employee?.name || p.employee?.user?.name || "",
+      Department:        p.employee?.department || "",
+      Basic:             p.basicSalary,
+      Allowance:         p.allowance,
+      "Advance Deducted":  p.advanceDeduction  || 0,
+      "Leave Deduction":   p.leaveDeduction    || 0,
+      "Extra Off Deduction": p.extraOffDeduction || 0,
+      "Total Deductions": p.deductions || 0,
+      "Net Salary":       p.netSalary,
+      Status:             p.status
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
@@ -153,28 +161,34 @@ const Payroll = () => {
     doc.text("WorkSphere HRMS", 105, 32, null, "center");
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(11);
-    doc.text(`Employee: ${payroll.employee?.user?.name}`, 15, 58);
+    doc.text(`Employee: ${payroll.employee?.name || payroll.employee?.user?.name}`, 15, 58);
     doc.text(`ID: ${payroll.employee?.employeeId}`, 15, 66);
     doc.text(`Department: ${payroll.employee?.department}`, 15, 74);
     doc.text(`Designation: ${payroll.employee?.designation}`, 15, 82);
     doc.text(`Month: ${month}`, 130, 58);
     doc.text(`Generated: ${new Date(payroll.createdAt).toLocaleDateString()}`, 130, 66);
+    const pdfBody = [
+      ["Basic Salary",  payroll.basicSalary.toLocaleString()],
+      ["Allowance",     payroll.allowance.toLocaleString()],
+      ["Gross Salary",  (payroll.basicSalary + payroll.allowance).toLocaleString()],
+      ["", ""],
+      ["Advance Deduction",         payroll.advanceDeduction  > 0 ? `- Rs ${Math.round(payroll.advanceDeduction).toLocaleString()}`  : "—"],
+      ["Unpaid Leave Deduction",   payroll.leaveDeduction    > 0 ? `- Rs ${Math.round(payroll.leaveDeduction).toLocaleString()}`   : "—"],
+      ["Extra Off (Absent Days)",  payroll.extraOffDeduction > 0 ? `- Rs ${Math.round(payroll.extraOffDeduction).toLocaleString()}` : "—"],
+      ["Total Deductions",        `- Rs ${Math.round(payroll.deductions).toLocaleString()}`],
+      [{ content: "NET PAYABLE", styles: { fontStyle: "bold", fillColor: [220, 252, 231] } },
+       { content: `Rs ${payroll.netSalary.toLocaleString()}`, styles: { fontStyle: "bold", fillColor: [220, 252, 231] } }],
+    ];
     doc.autoTable({
       startY: 92,
       head: [["Description", "Amount (Rs)"]],
-      body: [
-        ["Basic Salary", payroll.basicSalary.toLocaleString()],
-        ["Allowance", payroll.allowance.toLocaleString()],
-        ["Gross Salary", (payroll.basicSalary + payroll.allowance).toLocaleString()],
-        ["Deductions (Unpaid Leaves)", payroll.deductions.toLocaleString()],
-        [{ content: "NET PAYABLE", styles: { fontStyle: "bold", fillColor: [220, 252, 231] } }, { content: `Rs ${payroll.netSalary.toLocaleString()}`, styles: { fontStyle: "bold", fillColor: [220, 252, 231] } }],
-      ],
+      body: pdfBody,
       theme: "grid",
       headStyles: { fillColor: [6, 95, 70] },
     });
     doc.setFontSize(9);
     doc.text("This is a computer-generated document and does not require a signature.", 105, 282, null, "center");
-    doc.save(`Payslip-${payroll.employee?.user?.name}-${month}.pdf`);
+    doc.save(`Payslip-${payroll.employee?.name || payroll.employee?.user?.name}-${month}.pdf`);
   };
 
   const getMonthOptions = () => {
@@ -197,7 +211,7 @@ const Payroll = () => {
     if (departmentFilter !== "All" && p.employee?.department !== departmentFilter) return false;
     const q = search.trim().toLowerCase();
     if (q) {
-      const name = (p.employee?.user?.name || "").toLowerCase();
+      const name = (p.employee?.name || p.employee?.user?.name || "").toLowerCase();
       const dept = (p.employee?.department || "").toLowerCase();
       const eid = (p.employee?.employeeId || "").toLowerCase();
       if (!name.includes(q) && !dept.includes(q) && !eid.includes(q)) return false;
@@ -211,8 +225,9 @@ const Payroll = () => {
     else acc.pending++;
     acc.totalNet += p.netSalary || 0;
     acc.totalDeductions += p.deductions || 0;
+    acc.totalAdvance += p.advanceDeduction || 0;
     return acc;
-  }, { count: 0, approved: 0, pending: 0, totalNet: 0, totalDeductions: 0 });
+  }, { count: 0, approved: 0, pending: 0, totalNet: 0, totalDeductions: 0, totalAdvance: 0 });
 
   const fmtMoney = (n) => n >= 1000000 ? `Rs ${(n / 1000000).toFixed(1)}M` : n >= 1000 ? `Rs ${(n / 1000).toFixed(0)}K` : `Rs ${n}`;
 
@@ -238,11 +253,12 @@ const Payroll = () => {
 
       {/* Stats */}
       {filteredPayrolls.length > 0 && (
-        <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(4, 1fr)" }} gap={4} mb={4}>
-          <StatCard label="Total Payslips" value={summary.count} color="#065f46" bg="#f0fdf4" icon={FaUsers} />
-          <StatCard label="Approved" value={summary.approved} color="#1d4ed8" bg="#eff6ff" icon={FaCheckCircle} />
-          <StatCard label="Pending" value={summary.pending} color="#d97706" bg="#fffbeb" icon={FaClock} />
-          <StatCard label="Total Net Salary" value={fmtMoney(summary.totalNet)} color="#7c3aed" bg="#f5f3ff" icon={FaWallet} />
+        <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(5, 1fr)" }} gap={4} mb={4}>
+          <StatCard label="Total Payslips"     value={summary.count}                    color="#065f46" bg="#f0fdf4" icon={FaUsers}       />
+          <StatCard label="Approved"           value={summary.approved}                 color="#1d4ed8" bg="#eff6ff" icon={FaCheckCircle}  />
+          <StatCard label="Pending"            value={summary.pending}                  color="#d97706" bg="#fffbeb" icon={FaClock}        />
+          <StatCard label="Advance Deductions" value={fmtMoney(summary.totalAdvance)}   color="#dc2626" bg="#fef2f2" icon={FaMoneyBillWave}/>
+          <StatCard label="Total Net Salary"   value={fmtMoney(summary.totalNet)}       color="#7c3aed" bg="#f5f3ff" icon={FaWallet}       />
         </Grid>
       )}
 
@@ -268,7 +284,8 @@ const Payroll = () => {
                     <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Department</Th>
                     <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Fixed Salary</Th>
                     <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Unpaid Days</Th>
-                    <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Deductions</Th>
+                    <Th py={3} fontSize="xs" color="orange.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Advance</Th>
+                    <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Other Deductions</Th>
                     <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Net Salary</Th>
                     <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Status</Th>
                   </Tr>
@@ -288,7 +305,20 @@ const Payroll = () => {
                       <Td py={3}><Badge bg="gray.100" color="gray.600" borderRadius="full" px={2} fontSize="xs">{item.department}</Badge></Td>
                       <Td py={3} isNumeric><Text fontSize="sm" color="gray.700">Rs {Number(item.basicSalary || 0).toLocaleString()}</Text></Td>
                       <Td py={3} isNumeric><Text fontSize="sm" color={item.unpaidLeaveDays > 0 ? "red.500" : "gray.500"}>{item.unpaidLeaveDays || 0}</Text></Td>
-                      <Td py={3} isNumeric><Text fontSize="sm" color="red.500">- Rs {Number(item.totalDeductions || 0).toLocaleString()}</Text></Td>
+                      <Td py={3} isNumeric>
+                        {item.advanceDeduction > 0 ? (
+                          <Text fontSize="sm" fontWeight="semibold" color="orange.500">- Rs {Number(item.advanceDeduction).toLocaleString()}</Text>
+                        ) : (
+                          <Text fontSize="sm" color="gray.300">—</Text>
+                        )}
+                      </Td>
+                      <Td py={3} isNumeric>
+                        <Text fontSize="sm" color="red.500">
+                          {(item.totalDeductions - (item.advanceDeduction || 0)) > 0
+                            ? `- Rs ${Math.round(item.totalDeductions - (item.advanceDeduction || 0)).toLocaleString()}`
+                            : "—"}
+                        </Text>
+                      </Td>
                       <Td py={3} isNumeric><Text fontSize="sm" fontWeight="bold" color="#065f46">Rs {Number(item.netSalary || 0).toLocaleString()}</Text></Td>
                       <Td py={3}>
                         <Badge colorScheme={item.payrollStatus === "Approved" ? "green" : item.payrollStatus === "Generated" ? "orange" : "gray"}
@@ -351,7 +381,8 @@ const Payroll = () => {
                   <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Employee</Th>
                   <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Basic</Th>
                   <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Allowance</Th>
-                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Deductions</Th>
+                  <Th py={3} fontSize="xs" color="orange.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Advance Deducted</Th>
+                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Other Deductions</Th>
                   <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Net Salary</Th>
                   <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Status</Th>
                   <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Actions</Th>
@@ -359,9 +390,9 @@ const Payroll = () => {
               </Thead>
               <Tbody>
                 {filteredPayrolls.length === 0 ? (
-                  <Tr><Td colSpan={7} textAlign="center" color="gray.400" py={8}>No payrolls match the current filters.</Td></Tr>
+                  <Tr><Td colSpan={9} textAlign="center" color="gray.400" py={8}>No payrolls match the current filters.</Td></Tr>
                 ) : filteredPayrolls.map((p) => {
-                  const name = p.employee?.user?.name || "Unknown";
+                  const name = p.employee?.name || p.employee?.user?.name || "Unknown";
                   return (
                     <Tr key={p._id} _hover={{ bg: "gray.50" }} transition="background 0.15s">
                       <Td py={3}>
@@ -375,7 +406,24 @@ const Payroll = () => {
                       </Td>
                       <Td py={3} isNumeric><Text fontSize="sm" color="gray.700">Rs {p.basicSalary?.toLocaleString()}</Text></Td>
                       <Td py={3} isNumeric><Text fontSize="sm" color="gray.700">Rs {p.allowance?.toLocaleString()}</Text></Td>
-                      <Td py={3} isNumeric><Text fontSize="sm" color="red.500">- Rs {p.deductions?.toLocaleString()}</Text></Td>
+                      <Td py={3} isNumeric>
+                        {p.advanceDeduction > 0 ? (
+                          <Tooltip label={`Advance salary deducted`} hasArrow>
+                            <Text fontSize="sm" fontWeight="semibold" color="orange.500" cursor="default">
+                              - Rs {p.advanceDeduction?.toLocaleString()}
+                            </Text>
+                          </Tooltip>
+                        ) : (
+                          <Text fontSize="sm" color="gray.300">—</Text>
+                        )}
+                      </Td>
+                      <Td py={3} isNumeric>
+                        <Text fontSize="sm" color="red.500">
+                          {(p.deductions - (p.advanceDeduction || 0)) > 0
+                            ? `- Rs ${Math.round(p.deductions - (p.advanceDeduction || 0)).toLocaleString()}`
+                            : "—"}
+                        </Text>
+                      </Td>
                       <Td py={3} isNumeric><Text fontSize="sm" fontWeight="bold" color="#065f46">Rs {p.netSalary?.toLocaleString()}</Text></Td>
                       <Td py={3}>
                         <Badge colorScheme={p.status === "Approved" ? "green" : "orange"} borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold">{p.status}</Badge>
@@ -460,6 +508,26 @@ const Payroll = () => {
                   </Flex>
                 </Box>
 
+                {/* Attendance Info */}
+                <Flex gap={3} mb={4}>
+                  <Flex flex={1} direction="column" align="center" bg="green.50" borderRadius="xl" py={3} border="1px solid" borderColor="green.100">
+                    <Text fontSize="xl" fontWeight="800" color="green.600">{ledger.presentDays || 0}</Text>
+                    <Text fontSize="10px" color="gray.500" textTransform="uppercase">Present Days</Text>
+                  </Flex>
+                  <Flex flex={1} direction="column" align="center" bg="blue.50" borderRadius="xl" py={3} border="1px solid" borderColor="blue.100">
+                    <Text fontSize="xl" fontWeight="800" color="blue.600">{ledger.workingDays || 0}</Text>
+                    <Text fontSize="10px" color="gray.500" textTransform="uppercase">Working Days</Text>
+                  </Flex>
+                  <Flex flex={1} direction="column" align="center" bg="orange.50" borderRadius="xl" py={3} border="1px solid" borderColor="orange.100">
+                    <Text fontSize="xl" fontWeight="800" color="orange.500">{ledger.extraOffDays || 0}</Text>
+                    <Text fontSize="10px" color="gray.500" textTransform="uppercase">Extra Absent</Text>
+                  </Flex>
+                  <Flex flex={1} direction="column" align="center" bg="gray.50" borderRadius="xl" py={3} border="1px solid" borderColor="gray.100">
+                    <Text fontSize="xl" fontWeight="800" color="gray.600">{ledger.monthlyOffDays || 3}</Text>
+                    <Text fontSize="10px" color="gray.500" textTransform="uppercase">Company Off</Text>
+                  </Flex>
+                </Flex>
+
                 {/* Deductions */}
                 <Text fontSize="xs" fontWeight="700" color="gray.400" textTransform="uppercase" letterSpacing="wider" mb={2}>Deductions</Text>
                 <Box bg="red.50" border="1px solid" borderColor="red.100" borderRadius="xl" overflow="hidden" mb={4}>
@@ -468,12 +536,12 @@ const Payroll = () => {
                       <Text fontSize="sm" color="gray.600">Advance Deduction</Text>
                     </Box>
                     <Text fontSize="sm" fontWeight="semibold" color="red.600">
-                      {ledger.advanceDeduction > 0 ? `- Rs ${ledger.advanceDeduction.toLocaleString()}` : "—"}
+                      {ledger.advanceDeduction > 0 ? `- Rs ${Math.round(ledger.advanceDeduction).toLocaleString()}` : "—"}
                     </Text>
                   </Flex>
                   <Flex justify="space-between" px={4} py={3} borderBottom="1px solid" borderColor="red.100">
                     <Box>
-                      <Text fontSize="sm" color="gray.600">Leave Deduction</Text>
+                      <Text fontSize="sm" color="gray.600">Unpaid Leave Deduction</Text>
                       {ledger.unpaidDays > 0 && (
                         <Text fontSize="xs" color="gray.400">{ledger.unpaidDays} unpaid day{ledger.unpaidDays !== 1 ? "s" : ""}</Text>
                       )}
@@ -483,9 +551,16 @@ const Payroll = () => {
                     </Text>
                   </Flex>
                   <Flex justify="space-between" px={4} py={3} borderBottom="1px solid" borderColor="red.100">
-                    <Text fontSize="sm" color="gray.600">Tax Deduction</Text>
+                    <Box>
+                      <Text fontSize="sm" color="gray.600">Extra Off (Absent Days)</Text>
+                      {ledger.extraOffDays > 0 && (
+                        <Text fontSize="xs" color="gray.400">
+                          {ledger.extraOffDays} day{ledger.extraOffDays !== 1 ? "s" : ""} × Rs {Math.round((ledger.basicSalary || 0) / (ledger.workingDays || 1)).toLocaleString()}/day
+                        </Text>
+                      )}
+                    </Box>
                     <Text fontSize="sm" fontWeight="semibold" color="red.600">
-                      {ledger.taxDeduction > 0 ? `- Rs ${Math.round(ledger.taxDeduction).toLocaleString()}` : "—"}
+                      {ledger.extraOffDeduction > 0 ? `- Rs ${Math.round(ledger.extraOffDeduction).toLocaleString()}` : "—"}
                     </Text>
                   </Flex>
                   <Flex justify="space-between" px={4} py={3} bg="red.100">

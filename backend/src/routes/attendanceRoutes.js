@@ -4,6 +4,7 @@ const {
   punchOut,
   getMonthlyAttendance,
   getDailyAttendanceList,
+  getAttendanceRange,
   requestCorrection,
   approveCorrection,
   manualMark
@@ -25,6 +26,7 @@ router.put("/correction/:id", authorize("Admin"), approveCorrection);
 // Admin & Manager - read operations
 router.get("/", authorize("Admin", "Manager"), getMonthlyAttendance);
 router.get("/daily", authorize("Admin", "Manager"), getDailyAttendanceList);
+router.get("/range", authorize("Admin", "Manager"), getAttendanceRange);
 
 // Correction request (no role in original, keep open for any authenticated)
 router.post("/correction", protect, requestCorrection);

@@ -11,9 +11,9 @@ exports.getAllPayrolls = asyncHandler(async (req, res) => {
     if (year) query.year = parseInt(year);
 
     const payrolls = await Payroll.find(query)
-        .populate("employee", "employeeId department designation")
         .populate({
             path: "employee",
+            select: "name employeeId department designation",
             populate: { path: "user", select: "name" }
         })
         .sort({ year: -1, month: -1 });
@@ -54,19 +54,26 @@ exports.generatePayroll = asyncHandler(async (req, res) => {
     employeeId,
     month,
     year,
-    basic
+    basic,
+    employee.monthlyOffDays ?? 3
   );
 
-  const netSalary = basic + allowance - deductionResult.total;
+  const netSalary = Math.max(0, basic + allowance - deductionResult.total);
 
   try {
     const payroll = await Payroll.create({
       employee: employeeId,
       month,
       year,
-      basicSalary: basic,
+      basicSalary:       basic,
       allowance,
-      deductions: deductionResult.total,
+      deductions:        deductionResult.total,
+      advanceDeduction:  deductionResult.advanceDeduction,
+      leaveDeduction:    deductionResult.leaveDeduction,
+      extraOffDeduction: deductionResult.extraOffDeduction,
+      extraOffDays:      deductionResult.extraOffDays,
+      workingDays:       deductionResult.workingDays,
+      presentDays:       deductionResult.presentDays,
       netSalary,
       status: "Generated"
     });
@@ -119,7 +126,8 @@ exports.getPayrollOverview = asyncHandler(async (req, res) => {
         emp._id,
         targetMonth,
         targetYear,
-        basic
+        basic,
+        emp.monthlyOffDays ?? 3
       );
 
       const netSalary = basic + allowance - deductionResult.total;
@@ -131,21 +139,24 @@ exports.getPayrollOverview = asyncHandler(async (req, res) => {
       });
 
       return {
-        employeeId: emp._id,
-        employeeCode: emp.employeeId,
-        name: emp.name || (emp.user && emp.user.name) || "",
-        department: emp.department,
-        designation: emp.designation,
-        basicSalary: basic,
+        employeeId:        emp._id,
+        employeeCode:      emp.employeeId,
+        name:              emp.name || (emp.user && emp.user.name) || "",
+        department:        emp.department,
+        designation:       emp.designation,
+        basicSalary:       basic,
         allowance,
-        unpaidLeaveDays: deductionResult.unpaidDays || 0,
-        leaveDeduction: deductionResult.leaveDeduction,
-        advanceDeduction: deductionResult.advanceDeduction,
-        taxDeduction: deductionResult.taxDeduction,
-        totalDeductions: deductionResult.total,
+        workingDays:       deductionResult.workingDays,
+        presentDays:       deductionResult.presentDays,
+        unpaidLeaveDays:   deductionResult.unpaidDays || 0,
+        leaveDeduction:    deductionResult.leaveDeduction,
+        advanceDeduction:  deductionResult.advanceDeduction,
+        extraOffDeduction: deductionResult.extraOffDeduction,
+        extraOffDays:      deductionResult.extraOffDays,
+        totalDeductions:   deductionResult.total,
         netSalary,
         payrollStatus: payroll ? payroll.status : "Not Generated",
-        payrollId: payroll ? payroll._id : null
+        payrollId:     payroll ? payroll._id : null
       };
     })
   );
@@ -160,7 +171,7 @@ exports.getPayrollBreakdown = asyncHandler(async (req, res) => {
   const payroll = await Payroll.findById(req.params.id)
     .populate({
       path: "employee",
-      select: "employeeId department designation salary",
+      select: "name employeeId department designation salary monthlyOffDays",
       populate: { path: "user", select: "name" }
     });
 
@@ -173,27 +184,32 @@ exports.getPayrollBreakdown = asyncHandler(async (req, res) => {
   const allowance = typeof rawSalary === "object" && typeof rawSalary?.allowance === "number"
     ? rawSalary.allowance : 0;
 
+  // Always recalculate fresh so advance changes after generation are reflected
   const deductionResult = await calculateDeductions(
-    emp._id, payroll.month, payroll.year, basic
+    emp._id, payroll.month, payroll.year, basic, emp.monthlyOffDays ?? 3
   );
 
   res.json({
-    employeeName: emp.user?.name || "",
-    employeeCode: emp.employeeId,
-    department: emp.department,
-    designation: emp.designation,
-    month: payroll.month,
-    year: payroll.year,
-    status: payroll.status,
-    basicSalary: basic,
+    employeeName:      emp.name || emp.user?.name || "",
+    employeeCode:      emp.employeeId,
+    department:        emp.department,
+    designation:       emp.designation,
+    monthlyOffDays:    emp.monthlyOffDays ?? 3,
+    month:             payroll.month,
+    year:              payroll.year,
+    status:            payroll.status,
+    basicSalary:       basic,
     allowance,
-    grossSalary: basic + allowance,
-    leaveDeduction: deductionResult.leaveDeduction,
-    unpaidDays: deductionResult.unpaidDays,
-    advanceDeduction: deductionResult.advanceDeduction,
-    taxDeduction: deductionResult.taxDeduction,
-    totalDeductions: deductionResult.total,
-    netSalary: basic + allowance - deductionResult.total,
+    grossSalary:       basic + allowance,
+    workingDays:       deductionResult.workingDays,
+    presentDays:       deductionResult.presentDays,
+    leaveDeduction:    deductionResult.leaveDeduction,
+    unpaidDays:        deductionResult.unpaidDays,
+    advanceDeduction:  deductionResult.advanceDeduction,
+    extraOffDeduction: deductionResult.extraOffDeduction,
+    extraOffDays:      deductionResult.extraOffDays,
+    totalDeductions:   deductionResult.total,
+    netSalary:         Math.max(0, basic + allowance - deductionResult.total),
   });
 });
 
