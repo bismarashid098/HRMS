@@ -24,7 +24,7 @@ const seedUser = async () => {
             await User.create({
                 name: "Admin User",
                 email: "admin@hrms.com",
-                password: "123", // Will be hashed by pre-save hook
+                password: "12345678", // Will be hashed by pre-save hook
                 role: "Admin",
                 isActive: true
             });
@@ -36,17 +36,17 @@ const seedUser = async () => {
 
         if (existingManager) {
             console.log("⚠️ Manager user already exists. Updating password...");
-            existingManager.password = "123";
+            existingManager.password = "12345678";
             existingManager.role = "Manager";
             existingManager.isActive = true;
             await existingManager.save();
-            console.log("✅ Manager password updated to '123'");
+            console.log("✅ Manager password updated to '12345678'");
         } else {
             console.log("Creating new manager user...");
             await User.create({
                 name: "Manager User",
                 email: managerEmail,
-                password: "123",
+                password: "12345678",
                 role: "Manager",
                 isActive: true
             });
@@ -55,9 +55,9 @@ const seedUser = async () => {
 
         console.log("\nLogin Credentials:");
         console.log("Admin Email: admin@hrms.com");
-        console.log("Admin Password: 123");
+        console.log("Admin Password: 12345678");
         console.log("Manager Email: manager@hrms.com");
-        console.log("Manager Password: 123");
+        console.log("Manager Password: 12345678");
         
         process.exit();
     } catch (error) {
