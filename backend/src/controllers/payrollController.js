@@ -189,6 +189,14 @@ exports.getPayrollBreakdown = asyncHandler(async (req, res) => {
     emp._id, payroll.month, payroll.year, basic, emp.monthlyOffDays ?? 3
   );
 
+  // Fetch individual advance entries for this payroll month
+  const advanceEntries = await require("../models/Advance").find({
+    employee: emp._id,
+    month: payroll.month,
+    year: payroll.year,
+    status: { $in: ["Approved", "Paid"] }
+  }).select("amount date reason status").sort({ date: 1 });
+
   res.json({
     employeeName:      emp.name || emp.user?.name || "",
     employeeCode:      emp.employeeId,
@@ -206,6 +214,7 @@ exports.getPayrollBreakdown = asyncHandler(async (req, res) => {
     leaveDeduction:    deductionResult.leaveDeduction,
     unpaidDays:        deductionResult.unpaidDays,
     advanceDeduction:  deductionResult.advanceDeduction,
+    advanceEntries,
     extraOffDeduction: deductionResult.extraOffDeduction,
     extraOffDays:      deductionResult.extraOffDays,
     totalDeductions:   deductionResult.total,

@@ -96,20 +96,27 @@ const PayrollReport = () => {
   const averageMonthly = monthsWithPayroll > 0 ? Math.round(totalPaid / monthsWithPayroll) : 0;
   const chartData = stats.map((item) => ({ name: monthNames[item._id], amount: item.totalPaid }));
 
-  const ledgerTotal = filteredLedger.reduce((s, p) => s + (p.netSalary || 0), 0);
-  const ledgerDeductions = filteredLedger.reduce((s, p) => s + (p.deductions || 0), 0);
-  const ledgerBasic = filteredLedger.reduce((s, p) => s + (p.basicSalary || 0), 0);
+  const ledgerTotal      = filteredLedger.reduce((s, p) => s + (p.netSalary        || 0), 0);
+  const ledgerDeductions = filteredLedger.reduce((s, p) => s + (p.deductions       || 0), 0);
+  const ledgerBasic      = filteredLedger.reduce((s, p) => s + (p.basicSalary      || 0), 0);
+  const ledgerAllowance  = filteredLedger.reduce((s, p) => s + (p.allowance        || 0), 0);
+  const ledgerGross      = ledgerBasic + ledgerAllowance;
+  const ledgerAdvance    = filteredLedger.reduce((s, p) => s + (p.advanceDeduction || 0), 0);
+  const ledgerOtherDed   = ledgerDeductions - ledgerAdvance;
 
   const exportLedger = () => {
     const rows = filteredLedger.map((p) => ({
-      Employee: p.employee?.user?.name || "Unknown",
-      Department: p.employee?.department || "N/A",
-      Designation: p.employee?.designation || "N/A",
-      "Basic Salary": p.basicSalary || 0,
-      Allowance: p.allowance || 0,
-      Deductions: p.deductions || 0,
-      "Net Salary": p.netSalary || 0,
-      Status: p.status || "Generated"
+      Employee:             p.employee?.name || p.employee?.user?.name || "Unknown",
+      Department:           p.employee?.department || "N/A",
+      Designation:          p.employee?.designation || "N/A",
+      "Basic Salary":       p.basicSalary || 0,
+      Allowance:            p.allowance || 0,
+      "Gross Salary":       (p.basicSalary || 0) + (p.allowance || 0),
+      "Advance Deduction":  p.advanceDeduction || 0,
+      "Other Deductions":   Math.max(0, (p.deductions || 0) - (p.advanceDeduction || 0)),
+      "Total Deductions":   p.deductions || 0,
+      "Net Salary":         p.netSalary || 0,
+      Status:               p.status || "Generated",
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
@@ -268,13 +275,36 @@ const PayrollReport = () => {
               </Flex>
             </Box>
 
-            {/* Ledger Summary */}
+            {/* Ledger Summary — Salary Totals */}
             {filteredLedger.length > 0 && (
-              <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(3, 1fr)" }} gap={4} mb={4}>
-                <StatCard label="Total Basic" value={fmtMoney(ledgerBasic)} color="#1d4ed8" bg="#eff6ff" icon={FaUsers} sub={`${filteredLedger.length} employees`} />
-                <StatCard label="Total Deductions" value={fmtMoney(ledgerDeductions)} color="#dc2626" bg="#fef2f2" icon={FaTimesCircle} sub="tax + advance" />
-                <StatCard label="Total Net Salary" value={fmtMoney(ledgerTotal)} color="#065f46" bg="#f0fdf4" icon={FaMoneyBillWave} sub={`${monthFull[ledgerMonth]} ${ledgerYear}`} />
-              </Grid>
+              <>
+                <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(5, 1fr)" }} gap={4} mb={4}>
+                  <StatCard label="Gross Payable"      value={fmtMoney(ledgerGross)}    color="#1d4ed8" bg="#eff6ff" icon={FaUsers}         sub={`${filteredLedger.length} employees`} />
+                  <StatCard label="Advance Deducted"   value={fmtMoney(ledgerAdvance)}  color="#7c3aed" bg="#f5f3ff" icon={FaTimesCircle}   sub="salary advances" />
+                  <StatCard label="Other Deductions"   value={fmtMoney(ledgerOtherDed > 0 ? ledgerOtherDed : 0)} color="#dc2626" bg="#fef2f2" icon={FaTimesCircle} sub="leave + absent" />
+                  <StatCard label="Total Net Salary"   value={fmtMoney(ledgerTotal)}    color="#065f46" bg="#f0fdf4" icon={FaMoneyBillWave}  sub={`${monthFull[ledgerMonth]} ${ledgerYear}`} />
+                  <StatCard label="Total Deductions"   value={fmtMoney(ledgerDeductions)} color="#d97706" bg="#fffbeb" icon={FaCalendarAlt} sub="all deductions" />
+                </Grid>
+                {/* Net Payable Banner */}
+                <Box bgGradient="linear(135deg, #021024, #065f46)" borderRadius="2xl" px={6} py={4} mb={4}>
+                  <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
+                    <Box>
+                      <Text fontSize="xs" color="whiteAlpha.600" textTransform="uppercase" letterSpacing="wider">
+                        {monthFull[ledgerMonth]} {ledgerYear} — Net Payroll Summary
+                      </Text>
+                      <Text fontSize="sm" color="whiteAlpha.800" mt={1}>
+                        Gross Rs {ledgerGross.toLocaleString()} − Advance Rs {ledgerAdvance.toLocaleString()} − Other Rs {(ledgerOtherDed > 0 ? ledgerOtherDed : 0).toLocaleString()}
+                      </Text>
+                    </Box>
+                    <Box textAlign="right">
+                      <Text fontSize="xs" color="whiteAlpha.600" textTransform="uppercase" letterSpacing="wider">Total Net Payable</Text>
+                      <Text fontSize="3xl" fontWeight="900" color="white" letterSpacing="-0.02em">
+                        {fmtMoney(ledgerTotal)}
+                      </Text>
+                    </Box>
+                  </Flex>
+                </Box>
+              </>
             )}
 
             {/* Ledger Table */}
@@ -296,16 +326,19 @@ const PayrollReport = () => {
                     <Thead>
                       <Tr bg="gray.50">
                         <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Employee</Th>
-                        <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Basic</Th>
-                        <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Allowance</Th>
-                        <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Deductions</Th>
-                        <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Net Salary</Th>
+                        <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Gross</Th>
+                        <Th py={3} fontSize="xs" color="purple.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Advance Ded.</Th>
+                        <Th py={3} fontSize="xs" color="red.400" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Other Ded.</Th>
+                        <Th py={3} fontSize="xs" color="green.600" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Net Salary</Th>
                         <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Status</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
                       {filteredLedger.map((p) => {
-                        const name = p.employee?.user?.name || "Unknown";
+                        const name = p.employee?.name || p.employee?.user?.name || "Unknown";
+                        const gross = (p.basicSalary || 0) + (p.allowance || 0);
+                        const advDed = p.advanceDeduction || 0;
+                        const otherDed = (p.deductions || 0) - advDed;
                         return (
                           <Tr key={p._id} _hover={{ bg: "gray.50" }} transition="background 0.15s">
                             <Td py={3}>
@@ -318,14 +351,18 @@ const PayrollReport = () => {
                               </Flex>
                             </Td>
                             <Td py={3} isNumeric>
-                              <Text fontSize="sm" color="gray.700">Rs {(p.basicSalary || 0).toLocaleString()}</Text>
+                              <Text fontSize="sm" color="gray.700">Rs {gross.toLocaleString()}</Text>
                             </Td>
                             <Td py={3} isNumeric>
-                              <Text fontSize="sm" color="gray.700">Rs {(p.allowance || 0).toLocaleString()}</Text>
+                              {advDed > 0 ? (
+                                <Text fontSize="sm" fontWeight="700" color="#7c3aed">- Rs {advDed.toLocaleString()}</Text>
+                              ) : (
+                                <Text fontSize="sm" color="gray.300">—</Text>
+                              )}
                             </Td>
                             <Td py={3} isNumeric>
                               <Text fontSize="sm" color="#dc2626" fontWeight="semibold">
-                                {p.deductions > 0 ? `- Rs ${(p.deductions || 0).toLocaleString()}` : "—"}
+                                {otherDed > 0 ? `- Rs ${Math.round(otherDed).toLocaleString()}` : "—"}
                               </Text>
                             </Td>
                             <Td py={3} isNumeric>
@@ -333,7 +370,7 @@ const PayrollReport = () => {
                             </Td>
                             <Td py={3}>
                               <Badge
-                                colorScheme={p.status === "Paid" ? "green" : p.status === "Generated" ? "blue" : "gray"}
+                                colorScheme={p.status === "Approved" ? "green" : p.status === "Generated" ? "orange" : "gray"}
                                 borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold"
                               >
                                 {p.status || "Generated"}
@@ -345,13 +382,15 @@ const PayrollReport = () => {
                     </Tbody>
                   </Table>
                 </Box>
-                <Flex px={5} py={3} borderTop="1px solid" borderColor="gray.100" justify="space-between" align="center">
-                  <Text fontSize="xs" color="gray.400">
-                    <Text as="span" fontWeight="semibold" color="gray.600">{filteredLedger.length}</Text> employees
+                <Flex px={5} py={3} borderTop="1px solid" borderColor="gray.100" justify="space-between" align="center" bg="gray.50">
+                  <Text fontSize="xs" color="gray.500" fontWeight="600">
+                    {filteredLedger.length} employees
                   </Text>
-                  <Flex gap={6}>
-                    <Text fontSize="xs" color="gray.500">Deductions: <Text as="span" fontWeight="bold" color="#dc2626">Rs {ledgerDeductions.toLocaleString()}</Text></Text>
-                    <Text fontSize="xs" color="gray.500">Net Total: <Text as="span" fontWeight="bold" color="#065f46">Rs {ledgerTotal.toLocaleString()}</Text></Text>
+                  <Flex gap={5} flexWrap="wrap" justify="flex-end">
+                    <Text fontSize="xs" color="gray.500">Gross: <Text as="span" fontWeight="700" color="gray.700">Rs {ledgerGross.toLocaleString()}</Text></Text>
+                    <Text fontSize="xs" color="gray.500">Advance Ded.: <Text as="span" fontWeight="700" color="#7c3aed">Rs {ledgerAdvance.toLocaleString()}</Text></Text>
+                    <Text fontSize="xs" color="gray.500">Other Ded.: <Text as="span" fontWeight="700" color="#dc2626">Rs {(ledgerOtherDed > 0 ? ledgerOtherDed : 0).toLocaleString()}</Text></Text>
+                    <Text fontSize="xs" color="gray.500">Net Payable: <Text as="span" fontWeight="800" color="#065f46">Rs {ledgerTotal.toLocaleString()}</Text></Text>
                   </Flex>
                 </Flex>
               </Box>

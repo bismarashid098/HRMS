@@ -38,6 +38,21 @@ const Payroll = () => {
   const defaultMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
 
   const [month, setMonth] = useState(defaultMonth);
+
+  const prevMonth = () => {
+    const [y, m] = month.split("-").map(Number);
+    const d = new Date(y, m - 2, 1);
+    setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  };
+  const nextMonth = () => {
+    const [y, m] = month.split("-").map(Number);
+    const d = new Date(y, m, 1);
+    setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  };
+  const monthDisplayLabel = (() => {
+    const [y, m] = month.split("-").map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  })();
   const [payrolls, setPayrolls] = useState([]);
   const [overview, setOverview] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -239,7 +254,9 @@ const Payroll = () => {
         <Flex justify="space-between" align="center" wrap="wrap" gap={4} position="relative">
           <Box>
             <Text fontSize="2xl" fontWeight="bold" color="white">Payroll Management</Text>
-            <Text fontSize="sm" color="whiteAlpha.700" mt={1}>Generate, review and approve monthly salary payouts</Text>
+            <Text fontSize="sm" color="whiteAlpha.700" mt={1}>
+              {monthDisplayLabel} — Generate, review and approve monthly salary payouts
+            </Text>
           </Box>
           <Flex gap={2} wrap="wrap">
             <Button leftIcon={<FaFileExcel />} variant="outline" borderColor="whiteAlpha.400" color="white" _hover={{ bg: "whiteAlpha.200" }} size="sm" borderRadius="xl" onClick={exportExcel} isDisabled={!filteredPayrolls.length}>Export</Button>
@@ -338,7 +355,14 @@ const Payroll = () => {
         <Flex gap={3} wrap="wrap" align="flex-end">
           <Box>
             <Text fontSize="xs" fontWeight="semibold" color="gray.500" mb={1} textTransform="uppercase">Month</Text>
-            <Select value={month} onChange={(e) => setMonth(e.target.value)} w="220px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46">{getMonthOptions()}</Select>
+            <Flex align="center" gap={1}>
+              <Button size="sm" variant="outline" borderRadius="lg" borderColor="gray.200"
+                px={2} onClick={prevMonth} _hover={{ bg: "gray.50" }}>←</Button>
+              <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)}
+                w="175px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46" textAlign="center" />
+              <Button size="sm" variant="outline" borderRadius="lg" borderColor="gray.200"
+                px={2} onClick={nextMonth} _hover={{ bg: "gray.50" }}>→</Button>
+            </Flex>
           </Box>
           <InputGroup flex="1" minW="200px">
             <InputLeftElement pointerEvents="none"><Icon as={FaSearch} color="gray.300" fontSize="13px" /></InputLeftElement>
@@ -531,14 +555,39 @@ const Payroll = () => {
                 {/* Deductions */}
                 <Text fontSize="xs" fontWeight="700" color="gray.400" textTransform="uppercase" letterSpacing="wider" mb={2}>Deductions</Text>
                 <Box bg="red.50" border="1px solid" borderColor="red.100" borderRadius="xl" overflow="hidden" mb={4}>
-                  <Flex justify="space-between" px={4} py={3} borderBottom="1px solid" borderColor="red.100">
-                    <Box>
-                      <Text fontSize="sm" color="gray.600">Advance Deduction</Text>
-                    </Box>
-                    <Text fontSize="sm" fontWeight="semibold" color="red.600">
-                      {ledger.advanceDeduction > 0 ? `- Rs ${Math.round(ledger.advanceDeduction).toLocaleString()}` : "—"}
-                    </Text>
-                  </Flex>
+                  <Box borderBottom="1px solid" borderColor="red.100">
+                    <Flex justify="space-between" px={4} py={3}
+                      bg={ledger.advanceEntries?.length > 0 ? "orange.50" : undefined}>
+                      <Box>
+                        <Text fontSize="sm" color="gray.600" fontWeight="600">Advance Deduction</Text>
+                        {ledger.advanceDeduction > 0 && (
+                          <Text fontSize="10px" color="gray.400" mt={0.5}>
+                            {ledger.advanceEntries?.length || 0} advance{ledger.advanceEntries?.length !== 1 ? "s" : ""} this month
+                          </Text>
+                        )}
+                      </Box>
+                      <Text fontSize="sm" fontWeight="semibold" color="red.600">
+                        {ledger.advanceDeduction > 0 ? `- Rs ${Math.round(ledger.advanceDeduction).toLocaleString()}` : "—"}
+                      </Text>
+                    </Flex>
+                    {/* Individual advance entries */}
+                    {ledger.advanceEntries?.length > 0 && ledger.advanceEntries.map((adv, i) => (
+                      <Flex key={adv._id || i} justify="space-between" align="center"
+                        px={4} py={2} bg="orange.50" borderTop="1px dashed" borderColor="orange.200">
+                        <Flex align="center" gap={2}>
+                          <Box w={1.5} h={1.5} borderRadius="full" bg="orange.400" />
+                          <Box>
+                            <Text fontSize="11px" color="gray.600">
+                              {new Date(adv.date).toLocaleDateString()} — {adv.reason}
+                            </Text>
+                          </Box>
+                        </Flex>
+                        <Text fontSize="11px" fontWeight="700" color="orange.600">
+                          Rs {adv.amount?.toLocaleString()}
+                        </Text>
+                      </Flex>
+                    ))}
+                  </Box>
                   <Flex justify="space-between" px={4} py={3} borderBottom="1px solid" borderColor="red.100">
                     <Box>
                       <Text fontSize="sm" color="gray.600">Unpaid Leave Deduction</Text>
