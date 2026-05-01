@@ -171,7 +171,7 @@ const EmployeeList = () => {
       {/* Header */}
       <Flex justify="space-between" align="center" mb={5} wrap="wrap" gap={3}>
         <Box>
-          <Text fontSize="xl" fontWeight="bold" color="gray.800">Employee Directory</Text>
+          <Text fontSize="xl" fontWeight="bold" color="gray.800">Employee Directory Some Edit in Time By Bisma</Text>
           <Text fontSize="sm" color="gray.400">Manage and track all employees in your organization</Text>
         </Box>
         <HStack spacing={3}>
