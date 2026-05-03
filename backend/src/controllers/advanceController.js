@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Advance = require("../models/Advance");
 const Employee = require("../models/Employee");
+const Settings = require("../models/Settings");
 
 // @desc    Request a salary advance
 // @route   POST /api/advances
@@ -8,22 +9,82 @@ const Employee = require("../models/Employee");
 exports.requestAdvance = asyncHandler(async (req, res) => {
   const { employeeId, amount, reason, date } = req.body;
 
-  const employee = await Employee.findById(employeeId);
+  if (!amount || Number(amount) <= 0) {
+    res.status(400);
+    throw new Error("Amount must be greater than 0");
+  }
+  if (!reason) {
+    res.status(400);
+    throw new Error("Reason is required");
+  }
+
+  // Employees can only request for themselves
+  let targetEmployeeId = employeeId;
+  if (req.user && req.user.role === "Employee") {
+    const selfEmp = await Employee.findOne({ user: req.user._id });
+    if (!selfEmp) {
+      res.status(404);
+      throw new Error("Employee profile not found");
+    }
+    targetEmployeeId = selfEmp._id;
+  }
+
+  if (!targetEmployeeId) {
+    res.status(400);
+    throw new Error("Employee is required");
+  }
+
+  const employee = await Employee.findById(targetEmployeeId);
   if (!employee) {
     res.status(404);
     throw new Error("Employee not found");
   }
 
   const advanceDate = date ? new Date(date) : new Date();
+  if (Number.isNaN(advanceDate.getTime())) {
+    res.status(400);
+    throw new Error("Invalid date");
+  }
   const month = advanceDate.getMonth() + 1;
   const year = advanceDate.getFullYear();
 
   // Admin-added advances are auto-approved; employee requests stay Pending
   const isAdmin = req.user && req.user.role === "Admin";
 
+  // Enforce advance limit from system settings
+  const settings = await Settings.findOne();
+  const limitType = settings?.advances?.limitType || "PERCENTAGE";
+  const limitValue = Number(settings?.advances?.limitValue ?? 30);
+
+  const rawSalary = employee.salary;
+  const basicSalary =
+    typeof rawSalary === "number"
+      ? rawSalary
+      : rawSalary && typeof rawSalary.basic === "number"
+      ? rawSalary.basic
+      : 0;
+
+  const maxAllowed =
+    limitType === "FIXED" ? Math.max(0, limitValue) : Math.max(0, (basicSalary * limitValue) / 100);
+
+  // Total requested this month (excluding rejected)
+  const existing = await Advance.find({
+    employee: targetEmployeeId,
+    month,
+    year,
+    status: { $in: ["Pending", "Approved", "Paid"] }
+  }).select("amount");
+  const already = existing.reduce((s, a) => s + (a.amount || 0), 0);
+  const requestedNow = Number(amount);
+
+  if (maxAllowed > 0 && already + requestedNow > maxAllowed) {
+    res.status(400);
+    throw new Error(`Advance limit exceeded. Max allowed is ${maxAllowed}`);
+  }
+
   const advance = await Advance.create({
-    employee: employeeId,
-    amount,
+    employee: targetEmployeeId,
+    amount: requestedNow,
     reason,
     date: advanceDate,
     month,

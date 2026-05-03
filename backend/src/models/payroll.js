@@ -15,6 +15,7 @@ const payrollSchema = new mongoose.Schema(
     allowance: { type: Number, default: 0 },
 
     deductions: { type: Number, default: 0 },
+    taxDeduction: { type: Number, default: 0 },
     advanceDeduction:  { type: Number, default: 0 },
     leaveDeduction:    { type: Number, default: 0 },
     extraOffDeduction: { type: Number, default: 0 },

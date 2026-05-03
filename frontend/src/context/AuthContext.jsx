@@ -3,8 +3,17 @@ import api from "../api/axios";
 
 export const AuthContext = createContext();
 
+const getStoredUser = () => {
+    try {
+        const stored = localStorage.getItem("user");
+        return stored ? JSON.parse(stored) : null;
+    } catch {
+        return null;
+    }
+};
+
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(getStoredUser);
     const [token, setToken] = useState(localStorage.getItem("token") || "");
     const [loading, setLoading] = useState(true);
 
@@ -24,6 +33,7 @@ export const AuthProvider = ({ children }) => {
             try {
                 const { data } = await api.get("/auth/verify");
                 setUser(data);
+                localStorage.setItem("user", JSON.stringify(data));
             } catch {
                 logout();
             } finally {

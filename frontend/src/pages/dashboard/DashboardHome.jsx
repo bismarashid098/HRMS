@@ -13,6 +13,10 @@ import {
   ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid,
   Tooltip as ReTip, ResponsiveContainer,
 } from "recharts";
+import { Card } from "../../components/dashboard/Card";
+import { MetricCard } from "../../components/dashboard/MetricCard";
+import { Sparkline } from "../../components/dashboard/Sparkline";
+import { ChartTooltip } from "../../components/dashboard/ChartTooltip";
 
 /* ── helpers ── */
 const greet = () => {
@@ -31,90 +35,6 @@ const useClock = () => {
   }, []);
   return t.toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 };
-
-/* ── Mini Sparkline ── */
-const Sparkline = ({ data, color = "rgba(255,255,255,0.8)", width = 110, height = 28 }) => {
-  if (!data || data.length < 2) return null;
-  const max = Math.max(...data, 1);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const pad = 4;
-  const pts = data.map((v, i) => {
-    const x = (i / (data.length - 1)) * width;
-    const y = height - pad - ((v - min) / range) * (height - pad * 2);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(" ");
-  const fillPts = `0,${height} ${pts} ${width},${height}`;
-  return (
-    <svg width={width} height={height} style={{ display: "block" }}>
-      <polyline points={fillPts} fill={color} fillOpacity={0.15} stroke="none" />
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.8"
-        strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-};
-
-/* ── Gradient KPI Card ── */
-const KPICard = ({ label, value, sub, gradient, icon, sparkData }) => (
-  <Box bgGradient={gradient} borderRadius="20px" px={5} pt={4} pb={3}
-    position="relative" overflow="hidden"
-    _hover={{ transform: "translateY(-4px)", boxShadow: "0 20px 50px rgba(0,0,0,0.22)" }}
-    transition="all 0.28s cubic-bezier(0.34,1.56,0.64,1)" cursor="default">
-    <Box pos="absolute" top="-20px" right="-20px" w="105px" h="105px"
-      borderRadius="full" bg="rgba(255,255,255,0.1)" />
-    <Box pos="absolute" bottom="-32px" left="-14px" w="85px" h="85px"
-      borderRadius="full" bg="rgba(255,255,255,0.06)" />
-    <Box pos="absolute" top="50%" right="55px" w="55px" h="55px"
-      borderRadius="full" bg="rgba(255,255,255,0.04)"
-      style={{ transform: "translateY(-50%)" }} />
-
-    <Flex justify="space-between" align="flex-start" position="relative">
-      <Box flex={1} minW={0}>
-        <Text fontSize="10px" color="rgba(255,255,255,0.65)" fontWeight="700"
-          textTransform="uppercase" letterSpacing="0.14em" mb={1.5}>{label}</Text>
-        <Text fontSize="2xl" fontWeight="900" color="white" lineHeight="1.1"
-          letterSpacing="-0.02em">{value}</Text>
-        {sub && (
-          <Text fontSize="10px" color="rgba(255,255,255,0.55)" mt={1} fontWeight="500">{sub}</Text>
-        )}
-      </Box>
-      <Flex w="40px" h="40px" borderRadius="14px" bg="rgba(255,255,255,0.18)"
-        align="center" justify="center" flexShrink={0}
-        style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)" }}>
-        <Icon as={icon} color="white" boxSize="17px" />
-      </Flex>
-    </Flex>
-
-    {sparkData && sparkData.length > 1 && (
-      <Box mt={2.5} position="relative">
-        <Sparkline data={sparkData} color="rgba(255,255,255,0.75)" width={110} height={26} />
-      </Box>
-    )}
-  </Box>
-);
-
-/* ── Panel card ── */
-const Panel = ({ title, accent = "#10b981", action, onAction, children, ...rest }) => (
-  <Flex direction="column" bg="white" borderRadius="20px"
-    boxShadow="0 2px 4px rgba(0,0,0,0.04), 0 8px 28px rgba(0,0,0,0.07)"
-    border="1px solid rgba(0,0,0,0.05)" overflow="hidden" {...rest}>
-    <Box h="3.5px" flexShrink={0}
-      style={{ background: `linear-gradient(90deg, ${accent} 0%, ${accent}55 100%)` }} />
-    {title && (
-      <Flex px={5} pt={3.5} pb={3} justify="space-between" align="center"
-        flexShrink={0} borderBottom="1px solid" borderColor="gray.50">
-        <Text fontWeight="700" fontSize="13px" color="gray.800" letterSpacing="-0.01em">{title}</Text>
-        {action && (
-          <Button size="xs" variant="ghost" borderRadius="lg" onClick={onAction}
-            rightIcon={<Icon as={FaChevronRight} boxSize={2} />}
-            fontSize="11px" px={2.5} h={6} color="gray.400" fontWeight="500"
-            _hover={{ color: "gray.600", bg: "gray.50" }}>{action}</Button>
-        )}
-      </Flex>
-    )}
-    {children}
-  </Flex>
-);
 
 /* ── SVG Donut Ring with glow ── */
 const DonutRing = ({ value, max, color, size = 120, thickness = 12 }) => {
@@ -143,25 +63,6 @@ const ChartBox = ({ children }) => (
     </Box>
   </Box>
 );
-
-/* ── Custom chart tooltip ── */
-const ChartTip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <Box bg="white" borderRadius="14px"
-      boxShadow="0 8px 32px rgba(0,0,0,0.14)" px={3.5} py={3}
-      border="1px solid" borderColor="gray.100" minW="130px">
-      <Text fontSize="11px" fontWeight="700" color="gray.400" mb={2}>{label}</Text>
-      {payload.map((p, i) => (
-        <Flex key={i} align="center" gap={2} mb={i < payload.length - 1 ? 1 : 0}>
-          <Box w={2} h={2} borderRadius="3px" bg={p.color || p.stroke || p.fill} />
-          <Text fontSize="12px" color="gray.500">{p.name}:</Text>
-          <Text fontSize="12px" fontWeight="800" color="gray.800">{p.value}</Text>
-        </Flex>
-      ))}
-    </Box>
-  );
-};
 
 /* ── Workforce Snapshot progress row ── */
 const SnapRow = ({ label, value, max, fill, track, badge, badgeBg, badgeTxt }) => {
@@ -249,10 +150,19 @@ const AdminDashboard = ({ data }) => {
   ];
 
   return (
-    <Flex direction="column" gap={4}
-      mx={{ base: -4, md: -6 }} mt={{ base: -4, md: -6 }} mb={{ base: -4, md: -6 }}
-      h="calc(100vh - 64px)" overflow="hidden"
-      bg="#f0f4ff" px={5} pt={4} pb={4}>
+    <Flex
+      direction="column"
+      gap={4}
+      mx={{ base: -4, md: -6 }}
+      mt={{ base: -4, md: -6 }}
+      mb={{ base: -4, md: -6 }}
+      minH="calc(100vh - 64px)"
+      overflow="hidden"
+      bg="#f0f4ff"
+      px={5}
+      pt={4}
+      pb={4}
+    >
 
       {/* ════ WELCOME BANNER ════ */}
       <Box
@@ -295,217 +205,377 @@ const AdminDashboard = ({ data }) => {
         </Flex>
       </Box>
 
-      {/* ════ KPI CARDS ════ */}
-      <Grid templateColumns="repeat(4, 1fr)" gap={4} flexShrink={0}>
-        {kpiCards.map((k) => <KPICard key={k.label} {...k} />)}
-      </Grid>
+      {/* ════ BELOW-HEADER DASHBOARD (REDESIGNED) ════ */}
+      <div className="relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-2">
+        {/* subtle enterprise background lines */}
+        <div
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            backgroundImage: [
+              // soft grid
+              "linear-gradient(to right, rgba(15,23,42,0.06) 1px, transparent 1px)",
+              "linear-gradient(to bottom, rgba(15,23,42,0.06) 1px, transparent 1px)",
+              // soft diagonals
+              "linear-gradient(135deg, rgba(6,95,70,0.07) 0%, transparent 45%)",
+              "linear-gradient(315deg, rgba(99,102,241,0.06) 0%, transparent 45%)",
+            ].join(", "),
+            backgroundSize: "64px 64px, 64px 64px, 100% 100%, 100% 100%",
+            opacity: 0.55,
+            maskImage:
+              "radial-gradient(ellipse at top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.0) 85%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse at top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.0) 85%)",
+          }}
+        />
+        {/* KPI */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:auto-rows-fr">
+          {kpiCards.map((k) => (
+            <MetricCard
+              key={k.label}
+              label={k.label}
+              value={k.value}
+              sub={k.sub}
+              icon={k.icon}
+              gradient={k.gradient}
+              spark={
+                k.sparkData ? (
+                  <Sparkline
+                    data={k.sparkData}
+                    color="rgba(255,255,255,0.75)"
+                    width={120}
+                    height={26}
+                  />
+                ) : null
+              }
+            />
+          ))}
+        </div>
 
-      {/* ════ MIDDLE ROW ════ */}
-      <Grid flex={1} minH={0} templateColumns="1fr 300px" gap={4}>
+        {/* Main grid */}
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-[1fr_340px]">
 
-        {/* Composed Chart: bars + line */}
-        <Panel title="Attendance Trend" accent="#10b981">
-          <Flex gap={5} px={5} pt={1} pb={2} flexShrink={0} align="center">
-            <Flex align="center" gap={2}>
-              <Box w={3} h={3} borderRadius="4px"
-                style={{ background: "linear-gradient(135deg, #10b981, #059669)" }} />
-              <Text fontSize="11px" color="gray.500" fontWeight="600">Present</Text>
-            </Flex>
-            <Flex align="center" gap={2}>
-              <Box w={3} h="2px" borderRadius="full" bg="#f87171"
-                style={{ borderTop: "2px dashed #f87171" }} />
-              <Text fontSize="11px" color="gray.500" fontWeight="600">Absent</Text>
-            </Flex>
-          </Flex>
-          <ChartBox>
-            {chartData.length === 0 ? (
-              <Flex h="100%" align="center" justify="center" direction="column" gap={2}>
-                <Icon as={FaCalendarCheck} boxSize={10} color="gray.200" />
-                <Text color="gray.300" fontSize="sm">No attendance data yet</Text>
-              </Flex>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="barGradA" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" />
-                      <stop offset="100%" stopColor="#059669" />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="2 5" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false}
-                    tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 500 }} />
-                  <YAxis axisLine={false} tickLine={false}
-                    tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 500 }} />
-                  <ReTip content={<ChartTip />}
-                    cursor={{ fill: "rgba(148,163,184,0.06)", radius: 8 }} />
-                  <Bar dataKey="Present" name="Present" fill="url(#barGradA)"
-                    radius={[7, 7, 0, 0]} maxBarSize={30} />
-                  <Line type="monotone" dataKey="Absent" name="Absent"
-                    stroke="#f87171" strokeWidth={2.5} dot={false}
-                    strokeDasharray="5 3"
-                    activeDot={{ r: 5, fill: "#f87171", stroke: "white", strokeWidth: 2 }} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            )}
-          </ChartBox>
-        </Panel>
+          {/* Attendance Trend */}
+          <Card
+            title="Attendance Trend"
+            subtitle="Present vs Absent (last days)"
+            accent="#10b981"
+            className="min-h-[320px] xl:min-h-0"
+            right={
+              <button
+                type="button"
+                className="rounded-xl px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition"
+                onClick={() => nav("/dashboard/attendance/daily")}
+              >
+                View daily <span className="ml-1">→</span>
+              </button>
+            }
+          >
+            <div className="px-5 pt-2 pb-3">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-3 w-3 rounded-[4px]"
+                    style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}
+                  />
+                  <span className="text-[11px] font-semibold text-slate-500">
+                    Present
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-[2px] w-6 rounded-full"
+                    style={{ borderTop: "2px dashed #f87171" }}
+                  />
+                  <span className="text-[11px] font-semibold text-slate-500">
+                    Absent
+                  </span>
+                </div>
+              </div>
+            </div>
 
-        {/* Right column — Today's Overview + Leave Breakdown */}
-        <Flex direction="column" gap={4}>
+            <div className="h-[260px] px-4 pb-4">
+              {chartData.length === 0 ? (
+                <div className="flex h-full flex-col items-center justify-center gap-2 text-slate-300">
+                  <FaCalendarCheck className="h-10 w-10 opacity-40" />
+                  <div className="text-sm font-medium">No attendance data yet</div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -16, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="barGradA" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#10b981" />
+                        <stop offset="100%" stopColor="#059669" />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="2 6" vertical={false} stroke="#eef2f7" />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 600 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 600 }}
+                    />
+                    <ReTip content={<ChartTooltip />} cursor={{ fill: "rgba(148,163,184,0.06)" }} />
+                    <Bar dataKey="Present" name="Present" fill="url(#barGradA)" radius={[8, 8, 0, 0]} maxBarSize={34} />
+                    <Line
+                      type="monotone"
+                      dataKey="Absent"
+                      name="Absent"
+                      stroke="#f87171"
+                      strokeWidth={2.5}
+                      dot={false}
+                      strokeDasharray="5 3"
+                      activeDot={{ r: 5, fill: "#f87171", stroke: "white", strokeWidth: 2 }}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </Card>
 
-          {/* Donut ring */}
-          <Panel title="Today's Overview" accent="#6366f1" flex={1} minH={0}>
-            <Flex direction="column" align="center" justify="center"
-              flex={1} px={4} pb={3} pt={1} gap={3}>
-              <Box position="relative">
-                <DonutRing value={pres} max={total} color="#10b981" size={120} thickness={12} />
-                <Flex position="absolute" inset={0} align="center" justify="center" direction="column">
-                  <Text fontSize="22px" fontWeight="900" color="gray.800" lineHeight="1"
-                    letterSpacing="-0.02em">{rate}%</Text>
-                  <Text fontSize="9px" color="gray.400" fontWeight="700"
-                    textTransform="uppercase" letterSpacing="0.08em">Rate</Text>
-                </Flex>
-              </Box>
-              <Grid templateColumns="1fr 1fr" gap={2} w="100%">
-                <Box borderRadius="13px" p={2.5} textAlign="center"
-                  style={{ background: "linear-gradient(135deg, #f0fdf4, #dcfce7)" }}>
-                  <Text fontSize="20px" fontWeight="900" color="#059669" lineHeight="1">{pres}</Text>
-                  <Text fontSize="9px" fontWeight="700" color="#059669" mt={1}
-                    textTransform="uppercase" letterSpacing="0.08em">Present</Text>
-                </Box>
-                <Box borderRadius="13px" p={2.5} textAlign="center"
-                  style={{ background: "linear-gradient(135deg, #fef2f2, #fee2e2)" }}>
-                  <Text fontSize="20px" fontWeight="900" color="#dc2626" lineHeight="1">{absent}</Text>
-                  <Text fontSize="9px" fontWeight="700" color="#dc2626" mt={1}
-                    textTransform="uppercase" letterSpacing="0.08em">Absent</Text>
-                </Box>
-              </Grid>
-              <Flex w="100%" align="center" justify="space-between"
-                px={3} py={2} borderRadius="12px"
-                style={{ background: "linear-gradient(135deg, #fffbeb, #fef3c7)" }}>
-                <Text fontSize="11px" color="#92400e" fontWeight="600">Pending Leaves</Text>
-                <Badge style={{ background: "#fde68a" }} color="#92400e" borderRadius="full"
-                  fontSize="10px" fontWeight="800" px={2}>{leaves}</Badge>
-              </Flex>
-            </Flex>
-          </Panel>
+          {/* Right rail */}
+          <div className="grid min-h-0 grid-cols-1 gap-4">
 
-          {/* Leave breakdown */}
-          <Panel title="Leave Breakdown" accent="#f59e0b" flex={1} minH={0}
-            action="View All" onAction={() => nav("/dashboard/leaves")}>
-            <Box px={3} pb={3} flex={1} overflowY="auto">
-              {leaveList.map((item) => {
-                const cfg = leaveCfg(item.name);
-                const pct = leavTotal ? Math.round((item.value / leavTotal) * 100) : 0;
+            <Card title="Today's Overview" subtitle="Live snapshot" accent="#6366f1" className="min-h-[220px]">
+              <div className="flex items-center justify-between gap-4 px-5 py-5">
+                <div className="relative">
+                  <div className="rotate-[-90deg]">
+                    <DonutRing value={pres} max={total} color="#10b981" size={120} thickness={12} />
+                  </div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="text-[22px] font-black tracking-[-0.02em] text-slate-800 leading-none">
+                      {rate}%
+                    </div>
+                    <div className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+                      Rate
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid flex-1 grid-cols-2 gap-2">
+                  <div className="rounded-2xl p-3 text-center" style={{ background: "linear-gradient(135deg, #f0fdf4, #dcfce7)" }}>
+                    <div className="text-[20px] font-black leading-none" style={{ color: "#059669" }}>
+                      {pres}
+                    </div>
+                    <div className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ color: "#059669" }}>
+                      Present
+                    </div>
+                  </div>
+                  <div className="rounded-2xl p-3 text-center" style={{ background: "linear-gradient(135deg, #fef2f2, #fee2e2)" }}>
+                    <div className="text-[20px] font-black leading-none" style={{ color: "#dc2626" }}>
+                      {absent}
+                    </div>
+                    <div className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ color: "#dc2626" }}>
+                      Absent
+                    </div>
+                  </div>
+                  <div className="col-span-2 mt-1 flex items-center justify-between rounded-2xl px-3 py-2" style={{ background: "linear-gradient(135deg, #fffbeb, #fef3c7)" }}>
+                    <div className="text-[11px] font-semibold" style={{ color: "#92400e" }}>
+                      Pending Leaves
+                    </div>
+                    <div className="rounded-full px-2 py-1 text-[10px] font-extrabold" style={{ background: "#fde68a", color: "#92400e" }}>
+                      {leaves}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <Card
+              title="Leave Breakdown"
+              subtitle="By type"
+              accent="#f59e0b"
+              right={
+                <button
+                  type="button"
+                  className="rounded-xl px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition"
+                  onClick={() => nav("/dashboard/leaves")}
+                >
+                  View all <span className="ml-1">→</span>
+                </button>
+              }
+              className="min-h-[240px] xl:min-h-0"
+            >
+              <div className="max-h-[320px] overflow-auto px-4 py-4">
+                <div className="space-y-2">
+                  {leaveList.map((item) => {
+                    const cfg = leaveCfg(item.name);
+                    const pct = leavTotal ? Math.round((item.value / leavTotal) * 100) : 0;
+                    return (
+                      <div
+                        key={item.name}
+                        className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2 transition hover:bg-white hover:shadow-[0_8px_22px_rgba(0,0,0,0.08)]"
+                      >
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-xl" style={{ background: cfg.bg }}>
+                            <div className="h-2 w-2 rounded-full" style={{ background: cfg.color }} />
+                          </div>
+                          <div className="min-w-0 flex-1 truncate text-[12px] font-extrabold text-slate-800">
+                            {item.name}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-[12px] font-black" style={{ color: cfg.color }}>
+                              {item.value}
+                            </div>
+                            <div className="text-[10px] font-semibold text-slate-400">
+                              {pct}%
+                            </div>
+                          </div>
+                        </div>
+                        <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{ width: `${pct}%`, background: cfg.grad }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Bottom grid */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+
+          <Card
+            title="Quick Access"
+            subtitle="Shortcuts"
+            accent="#0ea5e9"
+            className="order-1 lg:order-2"
+          >
+            <div className="grid grid-cols-1 gap-2 px-5 py-4 sm:grid-cols-2">
+              {quickLinks.map((a) => {
+                const I = a.icon;
                 return (
-                  <Box key={item.name} px={3} py={2} mb={1.5}
-                    bg="#fafbfc" borderRadius="12px"
-                    border="1px solid" borderColor="gray.100"
-                    _hover={{ bg: "white", boxShadow: "0 3px 12px rgba(0,0,0,0.07)" }}
-                    transition="all 0.15s">
-                    <Flex align="center" gap={2} mb={2}>
-                      <Flex w={6} h={6} borderRadius="8px" bg={cfg.bg}
-                        align="center" justify="center" flexShrink={0}>
-                        <Box w="7px" h="7px" borderRadius="full" bg={cfg.color} />
-                      </Flex>
-                      <Text fontSize="11.5px" fontWeight="700" color="gray.800" flex={1} noOfLines={1}>{item.name}</Text>
-                      <Flex align="center" gap={1.5}>
-                        <Text fontSize="11px" fontWeight="900" color={cfg.color}>{item.value}</Text>
-                        <Text fontSize="9px" color="gray.400" fontWeight="500">{pct}%</Text>
-                      </Flex>
-                    </Flex>
-                    <Box bg="gray.100" borderRadius="full" h="5px" overflow="hidden">
-                      <Box h="100%" borderRadius="full" w={`${pct}%`}
-                        transition="width 0.8s ease"
-                        style={{ background: cfg.grad }} />
-                    </Box>
-                  </Box>
+                  <button
+                    type="button"
+                    key={a.label}
+                    onClick={() => nav(a.to)}
+                    className={[
+                      "group flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left",
+                      "shadow-[0_1px_4px_rgba(0,0,0,0.06)] transition-all duration-300 ease-out",
+                      "hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-[0_10px_28px_rgba(0,0,0,0.10)]",
+                      "focus:outline-none focus:ring-2 focus:ring-slate-200",
+                    ].join(" ")}
+                  >
+                    <span
+                      className="flex h-9 w-9 items-center justify-center rounded-2xl text-white shadow-[0_6px_16px_rgba(0,0,0,0.18)]"
+                      style={{
+                        background: `linear-gradient(135deg, ${a.color} 0%, ${a.color}cc 100%)`,
+                        boxShadow: `0 8px 18px ${a.color}33`,
+                      }}
+                    >
+                      <I className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-[12px] font-extrabold text-slate-700">
+                        {a.label}
+                      </span>
+                      <span className="block truncate text-[10px] font-medium text-slate-400">
+                        {a.sub}
+                      </span>
+                    </span>
+                  </button>
                 );
               })}
-            </Box>
-          </Panel>
-        </Flex>
-      </Grid>
+            </div>
+          </Card>
 
-      {/* ════ BOTTOM ROW ════ */}
-      <Grid flexShrink={0} templateColumns="1fr 1fr 1fr" gap={4} h="178px">
+          <Card title="Activity Summary" subtitle="Key metrics" accent="#8b5cf6" className="order-2 lg:order-1">
+            <div className="relative px-5 py-4">
+              <div
+                className="absolute left-[26px] top-6 bottom-6 w-[2px]"
+                style={{ background: "linear-gradient(180deg, #8b5cf655, #e2e8f0)" }}
+              />
+              <div className="space-y-3">
+                {feedItems.map((f, i) => {
+                  const I = f.icon;
+                  return (
+                    <div key={i} className="relative flex items-center gap-3">
+                      <div
+                        className="relative z-10 flex h-8 w-8 items-center justify-center rounded-xl"
+                        style={{
+                          background: `linear-gradient(135deg, ${f.color}28, ${f.color}12)`,
+                          border: `1.5px solid ${f.color}33`,
+                        }}
+                      >
+                        <I className="h-3 w-3" style={{ color: f.color }} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[12px] font-extrabold text-slate-700">
+                          {f.label}
+                        </div>
+                        <div className="text-[10px] font-medium text-slate-400">
+                          {f.sub}
+                        </div>
+                      </div>
+                      <div className="rounded-xl px-3 py-1" style={{ background: `${f.color}16` }}>
+                        <div className="text-[13px] font-black tracking-[-0.02em]" style={{ color: f.color }}>
+                          {f.value}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </Card>
 
-        {/* Timeline Activity Feed */}
-        <Panel title="Activity Summary" accent="#8b5cf6">
-          <Box px={4} pb={3} overflowY="hidden" position="relative">
-            <Box position="absolute" left="30px" top="4px" bottom="10px" w="1.5px"
-              style={{ background: "linear-gradient(180deg, #8b5cf655, #e2e8f0)" }} />
-            {feedItems.map((f, i) => (
-              <Flex key={i} align="center" gap={3} py={2} position="relative">
-                <Flex w={7} h={7} borderRadius="10px" flexShrink={0}
-                  align="center" justify="center" position="relative" zIndex={1}
-                  style={{
-                    background: `linear-gradient(135deg, ${f.color}28, ${f.color}12)`,
-                    border: `1.5px solid ${f.color}33`,
-                  }}>
-                  <Icon as={f.icon} color={f.color} boxSize="11px" />
-                </Flex>
-                <Box flex={1} minW={0}>
-                  <Text fontSize="11.5px" color="gray.700" fontWeight="600" noOfLines={1}>{f.label}</Text>
-                  <Text fontSize="10px" color="gray.400">{f.sub}</Text>
-                </Box>
-                <Box px={2.5} py={1} borderRadius="10px" flexShrink={0}
-                  style={{ background: `${f.color}16` }}>
-                  <Text fontSize="13px" fontWeight="900" color={f.color}
-                    letterSpacing="-0.02em">{f.value}</Text>
-                </Box>
-              </Flex>
-            ))}
-          </Box>
-        </Panel>
-
-        {/* Quick Access with gradient icons */}
-        <Panel title="Quick Access" accent="#0ea5e9">
-          <Grid templateColumns="1fr 1fr" gap={2} px={4} pb={3}>
-            {quickLinks.map((a) => (
-              <Flex key={a.label} align="center" gap={2.5} px={3} py={2.5}
-                bg="white" borderRadius="14px" cursor="pointer"
-                border="1px solid" borderColor="gray.100"
-                _hover={{
-                  transform: "translateY(-2px)",
-                  borderColor: `${a.color}55`,
-                }}
-                transition="all 0.22s cubic-bezier(0.34,1.56,0.64,1)"
-                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
-                onClick={() => nav(a.to)}>
-                <Flex w={8} h={8} borderRadius="12px" flexShrink={0}
-                  align="center" justify="center"
-                  style={{
-                    background: `linear-gradient(135deg, ${a.color} 0%, ${a.color}cc 100%)`,
-                    boxShadow: `0 4px 12px ${a.color}44`,
-                  }}>
-                  <Icon as={a.icon} boxSize="13px" color="white" />
-                </Flex>
-                <Box minW={0}>
-                  <Text fontSize="11px" fontWeight="700" color="gray.700" noOfLines={1}>{a.label}</Text>
-                  <Text fontSize="9.5px" color="gray.400" noOfLines={1}>{a.sub}</Text>
-                </Box>
-              </Flex>
-            ))}
-          </Grid>
-        </Panel>
-
-        {/* Workforce Snapshot — glowing bars */}
-        <Panel title="Workforce Snapshot" accent="#f59e0b"
-          action="Report" onAction={() => nav("/dashboard/reports/attendance")}>
-          <Box px={5} pt={2} pb={3}>
-            <SnapRow label="Present Today"  value={pres}   max={total}
-              fill="#10b981" track="#f0fdf4"
-              badge={`${rate}%`} badgeBg="#f0fdf4" badgeTxt="#059669" />
-            <SnapRow label="Absent Today"   value={absent} max={total}
-              fill="#f87171" track="#fef2f2" />
-            <SnapRow label="Pending Leaves" value={leaves} max={Math.max(leaves, 10)}
-              fill="#f59e0b" track="#fffbeb"
-              badge={leaves > 0 ? "Action" : undefined} badgeBg="#fffbeb" badgeTxt="#92400e" />
-          </Box>
-        </Panel>
-      </Grid>
+          <Card
+            title="Workforce Snapshot"
+            subtitle="Progress overview"
+            accent="#f59e0b"
+            className="order-3 lg:order-3"
+            right={
+              <button
+                type="button"
+                className="rounded-xl px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition"
+                onClick={() => nav("/dashboard/reports/attendance")}
+              >
+                Report <span className="ml-1">→</span>
+              </button>
+            }
+          >
+            <div className="px-5 py-4">
+              <SnapRow
+                label="Present Today"
+                value={pres}
+                max={total}
+                fill="#10b981"
+                track="#f0fdf4"
+                badge={`${rate}%`}
+                badgeBg="#f0fdf4"
+                badgeTxt="#059669"
+              />
+              <SnapRow
+                label="Absent Today"
+                value={absent}
+                max={total}
+                fill="#f87171"
+                track="#fef2f2"
+              />
+              <SnapRow
+                label="Pending Leaves"
+                value={leaves}
+                max={Math.max(leaves, 10)}
+                fill="#f59e0b"
+                track="#fffbeb"
+                badge={leaves > 0 ? "Action" : undefined}
+                badgeBg="#fffbeb"
+                badgeTxt="#92400e"
+              />
+            </div>
+          </Card>
+        </div>
+      </div>
     </Flex>
   );
 };
@@ -556,10 +626,19 @@ const ManagerDashboard = ({ data }) => {
   ];
 
   return (
-    <Flex direction="column" gap={4}
-      mx={{ base: -4, md: -6 }} mt={{ base: -4, md: -6 }} mb={{ base: -4, md: -6 }}
-      h="calc(100vh - 64px)" overflow="hidden"
-      bg="#f0f4ff" px={5} pt={4} pb={4}>
+    <Flex
+      direction="column"
+      gap={4}
+      mx={{ base: -4, md: -6 }}
+      mt={{ base: -4, md: -6 }}
+      mb={{ base: -4, md: -6 }}
+      minH="calc(100vh - 64px)"
+      overflow="hidden"
+      bg="#f0f4ff"
+      px={5}
+      pt={4}
+      pb={4}
+    >
 
       {/* ════ WELCOME BANNER ════ */}
       <Box
@@ -601,214 +680,371 @@ const ManagerDashboard = ({ data }) => {
         </Flex>
       </Box>
 
-      {/* ════ KPI CARDS ════ */}
-      <Grid templateColumns="repeat(4, 1fr)" gap={4} flexShrink={0}>
-        {kpiCards.map((k) => <KPICard key={k.label} {...k} />)}
-      </Grid>
+      {/* ════ BELOW-HEADER DASHBOARD (REDESIGNED) ════ */}
+      <div className="relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-2">
+        {/* subtle enterprise background lines */}
+        <div
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            backgroundImage: [
+              "linear-gradient(to right, rgba(15,23,42,0.06) 1px, transparent 1px)",
+              "linear-gradient(to bottom, rgba(15,23,42,0.06) 1px, transparent 1px)",
+              "linear-gradient(135deg, rgba(6,95,70,0.07) 0%, transparent 45%)",
+              "linear-gradient(315deg, rgba(99,102,241,0.06) 0%, transparent 45%)",
+            ].join(", "),
+            backgroundSize: "64px 64px, 64px 64px, 100% 100%, 100% 100%",
+            opacity: 0.55,
+            maskImage:
+              "radial-gradient(ellipse at top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.0) 85%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse at top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.0) 85%)",
+          }}
+        />
+        {/* KPI */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 xl:auto-rows-fr">
+          {kpiCards.map((k) => (
+            <MetricCard
+              key={k.label}
+              label={k.label}
+              value={k.value}
+              sub={k.sub}
+              icon={k.icon}
+              gradient={k.gradient}
+              spark={
+                k.sparkData ? (
+                  <Sparkline
+                    data={k.sparkData}
+                    color="rgba(255,255,255,0.75)"
+                    width={120}
+                    height={26}
+                  />
+                ) : null
+              }
+            />
+          ))}
+        </div>
 
-      {/* ════ MIDDLE ROW ════ */}
-      <Grid flex={1} minH={0} templateColumns="1fr 300px" gap={4}>
+        {/* Main grid */}
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-[1fr_340px]">
 
-        {/* Composed Chart */}
-        <Panel title="Monthly Attendance Trend" accent="#10b981">
-          <Flex gap={5} px={5} pt={1} pb={2} flexShrink={0} align="center">
-            <Flex align="center" gap={2}>
-              <Box w={3} h={3} borderRadius="4px"
-                style={{ background: "linear-gradient(135deg, #10b981, #059669)" }} />
-              <Text fontSize="11px" color="gray.500" fontWeight="600">Present ({presTotal})</Text>
-            </Flex>
-            <Flex align="center" gap={2}>
-              <Box w={3} h="2px" bg="#f87171"
-                style={{ borderTop: "2px dashed #f87171" }} />
-              <Text fontSize="11px" color="gray.500" fontWeight="600">Absent ({absTotal})</Text>
-            </Flex>
-          </Flex>
-          <ChartBox>
-            {chartData.length === 0 ? (
-              <Flex h="100%" align="center" justify="center" direction="column" gap={2}>
-                <Icon as={FaCalendarCheck} boxSize={10} color="gray.200" />
-                <Text color="gray.300" fontSize="sm">No data yet</Text>
-              </Flex>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="barGradM" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" />
-                      <stop offset="100%" stopColor="#059669" />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="2 5" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false}
-                    tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 500 }} />
-                  <YAxis axisLine={false} tickLine={false}
-                    tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 500 }} />
-                  <ReTip content={<ChartTip />}
-                    cursor={{ fill: "rgba(148,163,184,0.06)", radius: 8 }} />
-                  <Bar dataKey="Present" name="Present" fill="url(#barGradM)"
-                    radius={[7, 7, 0, 0]} maxBarSize={30} />
-                  <Line type="monotone" dataKey="Absent" name="Absent"
-                    stroke="#f87171" strokeWidth={2.5} dot={false}
-                    strokeDasharray="5 3"
-                    activeDot={{ r: 5, fill: "#f87171", stroke: "white", strokeWidth: 2 }} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            )}
-          </ChartBox>
-        </Panel>
+          <Card
+            title="Monthly Attendance Trend"
+            subtitle="Present vs Absent"
+            accent="#10b981"
+            className="min-h-[320px] xl:min-h-0"
+            right={
+              <button
+                type="button"
+                className="rounded-xl px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition"
+                onClick={() => nav("/dashboard/attendance/daily")}
+              >
+                View daily <span className="ml-1">→</span>
+              </button>
+            }
+          >
+            <div className="px-5 pt-2 pb-3">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-3 w-3 rounded-[4px]"
+                    style={{ background: "linear-gradient(135deg, #10b981, #059669)" }}
+                  />
+                  <span className="text-[11px] font-semibold text-slate-500">
+                    Present ({presTotal})
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-[2px] w-6 rounded-full"
+                    style={{ borderTop: "2px dashed #f87171" }}
+                  />
+                  <span className="text-[11px] font-semibold text-slate-500">
+                    Absent ({absTotal})
+                  </span>
+                </div>
+              </div>
+            </div>
 
-        {/* Right column */}
-        <Flex direction="column" gap={4}>
-          <Panel title="Today's Overview" accent="#6366f1" flex={1} minH={0}>
-            <Flex direction="column" align="center" justify="center"
-              flex={1} px={4} pb={3} pt={1} gap={3}>
-              <Box position="relative">
-                <DonutRing value={pres} max={total} color="#10b981" size={120} thickness={12} />
-                <Flex position="absolute" inset={0} align="center" justify="center" direction="column">
-                  <Text fontSize="22px" fontWeight="900" color="gray.800" lineHeight="1"
-                    letterSpacing="-0.02em">{rate}%</Text>
-                  <Text fontSize="9px" color="gray.400" fontWeight="700"
-                    textTransform="uppercase" letterSpacing="0.08em">Rate</Text>
-                </Flex>
-              </Box>
-              <Grid templateColumns="1fr 1fr" gap={2} w="100%">
-                <Box borderRadius="13px" p={2.5} textAlign="center"
-                  style={{ background: "linear-gradient(135deg, #f0fdf4, #dcfce7)" }}>
-                  <Text fontSize="20px" fontWeight="900" color="#059669" lineHeight="1">{pres}</Text>
-                  <Text fontSize="9px" fontWeight="700" color="#059669" mt={1}
-                    textTransform="uppercase" letterSpacing="0.08em">Present</Text>
-                </Box>
-                <Box borderRadius="13px" p={2.5} textAlign="center"
-                  style={{ background: "linear-gradient(135deg, #fef2f2, #fee2e2)" }}>
-                  <Text fontSize="20px" fontWeight="900" color="#dc2626" lineHeight="1">{absent}</Text>
-                  <Text fontSize="9px" fontWeight="700" color="#dc2626" mt={1}
-                    textTransform="uppercase" letterSpacing="0.08em">Absent</Text>
-                </Box>
-              </Grid>
-              <Flex w="100%" align="center" justify="space-between"
-                px={3} py={2} borderRadius="12px"
-                style={{ background: "linear-gradient(135deg, #fffbeb, #fef3c7)" }}>
-                <Text fontSize="11px" color="#92400e" fontWeight="600">Pending Leaves</Text>
-                <Badge style={{ background: "#fde68a" }} color="#92400e" borderRadius="full"
-                  fontSize="10px" fontWeight="800" px={2}>{leaves}</Badge>
-              </Flex>
-            </Flex>
-          </Panel>
+            <div className="h-[260px] px-4 pb-4">
+              {chartData.length === 0 ? (
+                <div className="flex h-full flex-col items-center justify-center gap-2 text-slate-300">
+                  <FaCalendarCheck className="h-10 w-10 opacity-40" />
+                  <div className="text-sm font-medium">No data yet</div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -16, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="barGradM" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#10b981" />
+                        <stop offset="100%" stopColor="#059669" />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="2 6" vertical={false} stroke="#eef2f7" />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 600 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 600 }}
+                    />
+                    <ReTip content={<ChartTooltip />} cursor={{ fill: "rgba(148,163,184,0.06)" }} />
+                    <Bar dataKey="Present" name="Present" fill="url(#barGradM)" radius={[8, 8, 0, 0]} maxBarSize={34} />
+                    <Line
+                      type="monotone"
+                      dataKey="Absent"
+                      name="Absent"
+                      stroke="#f87171"
+                      strokeWidth={2.5}
+                      dot={false}
+                      strokeDasharray="5 3"
+                      activeDot={{ r: 5, fill: "#f87171", stroke: "white", strokeWidth: 2 }}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </Card>
 
-          <Panel title="Leave Breakdown" accent="#f59e0b" flex={1} minH={0}
-            action="View All" onAction={() => nav("/dashboard/leaves")}>
-            <Box px={3} pb={3} flex={1} overflowY="auto">
-              {leaveList.map((item) => {
-                const cfg = leaveCfg(item.name);
-                const pct = leavTotal ? Math.round((item.value / leavTotal) * 100) : 0;
+          <div className="grid min-h-0 grid-cols-1 gap-4">
+            <Card title="Today's Overview" subtitle="Live snapshot" accent="#6366f1" className="min-h-[220px]">
+              <div className="flex items-center justify-between gap-4 px-5 py-5">
+                <div className="relative">
+                  <div className="rotate-[-90deg]">
+                    <DonutRing value={pres} max={total} color="#10b981" size={120} thickness={12} />
+                  </div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="text-[22px] font-black tracking-[-0.02em] text-slate-800 leading-none">
+                      {rate}%
+                    </div>
+                    <div className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.12em] text-slate-400">
+                      Rate
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid flex-1 grid-cols-2 gap-2">
+                  <div className="rounded-2xl p-3 text-center" style={{ background: "linear-gradient(135deg, #f0fdf4, #dcfce7)" }}>
+                    <div className="text-[20px] font-black leading-none" style={{ color: "#059669" }}>
+                      {pres}
+                    </div>
+                    <div className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ color: "#059669" }}>
+                      Present
+                    </div>
+                  </div>
+                  <div className="rounded-2xl p-3 text-center" style={{ background: "linear-gradient(135deg, #fef2f2, #fee2e2)" }}>
+                    <div className="text-[20px] font-black leading-none" style={{ color: "#dc2626" }}>
+                      {absent}
+                    </div>
+                    <div className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.12em]" style={{ color: "#dc2626" }}>
+                      Absent
+                    </div>
+                  </div>
+                  <div className="col-span-2 mt-1 flex items-center justify-between rounded-2xl px-3 py-2" style={{ background: "linear-gradient(135deg, #fffbeb, #fef3c7)" }}>
+                    <div className="text-[11px] font-semibold" style={{ color: "#92400e" }}>
+                      Pending Leaves
+                    </div>
+                    <div className="rounded-full px-2 py-1 text-[10px] font-extrabold" style={{ background: "#fde68a", color: "#92400e" }}>
+                      {leaves}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <Card
+              title="Leave Breakdown"
+              subtitle="By type"
+              accent="#f59e0b"
+              right={
+                <button
+                  type="button"
+                  className="rounded-xl px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition"
+                  onClick={() => nav("/dashboard/leaves")}
+                >
+                  View all <span className="ml-1">→</span>
+                </button>
+              }
+              className="min-h-[240px] xl:min-h-0"
+            >
+              <div className="max-h-[320px] overflow-auto px-4 py-4">
+                <div className="space-y-2">
+                  {leaveList.map((item) => {
+                    const cfg = leaveCfg(item.name);
+                    const pct = leavTotal ? Math.round((item.value / leavTotal) * 100) : 0;
+                    return (
+                      <div
+                        key={item.name}
+                        className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2 transition hover:bg-white hover:shadow-[0_8px_22px_rgba(0,0,0,0.08)]"
+                      >
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-xl" style={{ background: cfg.bg }}>
+                            <div className="h-2 w-2 rounded-full" style={{ background: cfg.color }} />
+                          </div>
+                          <div className="min-w-0 flex-1 truncate text-[12px] font-extrabold text-slate-800">
+                            {item.name}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-[12px] font-black" style={{ color: cfg.color }}>
+                              {item.value}
+                            </div>
+                            <div className="text-[10px] font-semibold text-slate-400">
+                              {pct}%
+                            </div>
+                          </div>
+                        </div>
+                        <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{ width: `${pct}%`, background: cfg.grad }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Bottom grid */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <Card
+            title="Quick Access"
+            subtitle="Shortcuts"
+            accent="#0ea5e9"
+            className="order-1 lg:order-2"
+          >
+            <div className="grid grid-cols-1 gap-2 px-5 py-4 sm:grid-cols-2">
+              {quickLinks.map((a) => {
+                const I = a.icon;
                 return (
-                  <Box key={item.name} px={3} py={2} mb={1.5}
-                    bg="#fafbfc" borderRadius="12px"
-                    border="1px solid" borderColor="gray.100"
-                    _hover={{ bg: "white", boxShadow: "0 3px 12px rgba(0,0,0,0.07)" }}
-                    transition="all 0.15s">
-                    <Flex align="center" gap={2} mb={2}>
-                      <Flex w={6} h={6} borderRadius="8px" bg={cfg.bg}
-                        align="center" justify="center" flexShrink={0}>
-                        <Box w="7px" h="7px" borderRadius="full" bg={cfg.color} />
-                      </Flex>
-                      <Text fontSize="11.5px" fontWeight="700" color="gray.800" flex={1} noOfLines={1}>{item.name}</Text>
-                      <Flex align="center" gap={1.5}>
-                        <Text fontSize="11px" fontWeight="900" color={cfg.color}>{item.value}</Text>
-                        <Text fontSize="9px" color="gray.400" fontWeight="500">{pct}%</Text>
-                      </Flex>
-                    </Flex>
-                    <Box bg="gray.100" borderRadius="full" h="5px" overflow="hidden">
-                      <Box h="100%" borderRadius="full" w={`${pct}%`}
-                        transition="width 0.8s ease"
-                        style={{ background: cfg.grad }} />
-                    </Box>
-                  </Box>
+                  <button
+                    type="button"
+                    key={a.label}
+                    onClick={() => nav(a.to)}
+                    className={[
+                      "group flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left",
+                      "shadow-[0_1px_4px_rgba(0,0,0,0.06)] transition-all duration-300 ease-out",
+                      "hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-[0_10px_28px_rgba(0,0,0,0.10)]",
+                      "focus:outline-none focus:ring-2 focus:ring-slate-200",
+                    ].join(" ")}
+                  >
+                    <span
+                      className="flex h-9 w-9 items-center justify-center rounded-2xl text-white shadow-[0_6px_16px_rgba(0,0,0,0.18)]"
+                      style={{
+                        background: `linear-gradient(135deg, ${a.color} 0%, ${a.color}cc 100%)`,
+                        boxShadow: `0 8px 18px ${a.color}33`,
+                      }}
+                    >
+                      <I className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-[12px] font-extrabold text-slate-700">
+                        {a.label}
+                      </span>
+                      <span className="block truncate text-[10px] font-medium text-slate-400">
+                        {a.sub}
+                      </span>
+                    </span>
+                  </button>
                 );
               })}
-            </Box>
-          </Panel>
-        </Flex>
-      </Grid>
+            </div>
+          </Card>
 
-      {/* ════ BOTTOM ROW ════ */}
-      <Grid flexShrink={0} templateColumns="1fr 1fr 1fr" gap={4} h="178px">
+          <Card title="Activity Summary" subtitle="Key metrics" accent="#8b5cf6" className="order-2 lg:order-1">
+            <div className="relative px-5 py-4">
+              <div
+                className="absolute left-[26px] top-6 bottom-6 w-[2px]"
+                style={{ background: "linear-gradient(180deg, #8b5cf655, #e2e8f0)" }}
+              />
+              <div className="space-y-3">
+                {feedItems.map((f, i) => {
+                  const I = f.icon;
+                  return (
+                    <div key={i} className="relative flex items-center gap-3">
+                      <div
+                        className="relative z-10 flex h-8 w-8 items-center justify-center rounded-xl"
+                        style={{
+                          background: `linear-gradient(135deg, ${f.color}28, ${f.color}12)`,
+                          border: `1.5px solid ${f.color}33`,
+                        }}
+                      >
+                        <I className="h-3 w-3" style={{ color: f.color }} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[12px] font-extrabold text-slate-700">
+                          {f.label}
+                        </div>
+                        <div className="text-[10px] font-medium text-slate-400">
+                          {f.sub}
+                        </div>
+                      </div>
+                      <div className="rounded-xl px-3 py-1" style={{ background: `${f.color}16` }}>
+                        <div className="text-[13px] font-black tracking-[-0.02em]" style={{ color: f.color }}>
+                          {f.value}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </Card>
 
-        {/* Timeline Activity Feed */}
-        <Panel title="Activity Summary" accent="#8b5cf6">
-          <Box px={4} pb={3} overflowY="hidden" position="relative">
-            <Box position="absolute" left="30px" top="4px" bottom="10px" w="1.5px"
-              style={{ background: "linear-gradient(180deg, #8b5cf655, #e2e8f0)" }} />
-            {feedItems.map((f, i) => (
-              <Flex key={i} align="center" gap={3} py={2} position="relative">
-                <Flex w={7} h={7} borderRadius="10px" flexShrink={0}
-                  align="center" justify="center" position="relative" zIndex={1}
-                  style={{
-                    background: `linear-gradient(135deg, ${f.color}28, ${f.color}12)`,
-                    border: `1.5px solid ${f.color}33`,
-                  }}>
-                  <Icon as={f.icon} color={f.color} boxSize="11px" />
-                </Flex>
-                <Box flex={1} minW={0}>
-                  <Text fontSize="11.5px" color="gray.700" fontWeight="600" noOfLines={1}>{f.label}</Text>
-                  <Text fontSize="10px" color="gray.400">{f.sub}</Text>
-                </Box>
-                <Box px={2.5} py={1} borderRadius="10px" flexShrink={0}
-                  style={{ background: `${f.color}16` }}>
-                  <Text fontSize="13px" fontWeight="900" color={f.color}
-                    letterSpacing="-0.02em">{f.value}</Text>
-                </Box>
-              </Flex>
-            ))}
-          </Box>
-        </Panel>
-
-        {/* Quick Access with gradient icons */}
-        <Panel title="Quick Access" accent="#0ea5e9">
-          <Grid templateColumns="1fr 1fr" gap={2} px={4} pb={3}>
-            {quickLinks.map((a) => (
-              <Flex key={a.label} align="center" gap={2.5} px={3} py={2.5}
-                bg="white" borderRadius="14px" cursor="pointer"
-                border="1px solid" borderColor="gray.100"
-                _hover={{
-                  transform: "translateY(-2px)",
-                  borderColor: `${a.color}55`,
-                }}
-                transition="all 0.22s cubic-bezier(0.34,1.56,0.64,1)"
-                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
-                onClick={() => nav(a.to)}>
-                <Flex w={8} h={8} borderRadius="12px" flexShrink={0}
-                  align="center" justify="center"
-                  style={{
-                    background: `linear-gradient(135deg, ${a.color} 0%, ${a.color}cc 100%)`,
-                    boxShadow: `0 4px 12px ${a.color}44`,
-                  }}>
-                  <Icon as={a.icon} boxSize="13px" color="white" />
-                </Flex>
-                <Box minW={0}>
-                  <Text fontSize="11px" fontWeight="700" color="gray.700" noOfLines={1}>{a.label}</Text>
-                  <Text fontSize="9.5px" color="gray.400" noOfLines={1}>{a.sub}</Text>
-                </Box>
-              </Flex>
-            ))}
-          </Grid>
-        </Panel>
-
-        {/* Workforce Snapshot — glowing bars */}
-        <Panel title="Workforce Snapshot" accent="#f59e0b"
-          action="Report" onAction={() => nav("/dashboard/reports/attendance")}>
-          <Box px={5} pt={2} pb={3}>
-            <SnapRow label="Present Today"  value={pres}   max={total}
-              fill="#10b981" track="#f0fdf4"
-              badge={`${rate}%`} badgeBg="#f0fdf4" badgeTxt="#059669" />
-            <SnapRow label="Absent Today"   value={absent} max={total}
-              fill="#f87171" track="#fef2f2" />
-            <SnapRow label="Pending Leaves" value={leaves} max={Math.max(leaves, 10)}
-              fill="#f59e0b" track="#fffbeb"
-              badge={leaves > 0 ? "Action" : undefined} badgeBg="#fffbeb" badgeTxt="#92400e" />
-          </Box>
-        </Panel>
-      </Grid>
+          <Card
+            title="Workforce Snapshot"
+            subtitle="Progress overview"
+            accent="#f59e0b"
+            className="order-3 lg:order-3"
+            right={
+              <button
+                type="button"
+                className="rounded-xl px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition"
+                onClick={() => nav("/dashboard/reports/attendance")}
+              >
+                Report <span className="ml-1">→</span>
+              </button>
+            }
+          >
+            <div className="px-5 py-4">
+              <SnapRow
+                label="Present Today"
+                value={pres}
+                max={total}
+                fill="#10b981"
+                track="#f0fdf4"
+                badge={`${rate}%`}
+                badgeBg="#f0fdf4"
+                badgeTxt="#059669"
+              />
+              <SnapRow
+                label="Absent Today"
+                value={absent}
+                max={total}
+                fill="#f87171"
+                track="#fef2f2"
+              />
+              <SnapRow
+                label="Pending Leaves"
+                value={leaves}
+                max={Math.max(leaves, 10)}
+                fill="#f59e0b"
+                track="#fffbeb"
+                badge={leaves > 0 ? "Action" : undefined}
+                badgeBg="#fffbeb"
+                badgeTxt="#92400e"
+              />
+            </div>
+          </Card>
+        </div>
+      </div>
     </Flex>
   );
 };

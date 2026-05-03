@@ -20,12 +20,18 @@ const settingsSchema = new mongoose.Schema(
 
     payroll: {
       taxPercentage: { type: Number, default: 5 },
-      overtimeRatePerHour: { type: Number, default: 0 }
+      overtimeRatePerHour: { type: Number, default: 0 },
+      monthlyOffDays: { type: Number, default: 3 }
     },
 
     currency: {
       code: { type: String, default: "PKR" },
       symbol: { type: String, default: "₨" }
+    },
+
+    advances: {
+      limitType: { type: String, enum: ["PERCENTAGE", "FIXED"], default: "PERCENTAGE" },
+      limitValue: { type: Number, default: 30 }
     }
   },
   { timestamps: true }

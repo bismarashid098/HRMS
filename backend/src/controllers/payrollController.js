@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const Payroll = require("../models/payroll");
 const Employee = require("../models/Employee");
 const { calculateDeductions } = require("../services/payrollService");
+const Settings = require("../models/Settings");
 
 exports.getAllPayrolls = asyncHandler(async (req, res) => {
     const { month, year } = req.query;
@@ -37,6 +38,10 @@ exports.generatePayroll = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "Employee not found" });
   }
 
+  const settings = await Settings.findOne();
+  const taxPercentage = Number(settings?.payroll?.taxPercentage ?? 0);
+  const defaultMonthlyOffDays = Number(settings?.payroll?.monthlyOffDays ?? 3);
+
   const rawSalary = employee.salary;
   const basic =
     typeof rawSalary === "number"
@@ -55,10 +60,11 @@ exports.generatePayroll = asyncHandler(async (req, res) => {
     month,
     year,
     basic,
-    employee.monthlyOffDays ?? 3
+    employee.monthlyOffDays ?? defaultMonthlyOffDays
   );
 
-  const netSalary = Math.max(0, basic + allowance - deductionResult.total);
+  const taxDeduction = Math.max(0, (basic * Math.max(0, taxPercentage)) / 100);
+  const netSalary = Math.max(0, basic + allowance - deductionResult.total - taxDeduction);
 
   try {
     const payroll = await Payroll.create({
@@ -67,7 +73,8 @@ exports.generatePayroll = asyncHandler(async (req, res) => {
       year,
       basicSalary:       basic,
       allowance,
-      deductions:        deductionResult.total,
+      deductions:        deductionResult.total + taxDeduction,
+      taxDeduction,
       advanceDeduction:  deductionResult.advanceDeduction,
       leaveDeduction:    deductionResult.leaveDeduction,
       extraOffDeduction: deductionResult.extraOffDeduction,
@@ -107,6 +114,10 @@ exports.getPayrollOverview = asyncHandler(async (req, res) => {
     isDeleted: false
   }).populate("user", "name email");
 
+  const settings = await Settings.findOne();
+  const taxPercentage = Number(settings?.payroll?.taxPercentage ?? 0);
+  const defaultMonthlyOffDays = Number(settings?.payroll?.monthlyOffDays ?? 3);
+
   const overview = await Promise.all(
     employees.map(async (emp) => {
       const rawSalary = emp.salary;
@@ -127,10 +138,11 @@ exports.getPayrollOverview = asyncHandler(async (req, res) => {
         targetMonth,
         targetYear,
         basic,
-        emp.monthlyOffDays ?? 3
+        emp.monthlyOffDays ?? defaultMonthlyOffDays
       );
 
-      const netSalary = basic + allowance - deductionResult.total;
+      const taxDeduction = Math.max(0, (basic * Math.max(0, taxPercentage)) / 100);
+      const netSalary = basic + allowance - deductionResult.total - taxDeduction;
 
       const payroll = await Payroll.findOne({
         employee: emp._id,
@@ -154,6 +166,8 @@ exports.getPayrollOverview = asyncHandler(async (req, res) => {
         extraOffDeduction: deductionResult.extraOffDeduction,
         extraOffDays:      deductionResult.extraOffDays,
         totalDeductions:   deductionResult.total,
+        taxDeduction,
+        taxPercentage,
         netSalary,
         payrollStatus: payroll ? payroll.status : "Not Generated",
         payrollId:     payroll ? payroll._id : null
@@ -184,9 +198,17 @@ exports.getPayrollBreakdown = asyncHandler(async (req, res) => {
   const allowance = typeof rawSalary === "object" && typeof rawSalary?.allowance === "number"
     ? rawSalary.allowance : 0;
 
+  const settings = await Settings.findOne();
+  const taxPercentage = Number(settings?.payroll?.taxPercentage ?? 0);
+  const taxDeduction = Math.max(0, (basic * Math.max(0, taxPercentage)) / 100);
+
   // Always recalculate fresh so advance changes after generation are reflected
   const deductionResult = await calculateDeductions(
-    emp._id, payroll.month, payroll.year, basic, emp.monthlyOffDays ?? 3
+    emp._id,
+    payroll.month,
+    payroll.year,
+    basic,
+    emp.monthlyOffDays ?? Number(settings?.payroll?.monthlyOffDays ?? 3)
   );
 
   // Fetch individual advance entries for this payroll month
@@ -209,6 +231,8 @@ exports.getPayrollBreakdown = asyncHandler(async (req, res) => {
     basicSalary:       basic,
     allowance,
     grossSalary:       basic + allowance,
+    taxPercentage,
+    taxDeduction,
     workingDays:       deductionResult.workingDays,
     presentDays:       deductionResult.presentDays,
     leaveDeduction:    deductionResult.leaveDeduction,
@@ -217,8 +241,8 @@ exports.getPayrollBreakdown = asyncHandler(async (req, res) => {
     advanceEntries,
     extraOffDeduction: deductionResult.extraOffDeduction,
     extraOffDays:      deductionResult.extraOffDays,
-    totalDeductions:   deductionResult.total,
-    netSalary:         Math.max(0, basic + allowance - deductionResult.total),
+    totalDeductions:   deductionResult.total + taxDeduction,
+    netSalary:         Math.max(0, basic + allowance - deductionResult.total - taxDeduction),
   });
 });
 

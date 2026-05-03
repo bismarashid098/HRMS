@@ -1,11 +1,11 @@
 import { useContext } from "react";
 import {
   Box, Flex, Text, Button, Menu, MenuButton, MenuList, MenuItem,
-  Avatar, Badge, Icon
+  Avatar, Badge, Icon, IconButton
 } from "@chakra-ui/react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { FaChevronDown, FaSignOutAlt, FaUser, FaCog, FaBell } from "react-icons/fa";
+import { FaChevronDown, FaSignOutAlt, FaUser, FaCog, FaBars } from "react-icons/fa";
 
 const pageTitles = {
   "/dashboard": "Dashboard",
@@ -26,7 +26,7 @@ const pageTitles = {
   "/dashboard/reports/advances": "Advance Report",
 };
 
-const TopNavbar = () => {
+const TopNavbar = ({ onMenuOpen }) => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,13 +40,29 @@ const TopNavbar = () => {
   const roleBadgeColor = user?.role === "Admin" ? "green" : "blue";
 
   return (
-    <Box bg="white" px={6} py={3} shadow="sm" borderBottom="1px" borderColor="gray.100" flexShrink={0}>
+    <Box bg="white" px={{ base: 3, md: 6 }} py={3} shadow="sm" borderBottom="1px" borderColor="gray.100" flexShrink={0}>
       <Flex justify="space-between" align="center">
-        {/* Left: Page title */}
-        <Box>
-          <Text fontSize="lg" fontWeight="bold" color="gray.800">{pageTitle}</Text>
-          <Text fontSize="xs" color="gray.400">{new Date().toLocaleDateString("en-PK", { weekday: "long", day: "numeric", month: "short" })}</Text>
-        </Box>
+        {/* Left: hamburger (mobile) + Page title */}
+        <Flex align="center" gap={2}>
+          {onMenuOpen && (
+            <IconButton
+              icon={<Icon as={FaBars} />}
+              variant="ghost"
+              onClick={onMenuOpen}
+              aria-label="Open navigation"
+              size="sm"
+              borderRadius="lg"
+              color="gray.600"
+              _hover={{ bg: "gray.100" }}
+            />
+          )}
+          <Box>
+            <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" color="gray.800">{pageTitle}</Text>
+            <Text fontSize="xs" color="gray.400" display={{ base: "none", sm: "block" }}>
+              {new Date().toLocaleDateString("en-PK", { weekday: "long", day: "numeric", month: "short" })}
+            </Text>
+          </Box>
+        </Flex>
 
         {/* Right: Role badge + user menu */}
         <Flex align="center" gap={3}>

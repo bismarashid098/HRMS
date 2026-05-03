@@ -1,45 +1,47 @@
 import React, { useContext } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Box, Flex, Text, Icon, VStack, Avatar, Badge, Tooltip, Divider } from "@chakra-ui/react";
+import { Box, Flex, Text, Icon, VStack, Avatar, Badge, Tooltip, IconButton } from "@chakra-ui/react";
 import {
-  FaHome, FaUsers, FaCalendarCheck, FaClipboardList, FaMoneyBillWave,
+  FaUsers, FaCalendarCheck, FaClipboardList, FaMoneyBillWave,
   FaChartBar, FaCog, FaHistory, FaFileInvoiceDollar, FaPlus,
-  FaUserCircle, FaHandHoldingUsd, FaChevronDown, FaChevronRight,
-  FaSignOutAlt, FaShieldAlt, FaTachometerAlt
+  FaUserCircle, FaHandHoldingUsd, FaChevronDown,
+  FaSignOutAlt, FaShieldAlt, FaTachometerAlt, FaTimes
 } from "react-icons/fa";
 import { AuthContext } from "../../context/AuthContext";
 
 const avatarColors = ["#065f46", "#1d4ed8", "#7c3aed", "#d97706", "#dc2626"];
 const getAvatarBg = (name = "") => avatarColors[name.charCodeAt(0) % avatarColors.length];
 
-const ACCENT = "#10b981";
-const ACCENT_DIM = "rgba(16,185,129,0.12)";
-const ACCENT_BORDER = "rgba(16,185,129,0.3)";
+const ACCENT = "#38bdf8";
+const ACCENT_DIM = "rgba(56,189,248,0.13)";
+const ACCENT_BORDER = "rgba(56,189,248,0.28)";
+const SIDEBAR_BG =
+  "linear-gradient(170deg, #070d1a 0%, #0d1f3c 55%, #071527 100%)";
 
 const SectionLabel = ({ label }) => (
-  <Flex align="center" gap={2} px={4} pt={5} pb={2}>
-    <Box flex={1} h="1px" bg="whiteAlpha.100" />
+  <Flex align="center" gap={2} px={4} pt={5} pb={1.5}>
     <Text
-      fontSize="8.5px"
+      fontSize="9px"
       fontWeight="700"
-      color="whiteAlpha.350"
+      color="whiteAlpha.400"
       textTransform="uppercase"
-      letterSpacing="0.18em"
+      letterSpacing="0.20em"
       flexShrink={0}
+      fontFamily="'Segoe UI', system-ui, sans-serif"
     >
       {label}
     </Text>
-    <Box flex={1} h="1px" bg="whiteAlpha.100" />
+    <Box flex={1} h="1px" bg="whiteAlpha.80" />
   </Flex>
 );
 
-const NavItem = ({ to, icon, label, exact = false, isChild = false }) => {
+const NavItem = ({ to, icon, label, exact = false, isChild = false, onClose }) => {
   const location = useLocation();
   const isActivePath = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
   const active = exact ? location.pathname === to : isActivePath(to);
 
   return (
-    <NavLink to={to} style={{ textDecoration: "none", width: "100%" }}>
+    <NavLink to={to} style={{ textDecoration: "none", width: "100%" }} onClick={onClose}>
       <Flex
         align="center"
         py={isChild ? "6px" : "8px"}
@@ -100,10 +102,11 @@ const NavItem = ({ to, icon, label, exact = false, isChild = false }) => {
         </Flex>
 
         <Text
-          fontSize={isChild ? "12px" : "13px"}
-          fontWeight={active ? "600" : "400"}
+          fontSize={isChild ? "12.5px" : "13.5px"}
+          fontWeight={active ? "600" : "450"}
           lineHeight="1"
-          letterSpacing={active ? "0.01em" : "normal"}
+          letterSpacing="0.01em"
+          fontFamily="'Segoe UI', system-ui, sans-serif"
         >
           {label}
         </Text>
@@ -177,7 +180,7 @@ const ParentItem = ({ icon, label, active, isOpen, onToggle }) => (
         transition="color 0.18s"
       />
     </Flex>
-    <Text fontSize="13px" fontWeight={active ? "600" : "400"} flex={1} lineHeight="1">
+    <Text fontSize="13.5px" fontWeight={active ? "600" : "450"} flex={1} lineHeight="1" letterSpacing="0.01em" fontFamily="'Segoe UI', system-ui, sans-serif">
       {label}
     </Text>
     <Flex
@@ -192,7 +195,7 @@ const ParentItem = ({ icon, label, active, isOpen, onToggle }) => (
   </Flex>
 );
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
@@ -318,13 +321,20 @@ const Sidebar = () => {
     <Box
       w="100%"
       h="100%"
-      bg="#021024"
+      bgImage={SIDEBAR_BG}
+      bgSize="cover"
+      bgPos="center"
       color="white"
       display="flex"
       flexDirection="column"
       position="relative"
       borderRight="1px solid"
       borderColor="rgba(255,255,255,0.06)"
+      fontFamily="'Segoe UI', system-ui, -apple-system, sans-serif"
+      style={{
+        backgroundImage: `${SIDEBAR_BG}, radial-gradient(circle, rgba(56,189,248,0.03) 1px, transparent 1px)`,
+        backgroundSize: "cover, 28px 28px",
+      }}
     >
       {/* ── Logo ── */}
       <Box px={4} pt={5} pb={4}>
@@ -333,35 +343,48 @@ const Sidebar = () => {
           gap={3}
           p={3}
           borderRadius="12px"
-          bg="rgba(16,185,129,0.07)"
+          bg="rgba(255,255,255,0.06)"
           border="1px solid"
-          borderColor="rgba(16,185,129,0.15)"
+          borderColor="rgba(255,255,255,0.10)"
         >
           {/* Icon badge */}
           <Flex
             w={9} h={9}
             borderRadius="10px"
-            bg="rgba(16,185,129,0.18)"
+            bg="rgba(56,189,248,0.15)"
             border="1px solid"
-            borderColor="rgba(16,185,129,0.35)"
+            borderColor="rgba(56,189,248,0.28)"
             align="center"
             justify="center"
             flexShrink={0}
-            boxShadow="0 0 14px rgba(16,185,129,0.25)"
+            boxShadow={`0 0 16px rgba(56,189,248,0.18)`}
           >
             <Text fontSize="15px" fontWeight="800" color={ACCENT} lineHeight="1">W</Text>
           </Flex>
-          <Box>
-            <Text fontSize="13px" fontWeight="700" color="white" letterSpacing="-0.02em" lineHeight="1.1">
+          <Box flex={1}>
+            <Text fontSize="14px" fontWeight="700" color="white" letterSpacing="-0.01em" lineHeight="1.1" fontFamily="'Segoe UI', system-ui, sans-serif">
               WorkSphere
             </Text>
             <Flex align="center" gap={1.5} mt={0.5}>
-              <Box w="5px" h="5px" borderRadius="full" bg={ACCENT} boxShadow={`0 0 5px ${ACCENT}`} />
-              <Text fontSize="9px" color="whiteAlpha.450" fontWeight="600" textTransform="uppercase" letterSpacing="0.14em">
+              <Box w="5px" h="5px" borderRadius="full" bg={ACCENT} boxShadow={`0 0 6px ${ACCENT}`} />
+              <Text fontSize="9px" color="whiteAlpha.500" fontWeight="600" textTransform="uppercase" letterSpacing="0.16em" fontFamily="'Segoe UI', system-ui, sans-serif">
                 HRMS Platform
               </Text>
             </Flex>
           </Box>
+          {onClose && (
+            <IconButton
+              icon={<Icon as={FaTimes} />}
+              size="xs"
+              variant="ghost"
+              color="whiteAlpha.500"
+              _hover={{ color: "white", bg: "whiteAlpha.100" }}
+              onClick={onClose}
+              aria-label="Close sidebar"
+              borderRadius="8px"
+              flexShrink={0}
+            />
+          )}
         </Flex>
       </Box>
 
@@ -383,7 +406,7 @@ const Sidebar = () => {
             <SectionLabel label={section.section} />
             {section.items.map((item) => {
               if (item.type === "single") {
-                return <NavItem key={item.key} to={item.to} icon={item.icon} label={item.label} exact={item.exact} />;
+                return <NavItem key={item.key} to={item.to} icon={item.icon} label={item.label} exact={item.exact} onClose={onClose} />;
               }
 
               const isGroupActive = item.children.some((child) => isActivePath(child.to));
@@ -408,7 +431,7 @@ const Sidebar = () => {
                       borderColor="whiteAlpha.100"
                     >
                       {item.children.map((child) => (
-                        <NavItem key={child.to} to={child.to} icon={child.icon} label={child.label} isChild />
+                        <NavItem key={child.to} to={child.to} icon={child.icon} label={child.label} isChild onClose={onClose} />
                       ))}
                     </Box>
                   )}
@@ -452,7 +475,7 @@ const Sidebar = () => {
           </Box>
 
           <Box flex={1} minW={0}>
-            <Text fontSize="12px" fontWeight="600" color="white" noOfLines={1} lineHeight="1.2">
+            <Text fontSize="13px" fontWeight="600" color="white" noOfLines={1} lineHeight="1.2" fontFamily="'Segoe UI', system-ui, sans-serif">
               {user?.name || "User"}
             </Text>
             <Badge

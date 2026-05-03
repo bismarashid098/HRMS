@@ -53,8 +53,9 @@ const Settings = () => {
   const [settings, setSettings] = useState({
     company: { name: "", email: "", address: "", phone: "" },
     attendance: { workingHours: { start: "09:00", end: "18:00" }, lateAfterMinutes: 15, halfDayAfterMinutes: 240 },
-    payroll: { taxPercentage: 5, overtimeRatePerHour: 0 },
-    currency: { code: "PKR", symbol: "₨" }
+    payroll: { taxPercentage: 5, overtimeRatePerHour: 0, monthlyOffDays: 3 },
+    currency: { code: "PKR", symbol: "₨" },
+    advances: { limitType: "PERCENTAGE", limitValue: 30 }
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -302,6 +303,29 @@ const Settings = () => {
               <Text fontSize="xs" color="gray.400" mt={1}>Applied on basic salary during payroll generation</Text>
             </Box>
             <Box w="full">
+              <FieldLabel label="Monthly Off Days" />
+              <InputGroup>
+                <InputLeftElement pointerEvents="none" h="full">
+                  <Icon as={FaClock} color="gray.300" fontSize="13px" />
+                </InputLeftElement>
+                <Input
+                  type="number"
+                  pl={9}
+                  borderRadius="xl"
+                  fontSize="sm"
+                  bg="gray.50"
+                  border="1px solid"
+                  borderColor="gray.200"
+                  focusBorderColor="#d97706"
+                  placeholder="e.g. 3"
+                  min={0}
+                  value={settings.payroll.monthlyOffDays}
+                  onChange={(e) => handleChange("payroll", "monthlyOffDays", Number(e.target.value))}
+                />
+              </InputGroup>
+              <Text fontSize="xs" color="gray.400" mt={1}>Used to calculate working days for payroll deductions</Text>
+            </Box>
+            <Box w="full">
               <FieldLabel label="Overtime Rate (per hour)" />
               <InputGroup>
                 <InputLeftElement pointerEvents="none" h="full">
@@ -323,6 +347,47 @@ const Settings = () => {
                 />
               </InputGroup>
               <Text fontSize="xs" color="gray.400" mt={1}>Rate per hour for overtime work (Rs)</Text>
+            </Box>
+          </VStack>
+        </SectionCard>
+
+        {/* Advance Salary Rules */}
+        <SectionCard title="Advance Salary Rules" subtitle="Set how much advance an employee can request per month" icon={FaMoneyBillWave} color="#0f766e" bg="#f0fdfa">
+          <VStack spacing={4}>
+            <Box w="full">
+              <FieldLabel label="Limit Type" />
+              <Input
+                as="select"
+                borderRadius="xl"
+                fontSize="sm"
+                bg="gray.50"
+                border="1px solid"
+                borderColor="gray.200"
+                focusBorderColor="#0f766e"
+                value={settings.advances?.limitType || "PERCENTAGE"}
+                onChange={(e) => handleChange("advances", "limitType", e.target.value)}
+              >
+                <option value="PERCENTAGE">Percentage of Basic Salary</option>
+                <option value="FIXED">Fixed Amount</option>
+              </Input>
+            </Box>
+            <Box w="full">
+              <FieldLabel label={settings.advances?.limitType === "FIXED" ? "Limit Value (Rs)" : "Limit Value (%)"} />
+              <Input
+                type="number"
+                borderRadius="xl"
+                fontSize="sm"
+                bg="gray.50"
+                border="1px solid"
+                borderColor="gray.200"
+                focusBorderColor="#0f766e"
+                min={0}
+                value={settings.advances?.limitValue ?? 30}
+                onChange={(e) => handleChange("advances", "limitValue", Number(e.target.value))}
+              />
+              <Text fontSize="xs" color="gray.400" mt={1}>
+                Enforced on advance requests (Pending/Approved/Paid) within the same month
+              </Text>
             </Box>
           </VStack>
         </SectionCard>
