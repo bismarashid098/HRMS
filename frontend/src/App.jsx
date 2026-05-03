@@ -6,7 +6,7 @@ import DashboardHome from "./pages/dashboard/DashboardHome";
 import EmployeeList from "./pages/employees/EmployeeList";
 import EmployeeForm from "./pages/employees/EmployeeForm";
 import EmployeeView from "./pages/employees/EmployeeView";
-import DailyAttendance from "./pages/attendance/Attendance";
+import Attendance from "./pages/attendance/Attendance"; // ✅ fixed import path
 import AttendancePage from "./pages/attendance/AttendancePage";
 import Leaves from "./pages/leaves/Leaves";
 import Payroll from "./pages/payroll/Payroll";
@@ -51,7 +51,7 @@ const App = () => {
 
         {/* Admin & Manager - Attendance */}
         <Route path="attendance" element={<AttendancePage />} />
-        <Route path="attendance/daily" element={<DailyAttendance />} />
+        <Route path="attendance" element={<Attendance />} />
 
         {/* Admin & Manager - Leaves */}
         <Route path="leaves" element={<Leaves />} />
