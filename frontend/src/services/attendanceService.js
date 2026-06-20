@@ -9,7 +9,7 @@ export const punchOut = (employeeId, config) => {
 };
 
 export const getMonthlyAttendance = (params, config) => {
-  return api.get("/attendance", {
+  return api.get("/attendance/monthly", {
     params,
     ...config
   });

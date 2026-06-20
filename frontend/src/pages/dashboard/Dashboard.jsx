@@ -1,5 +1,6 @@
 import { useEffect, useState, useContext } from "react";
-import { Outlet, useLocation } from "react-router-dom";   // ✅ Outlet import کریں
+import { Outlet, useLocation } from "react-router-dom";
+import ErrorBoundary from "../../components/ErrorBoundary";
 import {
   Box, Flex, Grid, Text, Icon, Badge,
   useBreakpointValue, useDisclosure,
@@ -412,7 +413,7 @@ const Dashboard = () => {
           </Flex>
         </Flex>
 
-        {/* Content - یہاں Outlet لگایا گیا ہے */}
+        {/* Content */}
         <Box flex="1" overflowY="auto" p={5}
           sx={{
             "&::-webkit-scrollbar": { width: "4px" },
@@ -420,9 +421,10 @@ const Dashboard = () => {
             "&::-webkit-scrollbar-thumb": { bg: T.border, borderRadius: "99px" },
           }}
         >
-          <Outlet />
-          {/* اگر کوئی nested route فعال نہیں ہے تو default home دکھائیں */}
-          {isDashboardHome && <DashboardHome />}
+          <ErrorBoundary routeKey={location.pathname}>
+            <Outlet />
+            {isDashboardHome && <DashboardHome />}
+          </ErrorBoundary>
         </Box>
       </Flex>
     </Flex>
