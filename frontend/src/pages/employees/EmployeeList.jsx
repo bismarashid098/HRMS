@@ -13,24 +13,23 @@ import {
 } from "react-icons/fa";
 import { AuthContext } from "../../context/AuthContext";
 
-const StatCard = ({ label, value, icon, color, bg }) => (
-  <Box
-    bg="white" borderRadius="2xl" p={4}
-    shadow="sm" border="1px solid" borderColor="gray.100"
-    borderLeft="4px solid" borderLeftColor={color}
-  >
-    <Flex align="center" justify="space-between">
-      <Box>
-        <Text fontSize="xs" color="gray.500" fontWeight="medium" textTransform="uppercase" letterSpacing="wide">{label}</Text>
-        <Text fontSize="2xl" fontWeight="bold" color="gray.800" mt={1}>{value}</Text>
-      </Box>
-      <Flex w={10} h={10} borderRadius="xl" bg={bg} align="center" justify="center">
-        <Icon as={icon} color={color} fontSize="16px" />
-      </Flex>
-    </Flex>
-  </Box>
-);
+/* ─── Theme constants (Matches Dashboard) ─── */
+const T = {
+  bg:       "#0D1117",
+  surface:  "#161B22",
+  surface2: "#1C2330",
+  border:   "#30363D",
+  teal:     "#00D4B4",
+  tealDim:  "#00A896",
+  blue:     "#58A6FF",
+  red:      "#FF6B6B",
+  amber:    "#F0A500",
+  green:    "#3FB950",
+  text:     "#E6EDF3",
+  muted:    "#8B949E",
+};
 
+/* ─── Helper functions ─── */
 const getInitials = (name = "") =>
   name.trim().split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
 
@@ -39,13 +38,60 @@ const getAvatarColor = (name = "") => avatarColors[name.charCodeAt(0) % avatarCo
 
 const getStatusColor = (status) => {
   switch (status) {
-    case "Active": return "green";
-    case "Resigned": return "orange";
-    case "Terminated": return "red";
-    default: return "gray";
+    case "Active": return T.green;
+    case "Resigned": return T.amber;
+    case "Terminated": return T.red;
+    default: return T.muted;
   }
 };
 
+/* ─── Stat Card (Dark themed) ─── */
+const StatCard = ({ label, value, icon, color, bg }) => (
+  <Box
+    bg={T.surface}
+    borderRadius="14px"
+    p={4}
+    border="1px solid"
+    borderColor={T.border}
+    position="relative"
+    overflow="hidden"
+    _hover={{ borderColor: color, transform: "translateY(-2px)" }}
+    transition="all 0.2s ease"
+  >
+    <Box
+      position="absolute"
+      top="0"
+      left="0"
+      right="0"
+      h="2px"
+      bg={`linear-gradient(90deg, ${color}, transparent)`}
+    />
+    <Flex align="center" justify="space-between">
+      <Box>
+        <Text fontSize="10px" fontWeight="700" textTransform="uppercase" letterSpacing="0.1em" color={T.muted} mb={2}>
+          {label}
+        </Text>
+        <Text fontSize="28px" fontWeight="900" color={T.text} lineHeight="1">
+          {value}
+        </Text>
+      </Box>
+      <Flex
+        w="36px"
+        h="36px"
+        borderRadius="10px"
+        bg={`${color}18`}
+        border="1px solid"
+        borderColor={`${color}30`}
+        align="center"
+        justify="center"
+      >
+        <Icon as={icon} fontSize="16px" color={color} />
+      </Flex>
+    </Flex>
+  </Box>
+);
+
+/* ─── Main Component ─── */
 const EmployeeList = () => {
   const navigate = useNavigate();
   const toast = useToast();
@@ -167,19 +213,25 @@ const EmployeeList = () => {
   const terminated = employees.filter((e) => e.employmentStatus === "Terminated").length;
 
   return (
-    <Box>
+    <Box bg={T.bg} minH="100vh" p={5}>
       {/* Header */}
       <Flex justify="space-between" align="center" mb={5} wrap="wrap" gap={3}>
         <Box>
-          <Text fontSize="xl" fontWeight="bold" color="gray.800">Employee Directory Some Edit in Time By Bisma</Text>
-          <Text fontSize="sm" color="gray.400">Manage and track all employees in your organization</Text>
+          <Text fontSize="xl" fontWeight="700" color={T.text}>
+            Employee Directory
+          </Text>
+          <Text fontSize="sm" color={T.muted}>
+            Manage and track all employees in your organization
+          </Text>
         </Box>
         <HStack spacing={3}>
           <Button
             leftIcon={<FaFileExcel />}
             variant="outline"
-            colorScheme="green"
-            borderRadius="xl"
+            borderColor={T.border}
+            color={T.muted}
+            _hover={{ borderColor: T.green, color: T.green, bg: "transparent" }}
+            borderRadius="10px"
             size="sm"
             onClick={handleExport}
             isDisabled={!employees.length}
@@ -189,12 +241,12 @@ const EmployeeList = () => {
           {!isManager && (
             <Button
               leftIcon={<FaPlus />}
-              bg="#065f46"
-              color="white"
-              _hover={{ bg: "#047857" }}
-              borderRadius="xl"
+              bg={T.teal}
+              color={T.bg}
+              _hover={{ bg: T.tealDim, opacity: 0.9 }}
+              borderRadius="10px"
               size="sm"
-              fontWeight="bold"
+              fontWeight="600"
               onClick={() => navigate("/dashboard/employees/create")}
             >
               Add Employee
@@ -205,43 +257,49 @@ const EmployeeList = () => {
 
       {/* Stat Cards */}
       <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(4, 1fr)" }} gap={4} mb={5}>
-        <StatCard label="Total Staff" value={total} icon={FaUsers} color="#065f46" bg="#f0fdf4" />
-        <StatCard label="Active" value={active} icon={FaUserCheck} color="#1d4ed8" bg="#eff6ff" />
-        <StatCard label="Resigned" value={resigned} icon={FaUserClock} color="#d97706" bg="#fffbeb" />
-        <StatCard label="Terminated" value={terminated} icon={FaUserTimes} color="#dc2626" bg="#fef2f2" />
+        <StatCard label="Total Staff" value={total} icon={FaUsers} color={T.teal} />
+        <StatCard label="Active" value={active} icon={FaUserCheck} color={T.green} />
+        <StatCard label="Resigned" value={resigned} icon={FaUserClock} color={T.amber} />
+        <StatCard label="Terminated" value={terminated} icon={FaUserTimes} color={T.red} />
       </Grid>
 
       {/* Filters */}
-      <Box bg="white" borderRadius="2xl" p={4} mb={4} shadow="sm" border="1px solid" borderColor="gray.100">
+      <Box bg={T.surface} borderRadius="14px" p={4} mb={4} border="1px solid" borderColor={T.border}>
         <Flex gap={3} wrap="wrap" align="center">
           <InputGroup flex="1" minW="200px">
             <InputLeftElement pointerEvents="none">
-              <Icon as={FaSearch} color="gray.300" fontSize="13px" />
+              <Icon as={FaSearch} color={T.muted} fontSize="13px" />
             </InputLeftElement>
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, email, department or role..."
-              borderRadius="xl"
-              bg="gray.50"
+              borderRadius="10px"
+              bg={T.bg}
               border="1px solid"
-              borderColor="gray.200"
-              _focus={{ bg: "white", borderColor: "#065f46" }}
+              borderColor={T.border}
+              _focus={{ borderColor: T.teal, bg: T.surface2 }}
+              _hover={{ borderColor: T.muted }}
+              color={T.text}
               fontSize="sm"
             />
           </InputGroup>
 
           <InputGroup w={{ base: "full", md: "180px" }}>
             <InputLeftElement pointerEvents="none">
-              <Icon as={FaFilter} color="gray.300" fontSize="12px" />
+              <Icon as={FaFilter} color={T.muted} fontSize="12px" />
             </InputLeftElement>
             <Select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              borderRadius="xl"
-              bg="gray.50"
+              borderRadius="10px"
+              bg={T.bg}
+              borderColor={T.border}
+              color={T.text}
               fontSize="sm"
               pl={8}
+              _focus={{ borderColor: T.teal }}
+              _hover={{ borderColor: T.muted }}
             >
               <option value="All">All Status</option>
               <option value="Active">Active</option>
@@ -254,9 +312,13 @@ const EmployeeList = () => {
             value={departmentFilter}
             onChange={(e) => setDepartmentFilter(e.target.value)}
             w={{ base: "full", md: "200px" }}
-            borderRadius="xl"
-            bg="gray.50"
+            borderRadius="10px"
+            bg={T.bg}
+            borderColor={T.border}
+            color={T.text}
             fontSize="sm"
+            _focus={{ borderColor: T.teal }}
+            _hover={{ borderColor: T.muted }}
           >
             <option value="All">All Departments</option>
             {departmentOptions.map((d) => (
@@ -266,7 +328,11 @@ const EmployeeList = () => {
 
           {(search || statusFilter !== "All" || departmentFilter !== "All") && (
             <Button
-              size="sm" variant="ghost" colorScheme="gray" borderRadius="xl"
+              size="sm"
+              variant="ghost"
+              color={T.muted}
+              _hover={{ color: T.text, bg: T.surface2 }}
+              borderRadius="10px"
               onClick={() => { setSearch(""); setStatusFilter("All"); setDepartmentFilter("All"); }}
             >
               Clear
@@ -275,61 +341,72 @@ const EmployeeList = () => {
         </Flex>
       </Box>
 
-      {/* Table */}
+      {/* Table Area */}
       {loading ? (
         <Flex justify="center" align="center" h="250px" direction="column" gap={3}>
-          <Spinner size="xl" color="#065f46" thickness="3px" />
-          <Text color="gray.400" fontSize="sm">Loading employees...</Text>
+          <Spinner size="xl" color={T.teal} thickness="3px" />
+          <Text color={T.muted} fontSize="sm">Loading employees...</Text>
         </Flex>
       ) : error ? (
-        <Box bg="red.50" borderRadius="xl" p={6} textAlign="center">
-          <Text color="red.500">{error}</Text>
+        <Box bg="rgba(255,107,107,0.1)" borderRadius="14px" p={6} textAlign="center" border="1px solid" borderColor={T.red}>
+          <Text color={T.red}>{error}</Text>
         </Box>
       ) : employees.length === 0 ? (
-        <Box bg="white" borderRadius="2xl" p={12} textAlign="center" shadow="sm">
-          <Icon as={FaUsers} fontSize="48px" color="gray.200" mb={4} />
-          <Text color="gray.500" fontWeight="medium">No employees added yet.</Text>
+        <Box bg={T.surface} borderRadius="14px" p={12} textAlign="center" border="1px solid" borderColor={T.border}>
+          <Icon as={FaUsers} fontSize="48px" color={T.muted} mb={4} opacity={0.5} />
+          <Text color={T.muted} fontWeight="medium">No employees added yet.</Text>
           {!isManager && (
-            <Button mt={4} size="sm" bg="#065f46" color="white" borderRadius="xl" leftIcon={<FaPlus />}
-              onClick={() => navigate("/dashboard/employees/create")}>
+            <Button
+              mt={4}
+              size="sm"
+              bg={T.teal}
+              color={T.bg}
+              borderRadius="10px"
+              leftIcon={<FaPlus />}
+              _hover={{ bg: T.tealDim }}
+              onClick={() => navigate("/dashboard/employees/create")}
+            >
               Add First Employee
             </Button>
           )}
         </Box>
       ) : (
-        <Box bg="white" shadow="sm" borderRadius="2xl" border="1px solid" borderColor="gray.100" overflow="hidden">
+        <Box bg={T.surface} borderRadius="14px" border="1px solid" borderColor={T.border} overflow="hidden">
           <Box overflowX="auto">
             <Table variant="simple" size="sm">
               <Thead>
-                <Tr bg="gray.50">
-                  <Th py={4} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                <Tr bg={T.surface2}>
+                  <Th py={4} fontSize="xs" color={T.muted} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" borderColor={T.border}>
                     Employee
                   </Th>
                   <Th
-                    py={4} fontSize="xs" color="gray.500" fontWeight="semibold"
+                    py={4} fontSize="xs" color={T.muted} fontWeight="semibold"
                     textTransform="uppercase" letterSpacing="wider"
                     cursor="pointer" onClick={() => handleSort("role")}
-                    _hover={{ color: "gray.700" }}
+                    _hover={{ color: T.text }}
+                    borderColor={T.border}
                   >
                     {sortLabel("Designation", "role")}
                   </Th>
                   <Th
-                    py={4} fontSize="xs" color="gray.500" fontWeight="semibold"
+                    py={4} fontSize="xs" color={T.muted} fontWeight="semibold"
                     textTransform="uppercase" letterSpacing="wider"
                     cursor="pointer" onClick={() => handleSort("department")}
-                    _hover={{ color: "gray.700" }}
+                    _hover={{ color: T.text }}
+                    borderColor={T.border}
                   >
                     {sortLabel("Department", "department")}
                   </Th>
                   <Th
-                    py={4} fontSize="xs" color="gray.500" fontWeight="semibold"
+                    py={4} fontSize="xs" color={T.muted} fontWeight="semibold"
                     textTransform="uppercase" letterSpacing="wider"
                     cursor="pointer" onClick={() => handleSort("status")}
-                    _hover={{ color: "gray.700" }}
+                    _hover={{ color: T.text }}
+                    borderColor={T.border}
                   >
                     {sortLabel("Status", "status")}
                   </Th>
-                  <Th py={4} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">
+                  <Th py={4} fontSize="xs" color={T.muted} fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" borderColor={T.border}>
                     Actions
                   </Th>
                 </Tr>
@@ -343,12 +420,12 @@ const EmployeeList = () => {
                   return (
                     <Tr
                       key={emp._id}
-                      _hover={{ bg: "gray.50" }}
+                      _hover={{ bg: T.surface2 }}
                       transition="background 0.15s"
                       borderBottom="1px solid"
-                      borderColor="gray.50"
+                      borderColor={T.border}
                     >
-                      <Td py={3}>
+                      <Td py={3} borderColor={T.border}>
                         <Flex align="center" gap={3}>
                           <Avatar
                             size="sm"
@@ -361,46 +438,59 @@ const EmployeeList = () => {
                           <Box>
                             <Button
                               variant="link"
-                              color="gray.800"
+                              color={T.text}
                               fontWeight="semibold"
                               fontSize="sm"
-                              _hover={{ color: "#065f46" }}
+                              _hover={{ color: T.teal }}
                               onClick={() => navigate(`/dashboard/attendance?employeeId=${emp._id}`)}
                               height="auto"
                               lineHeight="1.3"
                             >
                               {name}
                             </Button>
-                            <Text fontSize="xs" color="gray.400" lineHeight="1.3">{email || "—"}</Text>
+                            <Text fontSize="xs" color={T.muted} lineHeight="1.3">{email || "—"}</Text>
                           </Box>
                         </Flex>
                       </Td>
-                      <Td py={3}>
-                        <Text fontSize="sm" color="gray.700">{emp.designation || "—"}</Text>
+                      <Td py={3} borderColor={T.border}>
+                        <Text fontSize="sm" color={T.text}>{emp.designation || "—"}</Text>
                       </Td>
-                      <Td py={3}>
+                      <Td py={3} borderColor={T.border}>
                         {emp.department ? (
                           <Badge
-                            bg="gray.100" color="gray.600"
-                            borderRadius="full" px={2} py={0.5} fontSize="xs"
+                            bg={T.surface2}
+                            color={T.muted}
+                            borderRadius="full"
+                            px={2}
+                            py={0.5}
+                            fontSize="xs"
                           >
                             {emp.department}
                           </Badge>
-                        ) : <Text fontSize="sm" color="gray.400">—</Text>}
+                        ) : <Text fontSize="sm" color={T.muted}>—</Text>}
                       </Td>
-                      <Td py={3}>
+                      <Td py={3} borderColor={T.border}>
                         <Badge
-                          colorScheme={getStatusColor(emp.employmentStatus)}
-                          borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold"
+                          bg={`${getStatusColor(emp.employmentStatus)}20`}
+                          color={getStatusColor(emp.employmentStatus)}
+                          borderRadius="full"
+                          px={3}
+                          py={0.5}
+                          fontSize="xs"
+                          fontWeight="semibold"
                         >
                           {emp.employmentStatus || "—"}
                         </Badge>
                       </Td>
-                      <Td py={3}>
+                      <Td py={3} borderColor={T.border}>
                         <HStack spacing={1}>
                           <Tooltip label="View Profile" hasArrow>
                             <IconButton
-                              icon={<FaEye />} size="sm" variant="ghost" colorScheme="blue"
+                              icon={<FaEye />}
+                              size="sm"
+                              variant="ghost"
+                              color={T.muted}
+                              _hover={{ color: T.blue, bg: T.surface2 }}
                               borderRadius="lg"
                               onClick={() => navigate(`/dashboard/employees/${emp._id}`)}
                               aria-label="View"
@@ -410,7 +500,11 @@ const EmployeeList = () => {
                             <>
                               <Tooltip label="Edit Employee" hasArrow>
                                 <IconButton
-                                  icon={<FaEdit />} size="sm" variant="ghost" colorScheme="orange"
+                                  icon={<FaEdit />}
+                                  size="sm"
+                                  variant="ghost"
+                                  color={T.muted}
+                                  _hover={{ color: T.amber, bg: T.surface2 }}
                                   borderRadius="lg"
                                   onClick={() => navigate(`/dashboard/employees/edit/${emp._id}`)}
                                   aria-label="Edit"
@@ -418,7 +512,11 @@ const EmployeeList = () => {
                               </Tooltip>
                               <Tooltip label="Delete Employee" hasArrow>
                                 <IconButton
-                                  icon={<FaTrash />} size="sm" variant="ghost" colorScheme="red"
+                                  icon={<FaTrash />}
+                                  size="sm"
+                                  variant="ghost"
+                                  color={T.muted}
+                                  _hover={{ color: T.red, bg: T.surface2 }}
                                   borderRadius="lg"
                                   onClick={() => handleDelete(emp._id)}
                                   aria-label="Delete"
@@ -437,17 +535,27 @@ const EmployeeList = () => {
 
           {/* Pagination */}
           <Flex
-            justify="space-between" align="center"
-            px={5} py={3}
-            borderTop="1px solid" borderColor="gray.100"
-            flexWrap="wrap" gap={3}
+            justify="space-between"
+            align="center"
+            px={5}
+            py={3}
+            borderTop="1px solid"
+            borderColor={T.border}
+            flexWrap="wrap"
+            gap={3}
           >
             <HStack spacing={2}>
-              <Text fontSize="xs" color="gray.400">Rows per page</Text>
+              <Text fontSize="xs" color={T.muted}>Rows per page</Text>
               <Select
-                size="xs" w="70px" borderRadius="lg"
+                size="xs"
+                w="70px"
+                borderRadius="lg"
+                bg={T.bg}
+                borderColor={T.border}
+                color={T.text}
                 value={pageSize === "All" ? "All" : pageSize}
                 onChange={(e) => { setPageSize(e.target.value === "All" ? "All" : Number(e.target.value)); setCurrentPage(1); }}
+                _focus={{ borderColor: T.teal }}
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
@@ -456,15 +564,20 @@ const EmployeeList = () => {
               </Select>
             </HStack>
 
-            <Text fontSize="xs" color="gray.400">
-              Showing <Text as="span" fontWeight="semibold" color="gray.600">
+            <Text fontSize="xs" color={T.muted}>
+              Showing <Text as="span" fontWeight="semibold" color={T.text}>
                 {startIdx + 1}–{Math.min(startIdx + pageSizeNum, sortedEmployees.length)}
-              </Text> of <Text as="span" fontWeight="semibold" color="gray.600">{sortedEmployees.length}</Text> employees
+              </Text> of <Text as="span" fontWeight="semibold" color={T.text}>{sortedEmployees.length}</Text> employees
             </Text>
 
             <HStack spacing={1}>
               <Button
-                size="xs" variant="outline" borderRadius="lg"
+                size="xs"
+                variant="outline"
+                borderColor={T.border}
+                color={T.muted}
+                _hover={{ borderColor: T.teal, color: T.teal, bg: "transparent" }}
+                borderRadius="lg"
                 isDisabled={safePage === 1}
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               >
@@ -474,20 +587,28 @@ const EmployeeList = () => {
                 const page = i + 1;
                 return (
                   <Button
-                    key={page} size="xs" borderRadius="lg"
+                    key={page}
+                    size="xs"
+                    borderRadius="lg"
                     variant={safePage === page ? "solid" : "outline"}
-                    bg={safePage === page ? "#065f46" : undefined}
-                    color={safePage === page ? "white" : undefined}
-                    borderColor={safePage === page ? "#065f46" : undefined}
+                    bg={safePage === page ? T.teal : "transparent"}
+                    color={safePage === page ? T.bg : T.muted}
+                    borderColor={safePage === page ? T.teal : T.border}
+                    _hover={{ borderColor: T.teal, color: safePage === page ? T.bg : T.teal }}
                     onClick={() => setCurrentPage(page)}
                   >
                     {page}
                   </Button>
                 );
               })}
-              {totalPages > 5 && <Text fontSize="xs" color="gray.400">...</Text>}
+              {totalPages > 5 && <Text fontSize="xs" color={T.muted}>...</Text>}
               <Button
-                size="xs" variant="outline" borderRadius="lg"
+                size="xs"
+                variant="outline"
+                borderColor={T.border}
+                color={T.muted}
+                _hover={{ borderColor: T.teal, color: T.teal, bg: "transparent" }}
+                borderRadius="lg"
                 isDisabled={safePage === totalPages}
                 onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               >

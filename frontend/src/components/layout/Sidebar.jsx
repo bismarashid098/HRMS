@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Box, Flex, Text, Icon, VStack, Avatar, Badge, Tooltip, IconButton } from "@chakra-ui/react";
 import {
@@ -9,117 +9,123 @@ import {
 } from "react-icons/fa";
 import { AuthContext } from "../../context/AuthContext";
 
-const avatarColors = ["#065f46", "#1d4ed8", "#7c3aed", "#d97706", "#dc2626"];
-const getAvatarBg = (name = "") => avatarColors[name.charCodeAt(0) % avatarColors.length];
+/* ══════════════════════════════════════
+   THEME TOKENS
+══════════════════════════════════════ */
+const C = {
+  accent:       "#00E5C4",
+  accentGlow:   "rgba(0,229,196,0.18)",
+  accentBorder: "rgba(0,229,196,0.22)",
+  accentDim:    "rgba(0,229,196,0.08)",
+  gold:         "#F0C040",
+  bg:           "#080E1A",
+  surface:      "rgba(255,255,255,0.04)",
+  surfaceHover: "rgba(255,255,255,0.07)",
+  border:       "rgba(255,255,255,0.07)",
+  borderHover:  "rgba(255,255,255,0.13)",
+  text:         "#E8F0FE",
+  muted:        "rgba(255,255,255,0.38)",
+  mutedHover:   "rgba(255,255,255,0.72)",
+};
 
-const ACCENT = "#38bdf8";
-const ACCENT_DIM = "rgba(56,189,248,0.13)";
-const ACCENT_BORDER = "rgba(56,189,248,0.28)";
-const SIDEBAR_BG =
-  "linear-gradient(170deg, #070d1a 0%, #0d1f3c 55%, #071527 100%)";
+const avatarColors = ["#065f46","#1d4ed8","#7c3aed","#d97706","#dc2626"];
+const getAvatarBg  = (name = "") => avatarColors[name.charCodeAt(0) % avatarColors.length];
 
+const DOT_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='1' cy='1' r='1' fill='rgba(255,255,255,0.045)'/%3E%3C/svg%3E")`;
+const HEX_CLIP = "polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)";
+
+/* ══════════════════════════════════════
+   SECTION LABEL
+══════════════════════════════════════ */
 const SectionLabel = ({ label }) => (
   <Flex align="center" gap={2} px={4} pt={5} pb={1.5}>
     <Text
-      fontSize="9px"
-      fontWeight="700"
-      color="whiteAlpha.400"
-      textTransform="uppercase"
-      letterSpacing="0.20em"
-      flexShrink={0}
-      fontFamily="'Segoe UI', system-ui, sans-serif"
+      fontSize="8.5px" fontWeight="800" color={C.muted}
+      textTransform="uppercase" letterSpacing="0.22em"
+      fontFamily="'DM Mono', monospace" flexShrink={0}
     >
       {label}
     </Text>
-    <Box flex={1} h="1px" bg="whiteAlpha.80" />
+    <Box flex={1} h="1px" bgGradient={`linear(to-r, ${C.accentBorder}, transparent)`} />
   </Flex>
 );
 
+/* ══════════════════════════════════════
+   NAV ITEM
+══════════════════════════════════════ */
 const NavItem = ({ to, icon, label, exact = false, isChild = false, onClose }) => {
   const location = useLocation();
-  const isActivePath = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
+  const isActivePath = (p) => location.pathname === p || location.pathname.startsWith(`${p}/`);
   const active = exact ? location.pathname === to : isActivePath(to);
 
   return (
     <NavLink to={to} style={{ textDecoration: "none", width: "100%" }} onClick={onClose}>
       <Flex
         align="center"
-        py={isChild ? "6px" : "8px"}
-        pl={isChild ? 9 : 3}
-        pr={3}
-        mx={3}
-        mb="2px"
+        py={isChild ? "5px" : "7px"}
+        pl={isChild ? 8 : "10px"}
+        pr="10px"
+        mx={3} mb="2px"
         borderRadius="10px"
         cursor="pointer"
         position="relative"
-        bg={active ? ACCENT_DIM : "transparent"}
+        bg={active ? C.accentDim : "transparent"}
         border="1px solid"
-        borderColor={active ? ACCENT_BORDER : "transparent"}
-        color={active ? "white" : "whiteAlpha.550"}
-        _hover={{
-          bg: active ? ACCENT_DIM : "whiteAlpha.70",
-          color: "white",
-          borderColor: active ? ACCENT_BORDER : "whiteAlpha.100",
-        }}
-        transition="all 0.18s ease"
+        borderColor={active ? C.accentBorder : "transparent"}
+        color={active ? C.text : C.muted}
+        _hover={{ bg: active ? C.accentDim : C.surface, color: C.text, borderColor: active ? C.accentBorder : C.border }}
+        transition="all 0.16s ease"
         role="group"
         overflow="hidden"
       >
-        {/* Active glow bar */}
         {active && (
           <Box
-            position="absolute"
-            left={0}
-            top="15%"
-            bottom="15%"
-            w="2.5px"
-            borderRadius="0 3px 3px 0"
-            bg={ACCENT}
-            boxShadow={`0 0 8px ${ACCENT}`}
+            position="absolute" left={0} top="18%" bottom="18%"
+            w="2px" borderRadius="0 3px 3px 0"
+            bg={C.accent} boxShadow={`0 0 10px ${C.accent}`}
           />
         )}
-
-        {/* Icon */}
+        {active && (
+          <Box
+            position="absolute" right={0} top={0} bottom={0} w="50px"
+            bgGradient={`linear(to-l, ${C.accentDim}, transparent)`}
+            pointerEvents="none"
+          />
+        )}
         <Flex
-          w={isChild ? "22px" : "28px"}
-          h={isChild ? "22px" : "28px"}
-          borderRadius="8px"
-          bg={active ? "rgba(16,185,129,0.2)" : "whiteAlpha.70"}
-          align="center"
-          justify="center"
-          mr="10px"
-          flexShrink={0}
-          transition="all 0.18s"
-          _groupHover={{ bg: active ? "rgba(16,185,129,0.25)" : "whiteAlpha.100" }}
+          w={isChild ? "20px" : "26px"} h={isChild ? "20px" : "26px"}
+          borderRadius="7px"
+          bg={active ? C.accentGlow : C.surface}
+          border="1px solid"
+          borderColor={active ? C.accentBorder : C.border}
+          align="center" justify="center"
+          mr="9px" flexShrink={0}
+          transition="all 0.16s"
+          _groupHover={{ bg: active ? C.accentGlow : C.surfaceHover, borderColor: active ? C.accentBorder : C.borderHover }}
         >
           <Icon
             as={icon}
-            fontSize={isChild ? "10px" : "12px"}
-            color={active ? ACCENT : "whiteAlpha.500"}
-            _groupHover={{ color: active ? ACCENT : "whiteAlpha.800" }}
-            transition="color 0.18s"
+            fontSize={isChild ? "9px" : "11px"}
+            color={active ? C.accent : C.muted}
+            _groupHover={{ color: active ? C.accent : C.mutedHover }}
+            transition="color 0.16s"
           />
         </Flex>
-
         <Text
-          fontSize={isChild ? "12.5px" : "13.5px"}
-          fontWeight={active ? "600" : "450"}
+          fontSize={isChild ? "12px" : "13px"}
+          fontWeight={active ? "600" : "400"}
           lineHeight="1"
-          letterSpacing="0.01em"
-          fontFamily="'Segoe UI', system-ui, sans-serif"
+          letterSpacing={active ? "0.005em" : "0.01em"}
+          fontFamily="'DM Sans', system-ui, sans-serif"
+          flex={1}
         >
           {label}
         </Text>
-
         {active && (
           <Box
-            position="absolute"
-            right={0}
-            top={0}
-            bottom={0}
-            w="60px"
-            bgGradient="linear(to-l, rgba(16,185,129,0.06), transparent)"
-            pointerEvents="none"
+            w="5px" h="5px" borderRadius="full"
+            bg={C.accent} boxShadow={`0 0 6px ${C.accent}`}
+            flexShrink={0}
           />
         )}
       </Flex>
@@ -127,82 +133,83 @@ const NavItem = ({ to, icon, label, exact = false, isChild = false, onClose }) =
   );
 };
 
+/* ══════════════════════════════════════
+   PARENT ITEM (collapsible)
+══════════════════════════════════════ */
 const ParentItem = ({ icon, label, active, isOpen, onToggle }) => (
   <Flex
     align="center"
-    py="8px"
-    pl={3}
-    pr={3}
-    mx={3}
-    mb="2px"
+    py="7px" pl="10px" pr="10px"
+    mx={3} mb="2px"
     borderRadius="10px"
     cursor="pointer"
     position="relative"
-    bg={active ? ACCENT_DIM : "transparent"}
+    bg={active ? C.accentDim : "transparent"}
     border="1px solid"
-    borderColor={active ? ACCENT_BORDER : "transparent"}
-    color={active ? "white" : "whiteAlpha.550"}
-    _hover={{
-      bg: active ? ACCENT_DIM : "whiteAlpha.70",
-      color: "white",
-      borderColor: active ? ACCENT_BORDER : "whiteAlpha.100",
-    }}
-    transition="all 0.18s ease"
+    borderColor={active ? C.accentBorder : "transparent"}
+    color={active ? C.text : C.muted}
+    _hover={{ bg: active ? C.accentDim : C.surface, color: C.text, borderColor: active ? C.accentBorder : C.border }}
+    transition="all 0.16s ease"
     onClick={onToggle}
     role="group"
     overflow="hidden"
   >
     {active && (
       <Box
-        position="absolute"
-        left={0}
-        top="15%"
-        bottom="15%"
-        w="2.5px"
-        borderRadius="0 3px 3px 0"
-        bg={ACCENT}
-        boxShadow={`0 0 8px ${ACCENT}`}
+        position="absolute" left={0} top="18%" bottom="18%"
+        w="2px" borderRadius="0 3px 3px 0"
+        bg={C.accent} boxShadow={`0 0 10px ${C.accent}`}
       />
     )}
     <Flex
-      w="28px" h="28px" borderRadius="8px"
-      bg={active ? "rgba(16,185,129,0.2)" : "whiteAlpha.70"}
+      w="26px" h="26px" borderRadius="7px"
+      bg={active ? C.accentGlow : C.surface}
+      border="1px solid"
+      borderColor={active ? C.accentBorder : C.border}
       align="center" justify="center"
-      mr="10px" flexShrink={0}
-      transition="all 0.18s"
-      _groupHover={{ bg: active ? "rgba(16,185,129,0.25)" : "whiteAlpha.100" }}
+      mr="9px" flexShrink={0}
+      transition="all 0.16s"
+      _groupHover={{ bg: active ? C.accentGlow : C.surfaceHover, borderColor: active ? C.accentBorder : C.borderHover }}
     >
       <Icon
-        as={icon}
-        fontSize="12px"
-        color={active ? ACCENT : "whiteAlpha.500"}
-        _groupHover={{ color: active ? ACCENT : "whiteAlpha.800" }}
-        transition="color 0.18s"
+        as={icon} fontSize="11px"
+        color={active ? C.accent : C.muted}
+        _groupHover={{ color: active ? C.accent : C.mutedHover }}
+        transition="color 0.16s"
       />
     </Flex>
-    <Text fontSize="13.5px" fontWeight={active ? "600" : "450"} flex={1} lineHeight="1" letterSpacing="0.01em" fontFamily="'Segoe UI', system-ui, sans-serif">
+    <Text
+      fontSize="13px" fontWeight={active ? "600" : "400"}
+      flex={1} lineHeight="1" letterSpacing="0.01em"
+      fontFamily="'DM Sans', system-ui, sans-serif"
+    >
       {label}
     </Text>
     <Flex
-      w="18px" h="18px" borderRadius="5px"
-      bg="whiteAlpha.70"
+      w="16px" h="16px" borderRadius="5px"
+      bg={C.surface} border="1px solid" borderColor={C.border}
       align="center" justify="center"
-      transition="all 0.2s"
+      transition="transform 0.2s"
       transform={isOpen ? "rotate(0deg)" : "rotate(-90deg)"}
+      flexShrink={0}
     >
-      <Icon as={FaChevronDown} fontSize="8px" color="whiteAlpha.400" />
+      <Icon as={FaChevronDown} fontSize="7px" color={C.muted} />
     </Flex>
   </Flex>
 );
 
+/* ══════════════════════════════════════
+   MAIN SIDEBAR
+══════════════════════════════════════ */
 const Sidebar = ({ onClose }) => {
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
   const { user, logout } = useContext(AuthContext);
   const role = user?.role;
 
-  const isActivePath = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
+  const isActivePath = (p) => location.pathname === p || location.pathname.startsWith(`${p}/`);
 
+  /* ── Menu config ── */
   const baseMenu = [
     {
       section: "MAIN",
@@ -216,22 +223,22 @@ const Sidebar = ({ onClose }) => {
         {
           key: "employees", type: "group", label: "Employees", icon: FaUsers,
           children: [
-            { to: "/dashboard/employees", label: "Employee List", icon: FaUsers },
-            { to: "/dashboard/employees/create", label: "Add Employee", icon: FaPlus }
+            { to: "/dashboard/employees",        label: "Employee List", icon: FaUsers },
+            { to: "/dashboard/employees/create", label: "Add Employee",  icon: FaPlus  }
           ]
         },
         {
           key: "attendance", type: "group", label: "Attendance", icon: FaCalendarCheck,
           children: [
-            { to: "/dashboard/attendance", label: "Daily Attendance", icon: FaCalendarCheck },
-            { to: "/dashboard/reports/attendance", label: "Attendance Report", icon: FaChartBar }
+            { to: "/dashboard/attendance",         label: "Daily Attendance",  icon: FaCalendarCheck },
+            { to: "/dashboard/reports/attendance", label: "Attendance Report", icon: FaChartBar      }
           ]
         },
         {
           key: "leaves", type: "group", label: "Leaves", icon: FaClipboardList,
           children: [
-            { to: "/dashboard/leaves", label: "Leave Management", icon: FaClipboardList },
-            { to: "/dashboard/reports/leaves", label: "Leave Report", icon: FaChartBar }
+            { to: "/dashboard/leaves",         label: "Leave Management", icon: FaClipboardList },
+            { to: "/dashboard/reports/leaves", label: "Leave Report",     icon: FaChartBar      }
           ]
         }
       ]
@@ -242,10 +249,10 @@ const Sidebar = ({ onClose }) => {
         {
           key: "payroll", type: "group", label: "Payroll", icon: FaMoneyBillWave,
           children: [
-            { to: "/dashboard/payroll", label: "Payroll Processing", icon: FaMoneyBillWave },
-            { to: "/dashboard/advance", label: "Advance Salary", icon: FaHandHoldingUsd },
-            { to: "/dashboard/reports/payroll", label: "Payroll Report", icon: FaFileInvoiceDollar },
-            { to: "/dashboard/reports/advances", label: "Advance Report", icon: FaFileInvoiceDollar }
+            { to: "/dashboard/payroll",           label: "Payroll Processing", icon: FaMoneyBillWave     },
+            { to: "/dashboard/advance",           label: "Advance Salary",     icon: FaHandHoldingUsd    },
+            { to: "/dashboard/reports/payroll",   label: "Payroll Report",     icon: FaFileInvoiceDollar },
+            { to: "/dashboard/reports/advances",  label: "Advance Report",     icon: FaFileInvoiceDollar }
           ]
         }
       ]
@@ -256,10 +263,10 @@ const Sidebar = ({ onClose }) => {
         {
           key: "system", type: "group", label: "System", icon: FaShieldAlt,
           children: [
-            { to: "/dashboard/users", label: "User Management", icon: FaUsers },
-            { to: "/dashboard/profile", label: "My Profile", icon: FaUserCircle },
-            { to: "/dashboard/audit", label: "Audit Logs", icon: FaHistory },
-            { to: "/dashboard/settings", label: "Settings", icon: FaCog }
+            { to: "/dashboard/users",    label: "User Management", icon: FaUsers      },
+            { to: "/dashboard/profile",  label: "My Profile",      icon: FaUserCircle },
+            { to: "/dashboard/audit",    label: "Audit Logs",      icon: FaHistory    },
+            { to: "/dashboard/settings", label: "Settings",        icon: FaCog        }
           ]
         }
       ]
@@ -272,22 +279,20 @@ const Sidebar = ({ onClose }) => {
       items: [
         {
           key: "employees", type: "group", label: "Employees", icon: FaUsers,
-          children: [
-            { to: "/dashboard/employees", label: "Employee List", icon: FaUsers }
-          ]
+          children: [{ to: "/dashboard/employees", label: "Employee List", icon: FaUsers }]
         },
         {
           key: "attendance", type: "group", label: "Attendance", icon: FaCalendarCheck,
           children: [
-            { to: "/dashboard/attendance", label: "Daily Attendance", icon: FaCalendarCheck },
-            { to: "/dashboard/reports/attendance", label: "Attendance Report", icon: FaChartBar }
+            { to: "/dashboard/attendance",         label: "Daily Attendance",  icon: FaCalendarCheck },
+            { to: "/dashboard/reports/attendance", label: "Attendance Report", icon: FaChartBar      }
           ]
         },
         {
           key: "leaves", type: "group", label: "Leaves", icon: FaClipboardList,
           children: [
-            { to: "/dashboard/leaves", label: "Leave Management", icon: FaClipboardList },
-            { to: "/dashboard/reports/leaves", label: "Leave Report", icon: FaChartBar }
+            { to: "/dashboard/leaves",         label: "Leave Management", icon: FaClipboardList },
+            { to: "/dashboard/reports/leaves", label: "Leave Report",     icon: FaChartBar      }
           ]
         }
       ]
@@ -297,9 +302,7 @@ const Sidebar = ({ onClose }) => {
       items: [
         {
           key: "account", type: "group", label: "Account", icon: FaUserCircle,
-          children: [
-            { to: "/dashboard/profile", label: "My Profile", icon: FaUserCircle }
-          ]
+          children: [{ to: "/dashboard/profile", label: "My Profile", icon: FaUserCircle }]
         }
       ]
     }
@@ -307,11 +310,18 @@ const Sidebar = ({ onClose }) => {
 
   const menuSections = role === "Manager" ? managerMenu : baseMenu;
 
-  const allGroups = {};
-  menuSections.forEach((sec) => sec.items.forEach((item) => {
-    if (item.type === "group") allGroups[item.key] = true;
-  }));
-  const [openGroups, setOpenGroups] = React.useState(allGroups);
+  // ✅ FIX: useEffect se openGroups initialize hoga jab role/menuSections ready ho
+  const [openGroups, setOpenGroups] = React.useState({});
+
+  useEffect(() => {
+    const allGroups = {};
+    menuSections.forEach((sec) =>
+      sec.items.forEach((item) => {
+        if (item.type === "group") allGroups[item.key] = true;
+      })
+    );
+    setOpenGroups(allGroups);
+  }, [role]); // ✅ role change hone par re-initialize
 
   const toggleGroup = (key) => setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
 
@@ -319,55 +329,86 @@ const Sidebar = ({ onClose }) => {
 
   return (
     <Box
-      w="100%"
-      h="100%"
-      bgImage={SIDEBAR_BG}
-      bgSize="cover"
-      bgPos="center"
-      color="white"
+      w="100%" h="100%"
+      bg={C.bg}
+      backgroundImage={DOT_BG}
+      backgroundSize="24px 24px"
+      color={C.text}
       display="flex"
       flexDirection="column"
       position="relative"
       borderRight="1px solid"
-      borderColor="rgba(255,255,255,0.06)"
-      fontFamily="'Segoe UI', system-ui, -apple-system, sans-serif"
-      style={{
-        backgroundImage: `${SIDEBAR_BG}, radial-gradient(circle, rgba(56,189,248,0.03) 1px, transparent 1px)`,
-        backgroundSize: "cover, 28px 28px",
-      }}
+      borderColor={C.border}
+      fontFamily="'DM Sans', system-ui, sans-serif"
+      overflow="hidden"
     >
-      {/* ── Logo ── */}
-      <Box px={4} pt={5} pb={4}>
+      {/* Ambient top glow */}
+      <Box
+        position="absolute" top="-60px" left="50%"
+        transform="translateX(-50%)"
+        w="200px" h="120px"
+        borderRadius="full"
+        bg={C.accentGlow}
+        filter="blur(40px)"
+        pointerEvents="none"
+        zIndex={0}
+      />
+
+      {/* Corner accent lines */}
+      <Box position="absolute" top={0} left={0} w="60px" h="1px" bg={`linear-gradient(to-r, ${C.accent}, transparent)`} zIndex={1} />
+      <Box position="absolute" top={0} left={0} w="1px" h="60px" bg={`linear-gradient(to-b, ${C.accent}, transparent)`} zIndex={1} />
+
+      {/* ════ LOGO ════ */}
+      <Box px={4} pt={5} pb={3} position="relative" zIndex={1}>
         <Flex
-          align="center"
-          gap={3}
-          p={3}
-          borderRadius="12px"
-          bg="rgba(255,255,255,0.06)"
+          align="center" gap={3} p={3}
+          borderRadius="14px"
+          bg="rgba(255,255,255,0.035)"
           border="1px solid"
-          borderColor="rgba(255,255,255,0.10)"
+          borderColor={C.border}
+          position="relative"
+          overflow="hidden"
         >
-          {/* Icon badge */}
-          <Flex
-            w={9} h={9}
-            borderRadius="10px"
-            bg="rgba(56,189,248,0.15)"
-            border="1px solid"
-            borderColor="rgba(56,189,248,0.28)"
-            align="center"
-            justify="center"
-            flexShrink={0}
-            boxShadow={`0 0 16px rgba(56,189,248,0.18)`}
-          >
-            <Text fontSize="15px" fontWeight="800" color={ACCENT} lineHeight="1">W</Text>
+          <Box
+            position="absolute" top={0} left={0} right={0} h="1px"
+            bgGradient={`linear(to-r, transparent, ${C.accentBorder}, transparent)`}
+          />
+          <Flex w="38px" h="38px" flexShrink={0} align="center" justify="center" position="relative">
+            <Box
+              position="absolute" inset={0}
+              bg={`linear-gradient(135deg, ${C.accent}, #0EA5E9)`}
+              style={{ clipPath: HEX_CLIP }}
+              opacity={0.15}
+            />
+            <Box
+              position="absolute" inset="1px"
+              border="1px solid" borderColor={C.accentBorder}
+              style={{ clipPath: HEX_CLIP }}
+            />
+            <Text
+              fontSize="15px" fontWeight="900"
+              color={C.accent} lineHeight="1"
+              fontFamily="'DM Mono', monospace"
+              style={{ textShadow: `0 0 12px ${C.accent}` }}
+            >
+              W
+            </Text>
           </Flex>
           <Box flex={1}>
-            <Text fontSize="14px" fontWeight="700" color="white" letterSpacing="-0.01em" lineHeight="1.1" fontFamily="'Segoe UI', system-ui, sans-serif">
+            <Text
+              fontSize="14.5px" fontWeight="700" color="white"
+              letterSpacing="-0.02em" lineHeight="1.1"
+              fontFamily="'DM Sans', system-ui, sans-serif"
+            >
               WorkSphere
             </Text>
-            <Flex align="center" gap={1.5} mt={0.5}>
-              <Box w="5px" h="5px" borderRadius="full" bg={ACCENT} boxShadow={`0 0 6px ${ACCENT}`} />
-              <Text fontSize="9px" color="whiteAlpha.500" fontWeight="600" textTransform="uppercase" letterSpacing="0.16em" fontFamily="'Segoe UI', system-ui, sans-serif">
+            <Flex align="center" gap={1.5} mt="3px">
+              <Box w="4px" h="4px" borderRadius="full" bg={C.accent} boxShadow={`0 0 5px ${C.accent}`} />
+              <Text
+                fontSize="8.5px" color={C.muted} fontWeight="700"
+                textTransform="uppercase" letterSpacing="0.18em"
+                fontFamily="'DM Mono', monospace"
+              >
                 HRMS Platform
               </Text>
             </Flex>
@@ -375,10 +416,9 @@ const Sidebar = ({ onClose }) => {
           {onClose && (
             <IconButton
               icon={<Icon as={FaTimes} />}
-              size="xs"
-              variant="ghost"
-              color="whiteAlpha.500"
-              _hover={{ color: "white", bg: "whiteAlpha.100" }}
+              size="xs" variant="ghost"
+              color={C.muted}
+              _hover={{ color: "white", bg: C.surface }}
               onClick={onClose}
               aria-label="Close sidebar"
               borderRadius="8px"
@@ -388,17 +428,15 @@ const Sidebar = ({ onClose }) => {
         </Flex>
       </Box>
 
-      {/* ── Navigation ── */}
+      {/* ════ NAVIGATION ════ */}
       <VStack
-        spacing={0}
-        align="stretch"
-        overflowY="auto"
-        flex={1}
-        pb={3}
+        spacing={0} align="stretch"
+        overflowY="auto" flex={1} pb={3}
+        position="relative" zIndex={1}
         css={{
           "&::-webkit-scrollbar": { width: "3px" },
           "&::-webkit-scrollbar-track": { background: "transparent" },
-          "&::-webkit-scrollbar-thumb": { background: "rgba(255,255,255,0.08)", borderRadius: "24px" }
+          "&::-webkit-scrollbar-thumb": { background: "rgba(0,229,196,0.15)", borderRadius: "24px" }
         }}
       >
         {menuSections.map((section, si) => (
@@ -406,30 +444,26 @@ const Sidebar = ({ onClose }) => {
             <SectionLabel label={section.section} />
             {section.items.map((item) => {
               if (item.type === "single") {
-                return <NavItem key={item.key} to={item.to} icon={item.icon} label={item.label} exact={item.exact} onClose={onClose} />;
+                return (
+                  <NavItem
+                    key={item.key} to={item.to} icon={item.icon}
+                    label={item.label} exact={item.exact} onClose={onClose}
+                  />
+                );
               }
 
-              const isGroupActive = item.children.some((child) => isActivePath(child.to));
+              const isGroupActive = item.children.some((c) => isActivePath(c.to));
               const isOpen = openGroups[item.key];
 
               return (
                 <Box key={item.key}>
                   <ParentItem
-                    icon={item.icon}
-                    label={item.label}
-                    active={isGroupActive}
-                    isOpen={isOpen}
+                    icon={item.icon} label={item.label}
+                    active={isGroupActive} isOpen={isOpen}
                     onToggle={() => toggleGroup(item.key)}
                   />
                   {isOpen && (
-                    <Box
-                      ml={6}
-                      mr={3}
-                      mb={1}
-                      pl={3}
-                      borderLeft="1px solid"
-                      borderColor="whiteAlpha.100"
-                    >
+                    <Box ml={6} mr={3} mb={1} pl={3} borderLeft="1px solid" borderColor={C.accentBorder} opacity={0.9}>
                       {item.children.map((child) => (
                         <NavItem key={child.to} to={child.to} icon={child.icon} label={child.label} isChild onClose={onClose} />
                       ))}
@@ -442,75 +476,71 @@ const Sidebar = ({ onClose }) => {
         ))}
       </VStack>
 
-      {/* ── User Card ── */}
-      <Box px={3} pb={4} pt={2}>
-        <Box h="1px" bg="rgba(255,255,255,0.06)" mb={3} />
+      {/* ════ USER CARD ════ */}
+      <Box px={3} pb={4} pt={2} position="relative" zIndex={1}>
+        <Box h="1px" mb={3} bgGradient={`linear(to-r, transparent, ${C.accentBorder}, transparent)`} />
         <Flex
-          align="center"
-          gap={3}
-          p="10px"
-          borderRadius="12px"
-          bg="rgba(255,255,255,0.04)"
-          border="1px solid"
-          borderColor="rgba(255,255,255,0.08)"
+          align="center" gap={3} p="10px"
+          borderRadius="13px"
+          bg="rgba(255,255,255,0.03)"
+          border="1px solid" borderColor={C.border}
           cursor="pointer"
-          _hover={{ bg: "rgba(255,255,255,0.07)", borderColor: "rgba(255,255,255,0.12)" }}
+          _hover={{ bg: C.surfaceHover, borderColor: C.accentBorder }}
           transition="all 0.18s"
           onClick={() => navigate("/dashboard/profile")}
+          position="relative"
+          overflow="hidden"
         >
+          <Box
+            position="absolute" top={0} left={0} right={0} h="1px"
+            bgGradient="linear(to-r, transparent, rgba(255,255,255,0.06), transparent)"
+          />
           <Box position="relative">
-            <Avatar size="sm" name={user?.name} bg={getAvatarBg(user?.name || "")} color="white" fontSize="xs" />
+            <Avatar
+              size="sm" name={user?.name}
+              bg={getAvatarBg(user?.name || "")}
+              color="white" fontSize="xs"
+              boxShadow={`0 0 10px rgba(0,229,196,0.2)`}
+            />
             <Box
-              position="absolute"
-              bottom="0"
-              right="0"
-              w="8px"
-              h="8px"
-              borderRadius="full"
-              bg={ACCENT}
-              border="1.5px solid"
-              borderColor="#021024"
-              boxShadow={`0 0 5px ${ACCENT}`}
+              position="absolute" bottom="0" right="0"
+              w="8px" h="8px" borderRadius="full"
+              bg={C.accent} border="1.5px solid" borderColor={C.bg}
+              boxShadow={`0 0 6px ${C.accent}`}
             />
           </Box>
-
           <Box flex={1} minW={0}>
-            <Text fontSize="13px" fontWeight="600" color="white" noOfLines={1} lineHeight="1.2" fontFamily="'Segoe UI', system-ui, sans-serif">
+            <Text
+              fontSize="13px" fontWeight="600" color="white"
+              noOfLines={1} lineHeight="1.2"
+              fontFamily="'DM Sans', system-ui, sans-serif"
+            >
               {user?.name || "User"}
             </Text>
             <Badge
-              mt={0.5}
-              fontSize="7px"
-              px={1.5}
-              py={0.5}
+              mt="3px" fontSize="7px" px={1.5} py={0.5}
               borderRadius="full"
-              bg={role === "Admin" ? "rgba(16,185,129,0.15)" : "rgba(96,165,250,0.15)"}
-              color={role === "Admin" ? ACCENT : "#60a5fa"}
+              bg={role === "Admin" ? C.accentDim : "rgba(96,165,250,0.12)"}
+              color={role === "Admin" ? C.accent : "#60a5fa"}
               border="1px solid"
-              borderColor={role === "Admin" ? "rgba(16,185,129,0.25)" : "rgba(96,165,250,0.25)"}
-              fontWeight="700"
-              textTransform="uppercase"
-              letterSpacing="0.08em"
+              borderColor={role === "Admin" ? C.accentBorder : "rgba(96,165,250,0.25)"}
+              fontWeight="700" textTransform="uppercase" letterSpacing="0.1em"
+              fontFamily="'DM Mono', monospace"
             >
               {role}
             </Badge>
           </Box>
-
           <Tooltip label="Logout" placement="top" hasArrow>
             <Flex
-              w="30px" h="30px"
-              borderRadius="8px"
-              align="center"
-              justify="center"
-              color="whiteAlpha.400"
-              border="1px solid"
-              borderColor="transparent"
-              _hover={{ color: "#f87171", bg: "rgba(248,113,113,0.1)", borderColor: "rgba(248,113,113,0.2)" }}
-              transition="all 0.18s"
-              flexShrink={0}
+              w="28px" h="28px" borderRadius="8px"
+              align="center" justify="center"
+              color={C.muted}
+              border="1px solid" borderColor="transparent"
+              _hover={{ color: "#f87171", bg: "rgba(248,113,113,0.1)", borderColor: "rgba(248,113,113,0.22)" }}
+              transition="all 0.18s" flexShrink={0}
               onClick={(e) => { e.stopPropagation(); handleLogout(); }}
             >
-              <Icon as={FaSignOutAlt} fontSize="11px" />
+              <Icon as={FaSignOutAlt} fontSize="10px" />
             </Flex>
           </Tooltip>
         </Flex>

@@ -1,147 +1,408 @@
 const asyncHandler = require("express-async-handler");
+
 const Employee = require("../models/Employee");
 const Attendance = require("../models/Attendance");
 const Leave = require("../models/Leave");
 const Payroll = require("../models/payroll");
 
+/* ─────────────────────────────────────────────
+   DASHBOARD SUMMARY
+───────────────────────────────────────────── */
 exports.getDashboardSummary = asyncHandler(async (req, res) => {
-    try {
-        // 1. Total Employees
-        const totalEmployees = await Employee.countDocuments({
-            isDeleted: false,
-            employmentStatus: "Active"
-        });
+  try {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
 
-        // 2. Attendance Today
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const todayEnd = new Date();
-        todayEnd.setHours(23, 59, 59, 999);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
 
-        const attendanceToday = await Attendance.countDocuments({
-            date: { $gte: todayStart, $lte: todayEnd },
-            status: { $in: ["Present", "Late", "Half Day"] }
-        });
+    const currentMonth = new Date().getMonth() + 1;
+    const currentYear = new Date().getFullYear();
 
-        // 3. Pending Leaves
-        const pendingLeaves = await Leave.countDocuments({
-            status: "Pending"
-        });
+    /* Parallel Queries */
+    const [
+      totalEmployees,
+      attendanceToday,
+      pendingLeaves,
+      payrollAgg,
+    ] = await Promise.all([
 
-        // 4. Monthly Payroll (Current Month)
-        const currentMonth = new Date().getMonth() + 1; // 1-12
-        const currentYear = new Date().getFullYear();
+      /* Active Employees */
+      Employee.countDocuments({
+        isDeleted: false,
+        employmentStatus: "Active",
+      }),
 
-        const payrollData = await Payroll.aggregate([
-            {
-                $match: {
-                    month: currentMonth,
-                    year: currentYear
-                }
+      /* Present Today */
+      Attendance.countDocuments({
+        date: {
+          $gte: todayStart,
+          $lte: todayEnd,
+        },
+        status: {
+          $in: ["Present", "Late", "Half Day"],
+        },
+      }),
+
+      /* Pending Leaves */
+      Leave.countDocuments({
+        status: "Pending",
+      }),
+
+      /* Current Month Payroll */
+      Payroll.aggregate([
+        {
+          $match: {
+            month: currentMonth,
+            year: currentYear,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalSalary: {
+              $sum: "$netSalary",
             },
-            {
-                $group: {
-                    _id: null,
-                    totalSalary: { $sum: "$netSalary" }
-                }
-            }
-        ]);
+          },
+        },
+      ]),
+    ]);
 
-        const monthlyPayroll = payrollData.length > 0 ? payrollData[0].totalSalary : 0;
+    const monthlyPayroll =
+      payrollAgg?.[0]?.totalSalary || 0;
 
-        res.json({
-            totalEmployees,
-            attendanceToday,
-            pendingLeaves,
-            monthlyPayroll
-        });
+    return res.status(200).json({
+      success: true,
 
-    } catch (error) {
-        res.status(500);
-        throw new Error("Error fetching dashboard summary");
-    }
+      totalEmployees,
+      attendanceToday,
+      pendingLeaves,
+      monthlyPayroll,
+
+      attendanceRate:
+        totalEmployees > 0
+          ? Math.round(
+              (attendanceToday / totalEmployees) * 100
+            )
+          : 0,
+
+      absentToday:
+        totalEmployees - attendanceToday,
+
+      generatedAt: new Date(),
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500);
+    throw new Error(
+      "Error fetching dashboard summary"
+    );
+  }
 });
 
-exports.getAttendanceChartData = asyncHandler(async (req, res) => {
+/* ─────────────────────────────────────────────
+   ATTENDANCE CHART DATA
+───────────────────────────────────────────── */
+exports.getAttendanceChartData =
+  asyncHandler(async (req, res) => {
     try {
-        const monthParam = req.query.month;
-        const yearParam = req.query.year;
+      const now = new Date();
 
-        const now = new Date();
-        const targetYear = yearParam ? parseInt(yearParam, 10) : now.getFullYear();
-        const targetMonth = monthParam ? parseInt(monthParam, 10) : now.getMonth() + 1;
+      const monthParam = req.query.month;
+      const yearParam = req.query.year;
 
-        const startOfMonth = new Date(targetYear, targetMonth - 1, 1);
-        const endOfMonth = new Date(targetYear, targetMonth, 0, 23, 59, 59);
+      const targetYear = yearParam
+        ? parseInt(yearParam)
+        : now.getFullYear();
 
-        const attendanceData = await Attendance.aggregate([
-            {
-                $match: {
-                    date: { $gte: startOfMonth, $lte: endOfMonth }
-                }
+      const targetMonth = monthParam
+        ? parseInt(monthParam)
+        : now.getMonth() + 1;
+
+      const startOfMonth = new Date(
+        targetYear,
+        targetMonth - 1,
+        1
+      );
+
+      const endOfMonth = new Date(
+        targetYear,
+        targetMonth,
+        0,
+        23,
+        59,
+        59
+      );
+
+      const attendanceData =
+        await Attendance.aggregate([
+          {
+            $match: {
+              date: {
+                $gte: startOfMonth,
+                $lte: endOfMonth,
+              },
             },
-            {
-                $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-                    present: {
-                        $sum: {
-                            $cond: [{ $in: ["$status", ["Present", "Late", "Half Day"]] }, 1, 0]
-                        }
+          },
+
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: "$date",
+                },
+              },
+
+              present: {
+                $sum: {
+                  $cond: [
+                    {
+                      $in: [
+                        "$status",
+                        [
+                          "Present",
+                          "Late",
+                          "Half Day",
+                        ],
+                      ],
                     },
-                    absent: {
-                        $sum: {
-                            $cond: [{ $eq: ["$status", "Absent"] }, 1, 0]
-                        }
-                    }
-                }
+                    1,
+                    0,
+                  ],
+                },
+              },
+
+              absent: {
+                $sum: {
+                  $cond: [
+                    {
+                      $eq: [
+                        "$status",
+                        "Absent",
+                      ],
+                    },
+                    1,
+                    0,
+                  ],
+                },
+              },
             },
-            { $sort: { _id: 1 } }
+          },
+
+          {
+            $sort: {
+              _id: 1,
+            },
+          },
         ]);
 
-        res.json(attendanceData);
-    } catch (error) {
-        res.status(500);
-        throw new Error("Error fetching attendance chart data");
-    }
-});
+      /* Format For Frontend */
+      const formatted = attendanceData.map(
+        (item) => ({
+          _id: item._id,
 
-exports.getLeaveStats = asyncHandler(async (req, res) => {
+          present: item.present || 0,
+
+          absent: item.absent || 0,
+
+          total:
+            (item.present || 0) +
+            (item.absent || 0),
+
+          attendanceRate:
+            item.present + item.absent > 0
+              ? Math.round(
+                  (item.present /
+                    (item.present +
+                      item.absent)) *
+                    100
+                )
+              : 0,
+        })
+      );
+
+      return res.status(200).json(formatted);
+    } catch (error) {
+      console.log(error);
+
+      res.status(500);
+
+      throw new Error(
+        "Error fetching attendance chart data"
+      );
+    }
+  });
+
+/* ─────────────────────────────────────────────
+   LEAVE STATS
+───────────────────────────────────────────── */
+exports.getLeaveStats = asyncHandler(
+  async (req, res) => {
     try {
-        const leaveStats = await Leave.aggregate([
-            {
-                $group: {
-                    _id: "$type",
-                    total: { $sum: 1 }
-                }
-            }
-        ]);
-        res.json(leaveStats);
-    } catch (error) {
-        res.status(500);
-        throw new Error("Error fetching leave stats");
-    }
-});
+      const leaveStats = await Leave.aggregate([
+        {
+          $group: {
+            _id: "$type",
 
-exports.getPayrollStats = asyncHandler(async (req, res) => {
+            total: {
+              $sum: 1,
+            },
+
+            approved: {
+              $sum: {
+                $cond: [
+                  {
+                    $eq: [
+                      "$status",
+                      "Approved",
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+
+            pending: {
+              $sum: {
+                $cond: [
+                  {
+                    $eq: [
+                      "$status",
+                      "Pending",
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+
+            rejected: {
+              $sum: {
+                $cond: [
+                  {
+                    $eq: [
+                      "$status",
+                      "Rejected",
+                    ],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+          },
+        },
+
+        {
+          $sort: {
+            total: -1,
+          },
+        },
+      ]);
+
+      return res.status(200).json(leaveStats);
+    } catch (error) {
+      console.log(error);
+
+      res.status(500);
+
+      throw new Error(
+        "Error fetching leave stats"
+      );
+    }
+  }
+);
+
+/* ─────────────────────────────────────────────
+   PAYROLL STATS
+───────────────────────────────────────────── */
+exports.getPayrollStats = asyncHandler(
+  async (req, res) => {
     try {
-        const yearParam = req.query.year;
-        const targetYear = yearParam ? parseInt(yearParam, 10) : new Date().getFullYear();
+      const yearParam = req.query.year;
 
-        const payrollStats = await Payroll.aggregate([
-            {
-                $match: { year: targetYear }
+      const targetYear = yearParam
+        ? parseInt(yearParam)
+        : new Date().getFullYear();
+
+      const payrollStats =
+        await Payroll.aggregate([
+          {
+            $match: {
+              year: targetYear,
             },
-            {
-                $group: {
-                    _id: "$month",
-                    totalPaid: { $sum: "$netSalary" }
-                }
+          },
+
+          {
+            $group: {
+              _id: "$month",
+
+              totalPaid: {
+                $sum: "$netSalary",
+              },
+
+              employees: {
+                $sum: 1,
+              },
+
+              averageSalary: {
+                $avg: "$netSalary",
+              },
             },
-            { $sort: { _id: 1 } }
+          },
+
+          {
+            $sort: {
+              _id: 1,
+            },
+          },
         ]);
-        res.json(payrollStats);
+
+      /* Month Names */
+      const months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+
+      const formatted = payrollStats.map(
+        (item) => ({
+          month: months[item._id - 1],
+
+          monthNumber: item._id,
+
+          totalPaid:
+            Math.round(item.totalPaid) || 0,
+
+          employees: item.employees || 0,
+
+          averageSalary:
+            Math.round(item.averageSalary) || 0,
+        })
+      );
+
+      return res.status(200).json(formatted);
     } catch (error) {
-        res.status(500);
-        throw new Error("Error fetching payroll stats");
+      console.log(error);
+
+      res.status(500);
+
+      throw new Error(
+        "Error fetching payroll stats"
+      );
     }
-});
+  }
+);

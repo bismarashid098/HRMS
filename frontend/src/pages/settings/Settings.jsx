@@ -1,458 +1,288 @@
 import { useState, useEffect } from "react";
 import {
-  Box, Flex, Grid, Text, Input, Button, Spinner, Icon, InputGroup,
-  InputLeftElement, VStack
+  Box, Flex, Text, Button, Tabs, TabList, TabPanels, Tab, TabPanel,
+  FormControl, FormLabel, Input, Switch, useToast, Spinner, Divider,
+  NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper,
+  NumberDecrementStepper, Select, Grid, GridItem, Alert, AlertIcon,
+  Icon, Tooltip, SimpleGrid, Card, CardBody, Heading, VStack
 } from "@chakra-ui/react";
 import {
-  FaBuilding, FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock,
-  FaUserClock, FaMoneyBillWave, FaPercentage, FaSave, FaCheckCircle
+  FaSave, FaBuilding, FaClock, FaShieldAlt, FaEnvelope, FaBell,
+  FaMoneyBillWave, FaUmbrellaBeach, FaDatabase, FaSyncAlt
 } from "react-icons/fa";
 import api from "../../api/axios";
 
-const SectionCard = ({ title, subtitle, icon, color, bg, children }) => (
-  <Box bg="white" borderRadius="2xl" shadow="sm" border="1px solid" borderColor="gray.100" overflow="hidden">
-    <Flex align="center" gap={3} px={5} py={4} borderBottom="1px solid" borderColor="gray.100">
-      <Flex w={9} h={9} borderRadius="xl" bg={bg} align="center" justify="center" flexShrink={0}>
-        <Icon as={icon} color={color} fontSize="15px" />
-      </Flex>
-      <Box>
-        <Text fontWeight="bold" fontSize="sm" color="gray.800">{title}</Text>
-        <Text fontSize="xs" color="gray.400">{subtitle}</Text>
-      </Box>
-    </Flex>
-    <Box p={5}>{children}</Box>
-  </Box>
-);
-
-const FieldLabel = ({ label, required }) => (
-  <Text fontSize="xs" fontWeight="semibold" color="gray.500" mb={1.5} textTransform="uppercase" letterSpacing="wide">
-    {label}{required && <Text as="span" color="red.400" ml={1}>*</Text>}
-  </Text>
-);
-
-const IconInput = ({ leftIcon, ...props }) => (
-  <InputGroup>
-    <InputLeftElement pointerEvents="none" h="full">
-      <Icon as={leftIcon} color="gray.300" fontSize="13px" />
-    </InputLeftElement>
-    <Input
-      pl={9}
-      borderRadius="xl"
-      fontSize="sm"
-      bg="gray.50"
-      border="1px solid"
-      borderColor="gray.200"
-      focusBorderColor="#065f46"
-      _hover={{ borderColor: "gray.300" }}
-      {...props}
-    />
-  </InputGroup>
-);
+const T = {
+  bg: "#0D1117", surface: "#161B22", surface2: "#1C2330", border: "#30363D",
+  teal: "#00D4B4", blue: "#58A6FF", red: "#FF6B6B", amber: "#F0A500", green: "#3FB950",
+  text: "#E6EDF3", muted: "#8B949E"
+};
 
 const Settings = () => {
-  const [settings, setSettings] = useState({
-    company: { name: "", email: "", address: "", phone: "" },
-    attendance: { workingHours: { start: "09:00", end: "18:00" }, lateAfterMinutes: 15, halfDayAfterMinutes: 240 },
-    payroll: { taxPercentage: 5, overtimeRatePerHour: 0, monthlyOffDays: 3 },
-    currency: { code: "PKR", symbol: "₨" },
-    advances: { limitType: "PERCENTAGE", limitValue: 30 }
-  });
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState(null);
+  const [settings, setSettings] = useState({
+    // General
+    companyName: "WorkSphere",
+    companyEmail: "admin@worksphere.com",
+    companyPhone: "+92 123 4567890",
+    companyAddress: "Karachi, Pakistan",
+    logoUrl: "",
+    timezone: "Asia/Karachi",
+    dateFormat: "DD/MM/YYYY",
+    // Attendance
+    attendance: {
+      workingHours: { start: "09:00", end: "17:00" },
+      lateAfterMinutes: 15,
+      halfDayAfterMinutes: 240,
+      allowRemotePunch: true,
+      requirePhoto: false,
+      geoFencing: false
+    },
+    // Leave
+    leave: {
+      casualDaysPerYear: 12,
+      sickDaysPerYear: 10,
+      annualDaysPerYear: 14,
+      carryForward: true,
+      maxCarryForwardDays: 10,
+      approvalRequired: true
+    },
+    // Payroll
+    payroll: {
+      salaryDay: 28,
+      enableOvertime: true,
+      overtimeRate: 1.5,
+      loanLimit: 50000,
+      advanceSalaryLimit: 30000,
+      taxDeduction: true
+    },
+    // Security
+    security: {
+      sessionTimeout: 60,
+      twoFactorAuth: false,
+      passwordExpiryDays: 90,
+      maxLoginAttempts: 5,
+      lockoutDuration: 30
+    },
+    // Notifications
+    notifications: {
+      emailOnLeave: true,
+      emailOnAttendance: false,
+      emailOnPayroll: true,
+      slackWebhook: "",
+      whatsappEnabled: false
+    }
+  });
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const { data } = await api.get("/settings");
-        if (data) setSettings(data);
-      } catch {}
-      finally { setLoading(false); }
+        const res = await api.get("/settings");
+        setSettings(prev => ({ ...prev, ...res.data }));
+      } catch (err) {
+        toast({ title: "Error loading settings", status: "error" });
+      } finally {
+        setLoading(false);
+      }
     };
     fetchSettings();
   }, []);
 
-  const handleChange = (section, field, value) => {
-    setSettings((prev) => ({ ...prev, [section]: { ...prev[section], [field]: value } }));
-  };
-
-  const handleNestedChange = (section, subsection, field, value) => {
-    setSettings((prev) => ({
-      ...prev,
-      [section]: { ...prev[section], [subsection]: { ...prev[section][subsection], [field]: value } }
-    }));
-  };
-
-  const save = async () => {
+  const handleSave = async (section) => {
     setSaving(true);
-    setError(null);
-    setSaved(false);
     try {
       await api.put("/settings", settings);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    } catch {
-      setError("Failed to save settings. Please try again.");
-    } finally { setSaving(false); }
+      toast({ title: `${section} settings saved`, status: "success", duration: 2000 });
+    } catch (err) {
+      toast({ title: "Error saving settings", status: "error" });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (loading) return (
-    <Flex justify="center" align="center" h="400px" direction="column" gap={3}>
-      <Spinner size="xl" color="#065f46" thickness="3px" />
-      <Text color="gray.400" fontSize="sm">Loading settings...</Text>
-    </Flex>
-  );
+  const updateSetting = (path, value) => {
+    setSettings(prev => {
+      const newSettings = { ...prev };
+      const keys = path.split('.');
+      let current = newSettings;
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) current[keys[i]] = {};
+        current = current[keys[i]];
+      }
+      current[keys[keys.length - 1]] = value;
+      return newSettings;
+    });
+  };
+
+  if (loading) return <Flex justify="center" align="center" h="300px"><Spinner size="xl" color={T.teal} /></Flex>;
 
   return (
-    <Box>
-      {/* Header */}
-      <Box bgGradient="linear(135deg, #021024 0%, #065f46 100%)" borderRadius="2xl" p={6} mb={5} position="relative" overflow="hidden">
-        <Box position="absolute" top={-8} right={-8} w="140px" h="140px" borderRadius="full" bg="whiteAlpha.100" />
-        <Flex justify="space-between" align="center" position="relative">
+    <Box bg={T.bg} minH="100vh" p={5}>
+      <Box maxW="1200px" mx="auto">
+        {/* Header */}
+        <Flex justify="space-between" align="center" mb={5}>
           <Box>
-            <Text fontSize="2xl" fontWeight="bold" color="white">System Settings</Text>
-            <Text fontSize="sm" color="whiteAlpha.700" mt={1}>Configure company info, attendance rules and payroll</Text>
+            <Text fontSize="xl" fontWeight="700" color={T.text}>System Settings</Text>
+            <Text fontSize="sm" color={T.muted}>Configure company policies, attendance rules, payroll and security</Text>
           </Box>
           <Button
-            leftIcon={saved ? <FaCheckCircle /> : <FaSave />}
-            bg={saved ? "green.400" : "whiteAlpha.200"}
-            color="white"
-            _hover={{ bg: saved ? "green.500" : "whiteAlpha.300" }}
-            borderRadius="xl"
-            size="md"
-            onClick={save}
-            isLoading={saving}
-            loadingText="Saving"
-            border="1px solid"
-            borderColor="whiteAlpha.300"
+            leftIcon={<FaSyncAlt />}
+            variant="outline"
+            borderColor={T.border}
+            color={T.muted}
+            _hover={{ borderColor: T.teal, color: T.teal }}
+            onClick={() => window.location.reload()}
+            size="sm"
           >
-            {saved ? "Saved!" : "Save Changes"}
+            Refresh
           </Button>
         </Flex>
-      </Box>
 
-      {error && (
-        <Box bg="red.50" border="1px solid" borderColor="red.200" borderRadius="xl" p={4} mb={4}>
-          <Text color="red.600" fontSize="sm">{error}</Text>
+        {/* Main Card */}
+        <Box bg={T.surface} borderRadius="14px" border={`1px solid ${T.border}`} p={6}>
+          <Tabs variant="soft-rounded" colorScheme="teal">
+            <TabList overflowX="auto" pb={2}>
+              <Tab _selected={{ bg: T.teal, color: T.bg }} color={T.muted}>General</Tab>
+              <Tab _selected={{ bg: T.teal, color: T.bg }} color={T.muted}>Attendance</Tab>
+              <Tab _selected={{ bg: T.teal, color: T.bg }} color={T.muted}>Leave</Tab>
+              <Tab _selected={{ bg: T.teal, color: T.bg }} color={T.muted}>Payroll</Tab>
+              <Tab _selected={{ bg: T.teal, color: T.bg }} color={T.muted}>Security</Tab>
+              <Tab _selected={{ bg: T.teal, color: T.bg }} color={T.muted}>Notifications</Tab>
+            </TabList>
+
+            <TabPanels pt={6}>
+              {/* ────────────────── General Settings ────────────────── */}
+              <TabPanel px={0}>
+                <SettingsSection title="Company Information" icon={FaBuilding}>
+                  <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={5}>
+                    <FormControl>
+                      <FormLabel fontSize="sm" color={T.muted}>Company Name</FormLabel>
+                      <Input value={settings.companyName} onChange={(e) => updateSetting('companyName', e.target.value)} bg={T.bg} borderColor={T.border} color={T.text} />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel fontSize="sm" color={T.muted}>Company Email</FormLabel>
+                      <Input type="email" value={settings.companyEmail} onChange={(e) => updateSetting('companyEmail', e.target.value)} bg={T.bg} borderColor={T.border} color={T.text} />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel fontSize="sm" color={T.muted}>Company Phone</FormLabel>
+                      <Input value={settings.companyPhone} onChange={(e) => updateSetting('companyPhone', e.target.value)} bg={T.bg} borderColor={T.border} color={T.text} />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel fontSize="sm" color={T.muted}>Company Address</FormLabel>
+                      <Input value={settings.companyAddress} onChange={(e) => updateSetting('companyAddress', e.target.value)} bg={T.bg} borderColor={T.border} color={T.text} />
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel fontSize="sm" color={T.muted}>Timezone</FormLabel>
+                      <Select value={settings.timezone} onChange={(e) => updateSetting('timezone', e.target.value)} bg={T.bg} borderColor={T.border} color={T.text}>
+                        <option>Asia/Karachi</option><option>Asia/Dubai</option><option>America/New_York</option><option>Europe/London</option>
+                      </Select>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel fontSize="sm" color={T.muted}>Date Format</FormLabel>
+                      <Select value={settings.dateFormat} onChange={(e) => updateSetting('dateFormat', e.target.value)} bg={T.bg} borderColor={T.border} color={T.text}>
+                        <option>DD/MM/YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Button leftIcon={<FaSave />} bg={T.teal} color={T.bg} mt={5} onClick={() => handleSave("General")} isLoading={saving}>Save General</Button>
+                </SettingsSection>
+              </TabPanel>
+
+              {/* ────────────────── Attendance Settings ────────────────── */}
+              <TabPanel px={0}>
+                <SettingsSection title="Working Hours & Attendance Rules" icon={FaClock}>
+                  <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={5}>
+                    <FormControl><FormLabel>Start Time</FormLabel><Input type="time" value={settings.attendance.workingHours.start} onChange={(e) => updateSetting('attendance.workingHours.start', e.target.value)} bg={T.bg} borderColor={T.border} color={T.text} /></FormControl>
+                    <FormControl><FormLabel>End Time</FormLabel><Input type="time" value={settings.attendance.workingHours.end} onChange={(e) => updateSetting('attendance.workingHours.end', e.target.value)} bg={T.bg} borderColor={T.border} color={T.text} /></FormControl>
+                    <FormControl><FormLabel>Late After (minutes)</FormLabel><NumberInput min={0} value={settings.attendance.lateAfterMinutes} onChange={(v) => updateSetting('attendance.lateAfterMinutes', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /><NumberInputStepper><NumberIncrementStepper/><NumberDecrementStepper/></NumberInputStepper></NumberInput></FormControl>
+                    <FormControl><FormLabel>Half‑Day After (minutes)</FormLabel><NumberInput min={0} value={settings.attendance.halfDayAfterMinutes} onChange={(v) => updateSetting('attendance.halfDayAfterMinutes', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /><NumberInputStepper><NumberIncrementStepper/><NumberDecrementStepper/></NumberInputStepper></NumberInput></FormControl>
+                    <FormControl display="flex" alignItems="center"><FormLabel mb="0">Allow Remote Punch</FormLabel><Switch isChecked={settings.attendance.allowRemotePunch} onChange={(e) => updateSetting('attendance.allowRemotePunch', e.target.checked)} colorScheme="green" /></FormControl>
+                    <FormControl display="flex" alignItems="center"><FormLabel mb="0">Require Photo on Punch</FormLabel><Switch isChecked={settings.attendance.requirePhoto} onChange={(e) => updateSetting('attendance.requirePhoto', e.target.checked)} colorScheme="green" /></FormControl>
+                    <FormControl display="flex" alignItems="center"><FormLabel mb="0">Geo‑fencing (location based)</FormLabel><Switch isChecked={settings.attendance.geoFencing} onChange={(e) => updateSetting('attendance.geoFencing', e.target.checked)} colorScheme="green" /></FormControl>
+                  </Grid>
+                  <Button leftIcon={<FaSave />} bg={T.teal} color={T.bg} mt={5} onClick={() => handleSave("Attendance")} isLoading={saving}>Save Attendance</Button>
+                </SettingsSection>
+              </TabPanel>
+
+              {/* ────────────────── Leave Settings ────────────────── */}
+              <TabPanel px={0}>
+                <SettingsSection title="Leave Policies" icon={FaUmbrellaBeach}>
+                  <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={5}>
+                    <FormControl><FormLabel>Casual Leaves per Year</FormLabel><NumberInput min={0} value={settings.leave.casualDaysPerYear} onChange={(v) => updateSetting('leave.casualDaysPerYear', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
+                    <FormControl><FormLabel>Sick Leaves per Year</FormLabel><NumberInput min={0} value={settings.leave.sickDaysPerYear} onChange={(v) => updateSetting('leave.sickDaysPerYear', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
+                    <FormControl><FormLabel>Annual Leaves per Year</FormLabel><NumberInput min={0} value={settings.leave.annualDaysPerYear} onChange={(v) => updateSetting('leave.annualDaysPerYear', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
+                    <FormControl display="flex" alignItems="center"><FormLabel mb="0">Carry‑forward unused leaves</FormLabel><Switch isChecked={settings.leave.carryForward} onChange={(e) => updateSetting('leave.carryForward', e.target.checked)} colorScheme="green" /></FormControl>
+                    <FormControl><FormLabel>Max Carry‑forward Days</FormLabel><NumberInput min={0} isDisabled={!settings.leave.carryForward} value={settings.leave.maxCarryForwardDays} onChange={(v) => updateSetting('leave.maxCarryForwardDays', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
+                    <FormControl display="flex" alignItems="center"><FormLabel mb="0">Approval required for leaves</FormLabel><Switch isChecked={settings.leave.approvalRequired} onChange={(e) => updateSetting('leave.approvalRequired', e.target.checked)} colorScheme="green" /></FormControl>
+                  </Grid>
+                  <Button leftIcon={<FaSave />} bg={T.teal} color={T.bg} mt={5} onClick={() => handleSave("Leave")} isLoading={saving}>Save Leave Policies</Button>
+                </SettingsSection>
+              </TabPanel>
+
+              {/* ────────────────── Payroll Settings ────────────────── */}
+              <TabPanel px={0}>
+                <SettingsSection title="Payroll & Salary" icon={FaMoneyBillWave}>
+                  <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={5}>
+                    <FormControl><FormLabel>Salary Processing Day (of month)</FormLabel><NumberInput min={1} max={31} value={settings.payroll.salaryDay} onChange={(v) => updateSetting('payroll.salaryDay', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
+                    <FormControl display="flex" alignItems="center"><FormLabel mb="0">Enable Overtime</FormLabel><Switch isChecked={settings.payroll.enableOvertime} onChange={(e) => updateSetting('payroll.enableOvertime', e.target.checked)} colorScheme="green" /></FormControl>
+                    <FormControl><FormLabel>Overtime Rate (x hourly)</FormLabel><NumberInput min={1} max={3} step={0.1} value={settings.payroll.overtimeRate} onChange={(v) => updateSetting('payroll.overtimeRate', parseFloat(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
+                    <FormControl><FormLabel>Loan Limit (Rs)</FormLabel><NumberInput min={0} value={settings.payroll.loanLimit} onChange={(v) => updateSetting('payroll.loanLimit', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
+                    <FormControl><FormLabel>Advance Salary Limit (Rs)</FormLabel><NumberInput min={0} value={settings.payroll.advanceSalaryLimit} onChange={(v) => updateSetting('payroll.advanceSalaryLimit', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
+                    <FormControl display="flex" alignItems="center"><FormLabel mb="0">Enable Tax Deduction</FormLabel><Switch isChecked={settings.payroll.taxDeduction} onChange={(e) => updateSetting('payroll.taxDeduction', e.target.checked)} colorScheme="green" /></FormControl>
+                  </Grid>
+                  <Alert status="info" bg={`${T.blue}10`} borderRadius="10px" mt={4}>
+                    <AlertIcon color={T.blue} /><Text fontSize="xs" color={T.muted}>Tax rules and loan deductions will be applied during payroll processing as per these limits.</Text>
+                  </Alert>
+                  <Button leftIcon={<FaSave />} bg={T.teal} color={T.bg} mt={5} onClick={() => handleSave("Payroll")} isLoading={saving}>Save Payroll Settings</Button>
+                </SettingsSection>
+              </TabPanel>
+
+              {/* ────────────────── Security Settings ────────────────── */}
+              <TabPanel px={0}>
+                <SettingsSection title="Security & Authentication" icon={FaShieldAlt}>
+                  <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={5}>
+                    <FormControl><FormLabel>Session Timeout (minutes)</FormLabel><NumberInput min={5} max={480} value={settings.security.sessionTimeout} onChange={(v) => updateSetting('security.sessionTimeout', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
+                    <FormControl display="flex" alignItems="center"><FormLabel mb="0">Two‑Factor Authentication</FormLabel><Switch isChecked={settings.security.twoFactorAuth} onChange={(e) => updateSetting('security.twoFactorAuth', e.target.checked)} colorScheme="green" /></FormControl>
+                    <FormControl><FormLabel>Password Expiry (days)</FormLabel><NumberInput min={30} max={365} value={settings.security.passwordExpiryDays} onChange={(v) => updateSetting('security.passwordExpiryDays', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
+                    <FormControl><FormLabel>Max Login Attempts</FormLabel><NumberInput min={3} max={10} value={settings.security.maxLoginAttempts} onChange={(v) => updateSetting('security.maxLoginAttempts', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
+                    <FormControl><FormLabel>Account Lockout Duration (minutes)</FormLabel><NumberInput min={5} max={1440} value={settings.security.lockoutDuration} onChange={(v) => updateSetting('security.lockoutDuration', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
+                  </Grid>
+                  <Button leftIcon={<FaSave />} bg={T.teal} color={T.bg} mt={5} onClick={() => handleSave("Security")} isLoading={saving}>Save Security</Button>
+                </SettingsSection>
+              </TabPanel>
+
+              {/* ────────────────── Notifications Settings ────────────────── */}
+              <TabPanel px={0}>
+                <SettingsSection title="Email & Alerts" icon={FaBell}>
+                  <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={5}>
+                    <FormControl display="flex" alignItems="center"><FormLabel mb="0">Email on Leave Request</FormLabel><Switch isChecked={settings.notifications.emailOnLeave} onChange={(e) => updateSetting('notifications.emailOnLeave', e.target.checked)} colorScheme="green" /></FormControl>
+                    <FormControl display="flex" alignItems="center"><FormLabel mb="0">Email on Attendance Mark</FormLabel><Switch isChecked={settings.notifications.emailOnAttendance} onChange={(e) => updateSetting('notifications.emailOnAttendance', e.target.checked)} colorScheme="green" /></FormControl>
+                    <FormControl display="flex" alignItems="center"><FormLabel mb="0">Email on Payroll Generation</FormLabel><Switch isChecked={settings.notifications.emailOnPayroll} onChange={(e) => updateSetting('notifications.emailOnPayroll', e.target.checked)} colorScheme="green" /></FormControl>
+                    <FormControl><FormLabel>Slack Webhook (optional)</FormLabel><Input value={settings.notifications.slackWebhook} onChange={(e) => updateSetting('notifications.slackWebhook', e.target.value)} placeholder="https://hooks.slack.com/..." bg={T.bg} borderColor={T.border} color={T.text} /></FormControl>
+                    <FormControl display="flex" alignItems="center"><FormLabel mb="0">WhatsApp Alerts</FormLabel><Switch isChecked={settings.notifications.whatsappEnabled} onChange={(e) => updateSetting('notifications.whatsappEnabled', e.target.checked)} colorScheme="green" /></FormControl>
+                  </Grid>
+                  <Button leftIcon={<FaSave />} bg={T.teal} color={T.bg} mt={5} onClick={() => handleSave("Notifications")} isLoading={saving}>Save Notifications</Button>
+                </SettingsSection>
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
         </Box>
-      )}
-
-      <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={5}>
-        {/* Company Information */}
-        <SectionCard title="Company Information" subtitle="Basic company details and contact info" icon={FaBuilding} color="#065f46" bg="#f0fdf4">
-          <VStack spacing={4}>
-            <Box w="full">
-              <FieldLabel label="Company Name" required />
-              <IconInput
-                leftIcon={FaBuilding}
-                placeholder="e.g. WorkSphere Technologies"
-                value={settings.company.name}
-                onChange={(e) => handleChange("company", "name", e.target.value)}
-              />
-            </Box>
-            <Box w="full">
-              <FieldLabel label="Email Address" required />
-              <IconInput
-                leftIcon={FaEnvelope}
-                type="email"
-                placeholder="company@example.com"
-                value={settings.company.email}
-                onChange={(e) => handleChange("company", "email", e.target.value)}
-              />
-            </Box>
-            <Box w="full">
-              <FieldLabel label="Phone Number" />
-              <IconInput
-                leftIcon={FaPhone}
-                type="tel"
-                placeholder="+92 300 0000000"
-                value={settings.company.phone}
-                onChange={(e) => handleChange("company", "phone", e.target.value)}
-              />
-            </Box>
-            <Box w="full">
-              <FieldLabel label="Address" />
-              <IconInput
-                leftIcon={FaMapMarkerAlt}
-                placeholder="Street, City, Country"
-                value={settings.company.address}
-                onChange={(e) => handleChange("company", "address", e.target.value)}
-              />
-            </Box>
-          </VStack>
-        </SectionCard>
-
-        {/* Attendance Rules */}
-        <SectionCard title="Attendance Rules" subtitle="Define working hours and late thresholds" icon={FaUserClock} color="#1d4ed8" bg="#eff6ff">
-          <VStack spacing={4}>
-            <Grid templateColumns="1fr 1fr" gap={4} w="full">
-              <Box>
-                <FieldLabel label="Work Start Time" required />
-                <InputGroup>
-                  <InputLeftElement pointerEvents="none" h="full">
-                    <Icon as={FaClock} color="gray.300" fontSize="13px" />
-                  </InputLeftElement>
-                  <Input
-                    type="time"
-                    pl={9}
-                    borderRadius="xl"
-                    fontSize="sm"
-                    bg="gray.50"
-                    border="1px solid"
-                    borderColor="gray.200"
-                    focusBorderColor="#1d4ed8"
-                    value={settings.attendance.workingHours.start}
-                    onChange={(e) => handleNestedChange("attendance", "workingHours", "start", e.target.value)}
-                  />
-                </InputGroup>
-              </Box>
-              <Box>
-                <FieldLabel label="Work End Time" required />
-                <InputGroup>
-                  <InputLeftElement pointerEvents="none" h="full">
-                    <Icon as={FaClock} color="gray.300" fontSize="13px" />
-                  </InputLeftElement>
-                  <Input
-                    type="time"
-                    pl={9}
-                    borderRadius="xl"
-                    fontSize="sm"
-                    bg="gray.50"
-                    border="1px solid"
-                    borderColor="gray.200"
-                    focusBorderColor="#1d4ed8"
-                    value={settings.attendance.workingHours.end}
-                    onChange={(e) => handleNestedChange("attendance", "workingHours", "end", e.target.value)}
-                  />
-                </InputGroup>
-              </Box>
-            </Grid>
-            <Box w="full">
-              <FieldLabel label="Mark Late After (Minutes)" />
-              <InputGroup>
-                <InputLeftElement pointerEvents="none" h="full">
-                  <Icon as={FaUserClock} color="gray.300" fontSize="13px" />
-                </InputLeftElement>
-                <Input
-                  type="number"
-                  pl={9}
-                  borderRadius="xl"
-                  fontSize="sm"
-                  bg="gray.50"
-                  border="1px solid"
-                  borderColor="gray.200"
-                  focusBorderColor="#1d4ed8"
-                  placeholder="e.g. 15"
-                  value={settings.attendance.lateAfterMinutes}
-                  onChange={(e) => handleChange("attendance", "lateAfterMinutes", Number(e.target.value))}
-                />
-              </InputGroup>
-              <Text fontSize="xs" color="gray.400" mt={1}>Employee is marked late if punch-in is {settings.attendance.lateAfterMinutes} min after work start</Text>
-            </Box>
-            <Box w="full">
-              <FieldLabel label="Half Day After (Minutes)" />
-              <InputGroup>
-                <InputLeftElement pointerEvents="none" h="full">
-                  <Icon as={FaUserClock} color="gray.300" fontSize="13px" />
-                </InputLeftElement>
-                <Input
-                  type="number"
-                  pl={9}
-                  borderRadius="xl"
-                  fontSize="sm"
-                  bg="gray.50"
-                  border="1px solid"
-                  borderColor="gray.200"
-                  focusBorderColor="#1d4ed8"
-                  placeholder="e.g. 240"
-                  value={settings.attendance.halfDayAfterMinutes}
-                  onChange={(e) => handleChange("attendance", "halfDayAfterMinutes", Number(e.target.value))}
-                />
-              </InputGroup>
-              <Text fontSize="xs" color="gray.400" mt={1}>Marked as half day if present less than {Math.round(settings.attendance.halfDayAfterMinutes / 60)}h</Text>
-            </Box>
-          </VStack>
-        </SectionCard>
-
-        {/* Payroll Configuration */}
-        <SectionCard title="Payroll Configuration" subtitle="Tax and overtime salary settings" icon={FaMoneyBillWave} color="#d97706" bg="#fffbeb">
-          <VStack spacing={4}>
-            <Box w="full">
-              <FieldLabel label="Tax Percentage (%)" />
-              <InputGroup>
-                <InputLeftElement pointerEvents="none" h="full">
-                  <Icon as={FaPercentage} color="gray.300" fontSize="13px" />
-                </InputLeftElement>
-                <Input
-                  type="number"
-                  pl={9}
-                  borderRadius="xl"
-                  fontSize="sm"
-                  bg="gray.50"
-                  border="1px solid"
-                  borderColor="gray.200"
-                  focusBorderColor="#d97706"
-                  placeholder="e.g. 5"
-                  min={0}
-                  max={100}
-                  value={settings.payroll.taxPercentage}
-                  onChange={(e) => handleChange("payroll", "taxPercentage", Number(e.target.value))}
-                />
-              </InputGroup>
-              <Text fontSize="xs" color="gray.400" mt={1}>Applied on basic salary during payroll generation</Text>
-            </Box>
-            <Box w="full">
-              <FieldLabel label="Monthly Off Days" />
-              <InputGroup>
-                <InputLeftElement pointerEvents="none" h="full">
-                  <Icon as={FaClock} color="gray.300" fontSize="13px" />
-                </InputLeftElement>
-                <Input
-                  type="number"
-                  pl={9}
-                  borderRadius="xl"
-                  fontSize="sm"
-                  bg="gray.50"
-                  border="1px solid"
-                  borderColor="gray.200"
-                  focusBorderColor="#d97706"
-                  placeholder="e.g. 3"
-                  min={0}
-                  value={settings.payroll.monthlyOffDays}
-                  onChange={(e) => handleChange("payroll", "monthlyOffDays", Number(e.target.value))}
-                />
-              </InputGroup>
-              <Text fontSize="xs" color="gray.400" mt={1}>Used to calculate working days for payroll deductions</Text>
-            </Box>
-            <Box w="full">
-              <FieldLabel label="Overtime Rate (per hour)" />
-              <InputGroup>
-                <InputLeftElement pointerEvents="none" h="full">
-                  <Icon as={FaMoneyBillWave} color="gray.300" fontSize="13px" />
-                </InputLeftElement>
-                <Input
-                  type="number"
-                  pl={9}
-                  borderRadius="xl"
-                  fontSize="sm"
-                  bg="gray.50"
-                  border="1px solid"
-                  borderColor="gray.200"
-                  focusBorderColor="#d97706"
-                  placeholder="e.g. 200"
-                  min={0}
-                  value={settings.payroll.overtimeRatePerHour}
-                  onChange={(e) => handleChange("payroll", "overtimeRatePerHour", Number(e.target.value))}
-                />
-              </InputGroup>
-              <Text fontSize="xs" color="gray.400" mt={1}>Rate per hour for overtime work (Rs)</Text>
-            </Box>
-          </VStack>
-        </SectionCard>
-
-        {/* Advance Salary Rules */}
-        <SectionCard title="Advance Salary Rules" subtitle="Set how much advance an employee can request per month" icon={FaMoneyBillWave} color="#0f766e" bg="#f0fdfa">
-          <VStack spacing={4}>
-            <Box w="full">
-              <FieldLabel label="Limit Type" />
-              <Input
-                as="select"
-                borderRadius="xl"
-                fontSize="sm"
-                bg="gray.50"
-                border="1px solid"
-                borderColor="gray.200"
-                focusBorderColor="#0f766e"
-                value={settings.advances?.limitType || "PERCENTAGE"}
-                onChange={(e) => handleChange("advances", "limitType", e.target.value)}
-              >
-                <option value="PERCENTAGE">Percentage of Basic Salary</option>
-                <option value="FIXED">Fixed Amount</option>
-              </Input>
-            </Box>
-            <Box w="full">
-              <FieldLabel label={settings.advances?.limitType === "FIXED" ? "Limit Value (Rs)" : "Limit Value (%)"} />
-              <Input
-                type="number"
-                borderRadius="xl"
-                fontSize="sm"
-                bg="gray.50"
-                border="1px solid"
-                borderColor="gray.200"
-                focusBorderColor="#0f766e"
-                min={0}
-                value={settings.advances?.limitValue ?? 30}
-                onChange={(e) => handleChange("advances", "limitValue", Number(e.target.value))}
-              />
-              <Text fontSize="xs" color="gray.400" mt={1}>
-                Enforced on advance requests (Pending/Approved/Paid) within the same month
-              </Text>
-            </Box>
-          </VStack>
-        </SectionCard>
-
-        {/* Currency Settings */}
-        <SectionCard title="Currency Settings" subtitle="Set the currency used across the system" icon={FaMoneyBillWave} color="#7c3aed" bg="#f5f3ff">
-          <VStack spacing={4}>
-            <Box w="full">
-              <FieldLabel label="Currency Code" />
-              <Input
-                borderRadius="xl"
-                fontSize="sm"
-                bg="gray.50"
-                border="1px solid"
-                borderColor="gray.200"
-                focusBorderColor="#7c3aed"
-                placeholder="e.g. PKR, USD"
-                value={settings.currency.code}
-                onChange={(e) => handleChange("currency", "code", e.target.value)}
-              />
-            </Box>
-            <Box w="full">
-              <FieldLabel label="Currency Symbol" />
-              <Input
-                borderRadius="xl"
-                fontSize="sm"
-                bg="gray.50"
-                border="1px solid"
-                borderColor="gray.200"
-                focusBorderColor="#7c3aed"
-                placeholder="e.g. ₨, $"
-                value={settings.currency.symbol}
-                onChange={(e) => handleChange("currency", "symbol", e.target.value)}
-              />
-            </Box>
-            <Box bg="purple.50" borderRadius="xl" p={4} w="full">
-              <Text fontSize="sm" color="purple.700" fontWeight="semibold">Preview</Text>
-              <Text fontSize="2xl" fontWeight="bold" color="purple.800" mt={1}>
-                {settings.currency.symbol} 50,000 {settings.currency.code}
-              </Text>
-              <Text fontSize="xs" color="purple.500">Sample salary display format</Text>
-            </Box>
-          </VStack>
-        </SectionCard>
-      </Grid>
-
-      {/* Bottom Save Button */}
-      <Flex justify="flex-end" mt={5}>
-        <Button
-          leftIcon={saved ? <FaCheckCircle /> : <FaSave />}
-          bg={saved ? "#065f46" : "#021024"}
-          color="white"
-          _hover={{ bg: saved ? "#047857" : "#1a2a4a" }}
-          borderRadius="xl"
-          size="lg"
-          px={8}
-          onClick={save}
-          isLoading={saving}
-          loadingText="Saving Changes"
-        >
-          {saved ? "Changes Saved!" : "Save All Settings"}
-        </Button>
-      </Flex>
+      </Box>
     </Box>
   );
 };
+
+const SettingsSection = ({ title, icon, children }) => (
+  <Box>
+    <Flex align="center" gap={2} mb={4}>
+      <Icon as={icon} color={T.teal} fontSize="18px" />
+      <Text fontWeight="600" color={T.text}>{title}</Text>
+    </Flex>
+    <Divider borderColor={T.border} mb={5} />
+    {children}
+  </Box>
+);
 
 export default Settings;

@@ -12,9 +12,51 @@ import {
     VStack,
     Spinner,
     Center,
-    HStack
+    HStack,
+    Flex,
+    Icon,
 } from "@chakra-ui/react";
+import { FaArrowLeft, FaEdit, FaCalendarCheck, FaClipboardList, FaMoneyBillWave, FaUser } from "react-icons/fa";
 import api from "../../api/axios";
+
+/* ─── Theme constants (Matches Dashboard) ─── */
+const T = {
+    bg:       "#0D1117",
+    surface:  "#161B22",
+    surface2: "#1C2330",
+    border:   "#30363D",
+    teal:     "#00D4B4",
+    tealDim:  "#00A896",
+    blue:     "#58A6FF",
+    red:      "#FF6B6B",
+    amber:    "#F0A500",
+    green:    "#3FB950",
+    text:     "#E6EDF3",
+    muted:    "#8B949E",
+};
+
+const getStatusColor = (status) => {
+    switch (status) {
+        case "Active": return T.green;
+        case "Resigned": return T.amber;
+        case "Terminated": return T.red;
+        default: return T.muted;
+    }
+};
+
+const InfoRow = ({ label, value, icon }) => (
+    <Flex direction="column" gap={1}>
+        <Flex align="center" gap={2}>
+            {icon && <Icon as={icon} fontSize="12px" color={T.muted} />}
+            <Text fontSize="xs" fontWeight="semibold" color={T.muted} textTransform="uppercase" letterSpacing="0.05em">
+                {label}
+            </Text>
+        </Flex>
+        <Text fontSize="md" fontWeight="500" color={T.text}>
+            {value || "—"}
+        </Text>
+    </Flex>
+);
 
 const EmployeeView = () => {
     const { id } = useParams();
@@ -36,187 +78,296 @@ const EmployeeView = () => {
                 setLoading(false);
             }
         };
-
         fetchEmployee();
     }, [id]);
 
     if (loading) {
         return (
-            <Center h="200px">
-                <Spinner size="xl" />
+            <Center h="200px" bg={T.bg}>
+                <Spinner size="xl" color={T.teal} thickness="3px" />
             </Center>
         );
     }
 
     if (error || !employee) {
         return (
-            <Box p={5}>
-                <Heading size="md" color="red.500">
-                    {error || "Employee Not Found"}
-                </Heading>
-                <Button mt="4" onClick={() => navigate("/dashboard/employees")}>
-                    Back to Employees
-                </Button>
+            <Box bg={T.bg} minH="100vh" p={5}>
+                <Box bg={T.surface} borderRadius="14px" p={6} textAlign="center" border="1px solid" borderColor={T.border}>
+                    <Heading size="md" color={T.red} mb={4}>
+                        {error || "Employee Not Found"}
+                    </Heading>
+                    <Button
+                        leftIcon={<FaArrowLeft />}
+                        bg={T.teal}
+                        color={T.bg}
+                        _hover={{ bg: T.tealDim }}
+                        onClick={() => navigate("/dashboard/employees")}
+                        borderRadius="10px"
+                    >
+                        Back to Employees
+                    </Button>
+                </Box>
             </Box>
         );
     }
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case "Active":
-                return "green";
-            case "Resigned":
-                return "orange";
-            case "Terminated":
-                return "red";
-            default:
-                return "gray";
-        }
-    };
-
     return (
-        <Box p={5} bg="white" shadow="md" borderRadius="md">
-            <Heading size="lg" mb="6">
-                Employee Profile
-            </Heading>
-
-            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10}>
-                <VStack align="start" spacing={4}>
-                    <Box>
-                        <Text fontWeight="bold" color="gray.500">Employee ID</Text>
-                        <Text fontSize="lg">{employee.employeeId}</Text>
-                    </Box>
-                    <Box>
-                        <Text fontWeight="bold" color="gray.500">Name</Text>
-                        <Text fontSize="lg">{employee.user?.name}</Text>
-                    </Box>
-                    <Box>
-                        <Text fontWeight="bold" color="gray.500">Role</Text>
-                        <Text fontSize="lg">{employee.designation}</Text>
-                    </Box>
-                    <Box>
-                        <Text fontWeight="bold" color="gray.500">Department</Text>
-                        <Text fontSize="lg">{employee.department}</Text>
-                    </Box>
-                    <Box>
-                        <Text fontWeight="bold" color="gray.500">Status</Text>
-                        <Badge colorScheme={getStatusColor(employee.employmentStatus)} fontSize="md" px={2} py={1} borderRadius="md">
-                            {employee.employmentStatus}
-                        </Badge>
-                    </Box>
-                </VStack>
-
-                <VStack align="start" spacing={4}>
-                    {!isManager && (
-                        <Box>
-                            <Text fontWeight="bold" color="gray.500">Basic Salary</Text>
-                            <Text fontSize="lg">Rs {employee.salary?.basic}</Text>
-                        </Box>
-                    )}
-                    <Box>
-                        <Text fontWeight="bold" color="gray.500">Phone</Text>
-                        <Text fontSize="lg">{employee.phone || "N/A"}</Text>
-                    </Box>
-                    <Box>
-                        <Text fontWeight="bold" color="gray.500">Address</Text>
-                        <Text fontSize="lg">{employee.address || "N/A"}</Text>
-                    </Box>
-                    <Box>
-                        <Text fontWeight="bold" color="gray.500">Email</Text>
-                        <Text fontSize="lg">{employee.user?.email || "N/A"}</Text>
-                    </Box>
-                    <Box>
-                        <Text fontWeight="bold" color="gray.500">Joining Date</Text>
-                        <Text fontSize="lg">
-                            {new Date(employee.joiningDate).toLocaleDateString()}
-                        </Text>
-                    </Box>
-                </VStack>
-            </SimpleGrid>
-
-            <Divider my="8" />
-
-            <Box mb="6">
-                <Heading size="md" mb="4">
-                    Linked Modules
-                </Heading>
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                    <Box>
-                        <Text fontSize="sm" fontWeight="semibold" mb={2}>
-                            Attendance
-                        </Text>
-                        <HStack spacing={3}>
-                            <Button
-                                size="sm"
-                                colorScheme="green"
-                                variant="solid"
-                                onClick={() =>
-                                    navigate(`/dashboard/attendance?employeeId=${employee._id}`)
-                                }
+        <Box bg={T.bg} minH="100vh" p={5}>
+            <Box maxW="1000px" mx="auto">
+                {/* Header Card */}
+                <Box
+                    bg={T.surface}
+                    borderRadius="14px"
+                    p={6}
+                    mb={6}
+                    border="1px solid"
+                    borderColor={T.border}
+                    position="relative"
+                    overflow="hidden"
+                >
+                    <Box
+                        position="absolute"
+                        top={-8}
+                        right={-8}
+                        w="150px"
+                        h="150px"
+                        borderRadius="full"
+                        bg={`${T.teal}10`}
+                    />
+                    <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
+                        <Flex align="center" gap={4}>
+                            <Flex
+                                w="60px"
+                                h="60px"
+                                borderRadius="full"
+                                bg={T.surface2}
+                                border="2px solid"
+                                borderColor={T.teal}
+                                align="center"
+                                justify="center"
                             >
-                                Attendance Ledger
+                                <Icon as={FaUser} fontSize="24px" color={T.teal} />
+                            </Flex>
+                            <Box>
+                                <Heading size="lg" color={T.text} mb={1}>
+                                    {employee.user?.name || employee.name || "N/A"}
+                                </Heading>
+                                <HStack spacing={3}>
+                                    <Badge
+                                        bg={T.surface2}
+                                        color={T.muted}
+                                        borderRadius="full"
+                                        px={3}
+                                        py={1}
+                                        fontSize="xs"
+                                        fontWeight="medium"
+                                    >
+                                        ID: {employee.employeeId}
+                                    </Badge>
+                                    <Badge
+                                        bg={`${getStatusColor(employee.employmentStatus)}20`}
+                                        color={getStatusColor(employee.employmentStatus)}
+                                        borderRadius="full"
+                                        px={3}
+                                        py={1}
+                                        fontSize="xs"
+                                        fontWeight="bold"
+                                    >
+                                        {employee.employmentStatus || "—"}
+                                    </Badge>
+                                </HStack>
+                            </Box>
+                        </Flex>
+                        <Flex gap={3}>
+                            {!isManager && (
+                                <Button
+                                    leftIcon={<FaEdit />}
+                                    bg={T.blue}
+                                    color={T.bg}
+                                    _hover={{ bg: "#3b82f6", opacity: 0.9 }}
+                                    size="sm"
+                                    borderRadius="10px"
+                                    onClick={() => navigate(`/dashboard/employees/edit/${employee._id}`)}
+                                >
+                                    Edit Profile
+                                </Button>
+                            )}
+                            <Button
+                                leftIcon={<FaArrowLeft />}
+                                variant="outline"
+                                borderColor={T.border}
+                                color={T.muted}
+                                _hover={{ bg: T.surface2, color: T.text, borderColor: T.teal }}
+                                size="sm"
+                                borderRadius="10px"
+                                onClick={() => navigate("/dashboard/employees")}
+                            >
+                                Back
                             </Button>
-                        </HStack>
+                        </Flex>
+                    </Flex>
+                </Box>
+
+                {/* Information Grid */}
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5} mb={6}>
+                    {/* Left Column */}
+                    <Box
+                        bg={T.surface}
+                        borderRadius="14px"
+                        p={6}
+                        border="1px solid"
+                        borderColor={T.border}
+                        transition="all 0.2s"
+                        _hover={{ borderColor: T.teal }}
+                    >
+                        <Heading size="sm" color={T.teal} mb={4} textTransform="uppercase" letterSpacing="0.1em">
+                            Personal Details
+                        </Heading>
+                        <VStack align="stretch" spacing={4}>
+                            <InfoRow label="Employee ID" value={employee.employeeId} icon={FaUser} />
+                            <InfoRow label="Full Name" value={employee.user?.name || employee.name} icon={FaUser} />
+                            <InfoRow label="Father's Name" value={employee.fatherName} />
+                            <InfoRow label="Gender" value={employee.gender} />
+                            <InfoRow label="Religion" value={employee.religion} />
+                            <InfoRow label="Email" value={employee.user?.email} />
+                            <InfoRow label="Phone" value={employee.phone} />
+                            <InfoRow label="Address" value={employee.address} />
+                        </VStack>
                     </Box>
-                    <Box>
-                        <Text fontSize="sm" fontWeight="semibold" mb={2}>
-                            Leaves
-                        </Text>
-                        <HStack spacing={3}>
+
+                    {/* Right Column */}
+                    <Box
+                        bg={T.surface}
+                        borderRadius="14px"
+                        p={6}
+                        border="1px solid"
+                        borderColor={T.border}
+                        transition="all 0.2s"
+                        _hover={{ borderColor: T.blue }}
+                    >
+                        <Heading size="sm" color={T.blue} mb={4} textTransform="uppercase" letterSpacing="0.1em">
+                            Employment Details
+                        </Heading>
+                        <VStack align="stretch" spacing={4}>
+                            <InfoRow label="Designation" value={employee.designation} icon={FaUser} />
+                            <InfoRow label="Department" value={employee.department} />
+                            <InfoRow label="Joining Date" value={new Date(employee.joiningDate).toLocaleDateString()} />
+                            <InfoRow label="Duty Start Time" value={employee.dutyStartTime || "—"} />
+                            {!isManager && (
+                                <>
+                                    <Divider borderColor={T.border} />
+                                    <InfoRow label="Basic Salary" value={`Rs ${employee.salary?.basic?.toLocaleString() || employee.salary?.toLocaleString() || "—"}`} icon={FaMoneyBillWave} />
+                                    <InfoRow label="Monthly Off Days" value={employee.monthlyOffDays || "3"} />
+                                </>
+                            )}
+                        </VStack>
+                    </Box>
+                </SimpleGrid>
+
+                {/* Linked Modules */}
+                <Box
+                    bg={T.surface}
+                    borderRadius="14px"
+                    p={6}
+                    border="1px solid"
+                    borderColor={T.border}
+                    mb={6}
+                >
+                    <Heading size="sm" color={T.teal} mb={4} textTransform="uppercase" letterSpacing="0.1em">
+                        Linked Modules
+                    </Heading>
+                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+                        <Box>
+                            <Text fontSize="xs" fontWeight="semibold" color={T.muted} mb={2}>
+                                Attendance
+                            </Text>
                             <Button
                                 size="sm"
                                 variant="outline"
-                                colorScheme="green"
+                                borderColor={T.border}
+                                color={T.text}
+                                _hover={{ bg: T.surface2, borderColor: T.teal, color: T.teal }}
+                                leftIcon={<FaCalendarCheck />}
+                                onClick={() => navigate(`/dashboard/attendance?employeeId=${employee._id}`)}
+                                borderRadius="10px"
+                                w="full"
+                            >
+                                Attendance Ledger
+                            </Button>
+                        </Box>
+                        <Box>
+                            <Text fontSize="xs" fontWeight="semibold" color={T.muted} mb={2}>
+                                Leaves
+                            </Text>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                borderColor={T.border}
+                                color={T.text}
+                                _hover={{ bg: T.surface2, borderColor: T.teal, color: T.teal }}
+                                leftIcon={<FaClipboardList />}
                                 onClick={() => navigate("/dashboard/leaves")}
+                                borderRadius="10px"
+                                w="full"
                             >
                                 Leave Records
                             </Button>
-                        </HStack>
-                    </Box>
-                    {!isManager && (
-                        <Box>
-                            <Text fontSize="sm" fontWeight="semibold" mb={2}>
-                                Advances and Payroll
-                            </Text>
-                            <HStack spacing={3}>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    colorScheme="green"
-                                    onClick={() => navigate("/dashboard/reports/advances")}
-                                >
-                                    Advance / Loan Ledger
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    colorScheme="green"
-                                    onClick={() => navigate("/dashboard/reports/payroll")}
-                                >
-                                    Payroll History
-                                </Button>
-                            </HStack>
                         </Box>
-                    )}
-                </SimpleGrid>
-            </Box>
+                        {!isManager && (
+                            <>
+                                <Box>
+                                    <Text fontSize="xs" fontWeight="semibold" color={T.muted} mb={2}>
+                                        Advances
+                                    </Text>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        borderColor={T.border}
+                                        color={T.text}
+                                        _hover={{ bg: T.surface2, borderColor: T.teal, color: T.teal }}
+                                        leftIcon={<FaMoneyBillWave />}
+                                        onClick={() => navigate("/dashboard/reports/advances")}
+                                        borderRadius="10px"
+                                        w="full"
+                                    >
+                                        Advance Ledger
+                                    </Button>
+                                </Box>
+                                <Box>
+                                    <Text fontSize="xs" fontWeight="semibold" color={T.muted} mb={2}>
+                                        Payroll
+                                    </Text>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        borderColor={T.border}
+                                        color={T.text}
+                                        _hover={{ bg: T.surface2, borderColor: T.teal, color: T.teal }}
+                                        leftIcon={<FaMoneyBillWave />}
+                                        onClick={() => navigate("/dashboard/reports/payroll")}
+                                        borderRadius="10px"
+                                        w="full"
+                                    >
+                                        Payroll History
+                                    </Button>
+                                </Box>
+                            </>
+                        )}
+                    </SimpleGrid>
+                </Box>
 
-            <Box>
-                {!isManager && (
+                {/* Additional Actions (if any) */}
+                <Box textAlign="center">
                     <Button
-                        colorScheme="blue"
-                        mr="3"
-                        onClick={() => navigate(`/dashboard/employees/edit/${employee._id}`)}
+                        variant="ghost"
+                        size="sm"
+                        color={T.muted}
+                        _hover={{ color: T.red, bg: T.surface2 }}
+                        onClick={() => navigate("/dashboard/employees")}
                     >
-                        Edit Employee
+                        ← Return to Employee List
                     </Button>
-                )}
-                <Button
-                    variant="outline"
-                    onClick={() => navigate("/dashboard/employees")}
-                >
-                    Back to List
-                </Button>
+                </Box>
             </Box>
         </Box>
     );

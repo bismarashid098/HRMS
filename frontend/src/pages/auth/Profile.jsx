@@ -1,160 +1,73 @@
-import { useContext, useState } from "react";
-import {
-  Box, Flex, Grid, GridItem, VStack, Input, Button, Text,
-  Avatar, Badge, Icon, InputGroup, InputRightElement, IconButton
-} from "@chakra-ui/react";
+import { useState, useEffect, useContext } from "react";
+import { Box, Flex, Text, Button, Avatar, VStack, HStack, Badge, Divider, Input, FormControl, FormLabel, useToast, Spinner, Icon, Grid } from "@chakra-ui/react";
+import { FaUser, FaEnvelope, FaBriefcase, FaBuilding, FaPhone, FaMapMarkerAlt, FaEdit, FaSave, FaTimes } from "react-icons/fa";
 import api from "../../api/axios";
 import { AuthContext } from "../../context/AuthContext";
-import { FaUser, FaLock, FaEye, FaEyeSlash, FaSave, FaKey } from "react-icons/fa";
 
-const SectionCard = ({ icon, title, subtitle, color = "#065f46", children }) => (
-  <Box bg="white" borderRadius="2xl" shadow="sm" border="1px solid" borderColor="gray.100" borderTop="3px solid" borderTopColor={color} overflow="hidden">
-    <Flex align="center" gap={3} px={6} py={4} borderBottom="1px solid" borderColor="gray.50">
-      <Flex w={9} h={9} borderRadius="xl" bg={`${color}15`} align="center" justify="center" flexShrink={0}>
-        <Icon as={icon} color={color} fontSize="15px" />
-      </Flex>
-      <Box>
-        <Text fontWeight="bold" fontSize="sm" color="gray.800">{title}</Text>
-        <Text fontSize="xs" color="gray.400">{subtitle}</Text>
-      </Box>
-    </Flex>
-    <Box px={6} py={5}>{children}</Box>
-  </Box>
-);
-
-const FieldLabel = ({ children }) => (
-  <Text fontSize="sm" fontWeight="semibold" color="gray.600" mb={1}>{children}</Text>
-);
+const T = { bg:"#0D1117", surface:"#161B22", surface2:"#1C2330", border:"#30363D", teal:"#00D4B4", text:"#E6EDF3", muted:"#8B949E" };
 
 const Profile = () => {
-  const { user, updateUserProfile } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
+  const toast = useToast();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "", designation: "", department: "" });
 
-  const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
-  const [profileMsg, setProfileMsg] = useState({ text: "", type: "" });
-  const [savingProfile, setSavingProfile] = useState(false);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get("/users/profile");
+        setProfile(res.data);
+        setForm({ name: res.data.name, email: res.data.email, phone: res.data.phone || "", address: res.data.address || "", designation: res.data.designation || "", department: res.data.department || "" });
+      } catch (err) { toast({ title: "Error loading profile", status: "error" }); }
+      finally { setLoading(false); }
+    };
+    fetchProfile();
+  }, []);
 
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordMsg, setPasswordMsg] = useState({ text: "", type: "" });
-  const [savingPassword, setSavingPassword] = useState(false);
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-
-  const handleProfileSave = async () => {
-    setProfileMsg({ text: "", type: "" });
-    setSavingProfile(true);
+  const handleSave = async () => {
     try {
-      const { data } = await api.put("/auth/profile", { name, email });
-      updateUserProfile(data);
-      setProfileMsg({ text: "Profile updated successfully", type: "success" });
-    } catch (err) {
-      setProfileMsg({ text: err?.response?.data?.message || "Failed to update profile", type: "error" });
-    } finally { setSavingProfile(false); }
+      const res = await api.put("/users/profile", form);
+      setProfile(res.data);
+      setUser({ ...user, name: res.data.name, email: res.data.email });
+      toast({ title: "Profile updated", status: "success" });
+      setEditing(false);
+    } catch (err) { toast({ title: "Error", status: "error" }); }
   };
 
-  const handlePasswordChange = async () => {
-    setPasswordMsg({ text: "", type: "" });
-    if (!currentPassword || !newPassword || !confirmPassword) { setPasswordMsg({ text: "All password fields are required", type: "error" }); return; }
-    if (newPassword !== confirmPassword) { setPasswordMsg({ text: "New passwords do not match", type: "error" }); return; }
-    setSavingPassword(true);
-    try {
-      await api.put("/auth/change-password", { currentPassword, newPassword });
-      setPasswordMsg({ text: "Password changed successfully", type: "success" });
-      setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
-    } catch (err) {
-      setPasswordMsg({ text: err?.response?.data?.message || "Failed to change password", type: "error" });
-    } finally { setSavingPassword(false); }
-  };
-
-  const roleBadgeColor = user?.role === "Admin" ? "green" : "blue";
+  if (loading) return <Flex justify="center" align="center" h="300px"><Spinner size="xl" color={T.teal} /></Flex>;
 
   return (
-    <Box maxW="860px" mx="auto">
-      {/* Header Banner */}
-      <Box bgGradient="linear(135deg, #021024 0%, #065f46 100%)" borderRadius="2xl" p={6} mb={5} position="relative" overflow="hidden">
-        <Box position="absolute" top={-8} right={-8} w="140px" h="140px" borderRadius="full" bg="whiteAlpha.100" />
-        <Flex align="center" gap={5} position="relative">
-          <Avatar size="xl" name={user?.name} bg="white" color="#065f46" fontWeight="bold" fontSize="2xl" shadow="lg" />
-          <Box>
-            <Text fontSize="2xl" fontWeight="bold" color="white">{user?.name}</Text>
-            <Text fontSize="sm" color="whiteAlpha.700">{user?.email}</Text>
-            <Flex align="center" gap={2} mt={2}>
-              <Badge colorScheme={roleBadgeColor} borderRadius="full" px={3} py={1} fontSize="xs" fontWeight="semibold">{user?.role}</Badge>
+    <Box bg={T.bg} minH="100vh" p={5}>
+      <Box maxW="800px" mx="auto">
+        <Box bg={T.surface} borderRadius="14px" border={`1px solid ${T.border}`} p={6}>
+          <Flex justify="space-between" align="center" mb={6}>
+            <Flex align="center" gap={4}>
+              <Avatar size="xl" name={profile?.name} bg={T.teal} color="white" />
+              <Box><Text fontSize="2xl" fontWeight="bold" color={T.text}>{profile?.name}</Text><Badge bg={`${T.teal}20`} color={T.teal} px={2} py={1} borderRadius="full">{user?.role}</Badge></Box>
             </Flex>
-          </Box>
-        </Flex>
+            <Button leftIcon={editing ? <FaSave/> : <FaEdit/>} bg={editing ? T.green : T.teal} color={T.bg} onClick={editing ? handleSave : () => setEditing(true)}>{editing ? "Save" : "Edit"}</Button>
+          </Flex>
+          <Divider borderColor={T.border} my={4} />
+          <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={5}>
+            <InfoField label="Name" value={form.name} editing={editing} onChange={(v)=>setForm({...form,name:v})} />
+            <InfoField label="Email" value={form.email} editing={editing} onChange={(v)=>setForm({...form,email:v})} type="email" />
+            <InfoField label="Phone" value={form.phone} editing={editing} onChange={(v)=>setForm({...form,phone:v})} />
+            <InfoField label="Address" value={form.address} editing={editing} onChange={(v)=>setForm({...form,address:v})} />
+            <InfoField label="Designation" value={form.designation} editing={editing} onChange={(v)=>setForm({...form,designation:v})} />
+            <InfoField label="Department" value={form.department} editing={editing} onChange={(v)=>setForm({...form,department:v})} />
+          </Grid>
+        </Box>
       </Box>
-
-      <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={5}>
-        {/* Account Info */}
-        <SectionCard icon={FaUser} title="Account Information" subtitle="Update your name and email address">
-          <VStack spacing={4} align="stretch">
-            <Box>
-              <FieldLabel>Full Name</FieldLabel>
-              <Input value={name} onChange={(e) => setName(e.target.value)} borderRadius="xl" focusBorderColor="#065f46" placeholder="Enter your full name" />
-            </Box>
-            <Box>
-              <FieldLabel>Email Address</FieldLabel>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} borderRadius="xl" focusBorderColor="#065f46" placeholder="Enter your email" />
-            </Box>
-            {profileMsg.text && (
-              <Box bg={profileMsg.type === "success" ? "green.50" : "red.50"} borderRadius="xl" p={3}>
-                <Text fontSize="sm" color={profileMsg.type === "success" ? "green.600" : "red.500"} fontWeight="medium">{profileMsg.text}</Text>
-              </Box>
-            )}
-            <Button leftIcon={<FaSave />} bg="#065f46" color="white" _hover={{ bg: "#047857" }} borderRadius="xl"
-              onClick={handleProfileSave} isLoading={savingProfile} loadingText="Saving...">
-              Save Profile
-            </Button>
-          </VStack>
-        </SectionCard>
-
-        {/* Change Password */}
-        <SectionCard icon={FaLock} title="Change Password" subtitle="Update your account password" color="#1d4ed8">
-          <VStack spacing={4} align="stretch">
-            <Box>
-              <FieldLabel>Current Password</FieldLabel>
-              <InputGroup>
-                <Input type={showCurrent ? "text" : "password"} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
-                  borderRadius="xl" focusBorderColor="#1d4ed8" placeholder="Enter current password" />
-                <InputRightElement>
-                  <IconButton icon={showCurrent ? <FaEyeSlash /> : <FaEye />} size="sm" variant="ghost" aria-label="Toggle"
-                    onClick={() => setShowCurrent(!showCurrent)} color="gray.400" />
-                </InputRightElement>
-              </InputGroup>
-            </Box>
-            <Box>
-              <FieldLabel>New Password</FieldLabel>
-              <InputGroup>
-                <Input type={showNew ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-                  borderRadius="xl" focusBorderColor="#1d4ed8" placeholder="Enter new password" />
-                <InputRightElement>
-                  <IconButton icon={showNew ? <FaEyeSlash /> : <FaEye />} size="sm" variant="ghost" aria-label="Toggle"
-                    onClick={() => setShowNew(!showNew)} color="gray.400" />
-                </InputRightElement>
-              </InputGroup>
-            </Box>
-            <Box>
-              <FieldLabel>Confirm New Password</FieldLabel>
-              <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                borderRadius="xl" focusBorderColor="#1d4ed8" placeholder="Confirm new password" />
-            </Box>
-            {passwordMsg.text && (
-              <Box bg={passwordMsg.type === "success" ? "green.50" : "red.50"} borderRadius="xl" p={3}>
-                <Text fontSize="sm" color={passwordMsg.type === "success" ? "green.600" : "red.500"} fontWeight="medium">{passwordMsg.text}</Text>
-              </Box>
-            )}
-            <Button leftIcon={<FaKey />} bg="#1d4ed8" color="white" _hover={{ bg: "#1e40af" }} borderRadius="xl"
-              onClick={handlePasswordChange} isLoading={savingPassword} loadingText="Updating...">
-              Update Password
-            </Button>
-          </VStack>
-        </SectionCard>
-      </Grid>
     </Box>
   );
 };
 
+const InfoField = ({ label, value, editing, onChange, type = "text" }) => (
+  <Box>
+    <Text fontSize="xs" color={T.muted} mb={1}>{label}</Text>
+    {editing ? <Input type={type} value={value} onChange={(e)=>onChange(e.target.value)} bg={T.bg} borderColor={T.border} color={T.text} size="sm" /> : <Text color={T.text} fontSize="sm">{value || "—"}</Text>}
+  </Box>
+);
 export default Profile;

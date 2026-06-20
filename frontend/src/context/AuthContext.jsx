@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useRef } from "react";
 import api from "../api/axios";
 
 export const AuthContext = createContext();
@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(getStoredUser);
     const [token, setToken] = useState(localStorage.getItem("token") || "");
     const [loading, setLoading] = useState(true);
+    const skipVerifyRef = useRef(false);
 
     const logout = () => {
         localStorage.removeItem("user");
@@ -27,6 +28,12 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const verifyUser = async () => {
             if (!token) {
+                setLoading(false);
+                return;
+            }
+            // Login already returns fresh user data — skip redundant verify
+            if (skipVerifyRef.current) {
+                skipVerifyRef.current = false;
                 setLoading(false);
                 return;
             }
@@ -48,6 +55,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("token", authToken);
         setUser(userData);
+        skipVerifyRef.current = true; // token change will trigger useEffect — skip it
         setToken(authToken);
     };
 

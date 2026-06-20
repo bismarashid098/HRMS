@@ -2,7 +2,8 @@ const express = require("express");
 const {
   attendanceReport,
   leaveReport,
-  payrollReport
+  payrollReport,
+  advanceReport
 } = require("../controllers/reportController");
 
 const protect = require("../middleware/authMiddleware");
@@ -16,7 +17,8 @@ router.use(protect);
 router.get("/attendance", authorize("Admin", "Manager"), attendanceReport);
 router.get("/leaves", authorize("Admin", "Manager"), leaveReport);
 
-// Admin only for payroll reports
-router.get("/payroll", authorize("Admin"), payrollReport);
+// Admin only for payroll and advance reports
+router.get("/payroll",   authorize("Admin"), payrollReport);
+router.get("/advances",  authorize("Admin"), advanceReport);
 
 module.exports = router;

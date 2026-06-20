@@ -1,150 +1,82 @@
-import {
-  Box, Flex, Table, Thead, Tbody, Tr, Th, Td, Spinner, Text,
-  Badge, Input, Select, InputGroup, InputLeftElement, Icon, Avatar
-} from "@chakra-ui/react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { Box, Flex, Text, Button, Table, Thead, Tbody, Tr, Th, Td, Badge, HStack, Input, InputGroup, InputLeftElement, Icon, Spinner, Select, useToast } from "@chakra-ui/react";
+import { FaSearch, FaFileExcel, FaUser, FaClock, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import api from "../../api/axios";
-import { FaSearch, FaShieldAlt, FaHistory } from "react-icons/fa";
+import * as XLSX from "xlsx";
 
-const actionColors = {
-  CREATE: "green", UPDATE: "blue", DELETE: "red",
-  LOGIN: "purple", LOGOUT: "orange", APPROVE: "teal", REJECT: "red"
-};
-
-const getActionColor = (action = "") => {
-  const key = Object.keys(actionColors).find((k) => action.toUpperCase().includes(k));
-  return actionColors[key] || "gray";
-};
-
-const avatarBgColors = ["#065f46", "#1d4ed8", "#7c3aed", "#d97706", "#dc2626"];
-const getAvatarBg = (name = "") => avatarBgColors[(name || "").charCodeAt(0) % avatarBgColors.length];
+const T = { bg:"#0D1117", surface:"#161B22", surface2:"#1C2330", border:"#30363D", teal:"#00D4B4", text:"#E6EDF3", muted:"#8B949E", green:"#3FB950", red:"#FF6B6B", amber:"#F0A500" };
 
 const AuditLogs = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("All");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [total, setTotal] = useState(0);
+  const toast = useToast();
 
-  useEffect(() => {
-    const fetchLogs = async () => {
-      try {
-        const { data } = await api.get("/audit-logs");
-        setLogs(data);
-      } catch { setError("Failed to load audit logs."); }
-      finally { setLoading(false); }
-    };
-    fetchLogs();
-  }, []);
+  const fetchLogs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/audit-logs", { params: { search: search || undefined, action: actionFilter !== "All" ? actionFilter : undefined, page, limit } });
+      setLogs(res.data.logs || []);
+      setTotal(res.data.total || 0);
+    } catch (err) { toast({ title: "Error loading logs", status: "error" }); }
+    finally { setLoading(false); }
+  }, [search, actionFilter, page, limit]);
 
-  const uniqueActions = useMemo(() => Array.from(new Set(logs.map((l) => l.action).filter(Boolean))).sort(), [logs]);
+  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+  useEffect(() => { setPage(1); }, [search, actionFilter]);
 
-  const filteredLogs = useMemo(() =>
-    logs.filter((log) => {
-      if (actionFilter !== "All" && log.action !== actionFilter) return false;
-      const q = search.trim().toLowerCase();
-      if (q) {
-        const user = (log.user?.name || "System").toLowerCase();
-        const action = (log.action || "").toLowerCase();
-        const details = (log.details || "").toLowerCase();
-        if (!user.includes(q) && !action.includes(q) && !details.includes(q)) return false;
-      }
-      return true;
-    }), [logs, search, actionFilter]);
+  const actionColors = { CREATE: T.green, UPDATE: T.blue, DELETE: T.red, LOGIN: T.teal, LOGOUT: T.amber };
+
+  const handleExport = () => {
+    if (!logs.length) return;
+    const rows = logs.map(l => ({ User: l.userName, Action: l.action, Details: l.details, IP: l.ipAddress, Timestamp: new Date(l.createdAt).toLocaleString() }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Audit Logs");
+    XLSX.writeFile(wb, `audit_logs_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
 
   return (
-    <Box>
-      {/* Header Banner */}
-      <Box bgGradient="linear(135deg, #021024 0%, #374151 100%)" borderRadius="2xl" p={6} mb={5} position="relative" overflow="hidden">
-        <Box position="absolute" top={-8} right={-8} w="140px" h="140px" borderRadius="full" bg="whiteAlpha.100" />
-        <Flex justify="space-between" align="center" position="relative">
-          <Box>
-            <Flex align="center" gap={2} mb={1}>
-              <Icon as={FaShieldAlt} color="whiteAlpha.700" fontSize="16px" />
-              <Text fontSize="sm" color="whiteAlpha.600">System</Text>
-            </Flex>
-            <Text fontSize="2xl" fontWeight="bold" color="white">Audit Trail</Text>
-            <Text fontSize="sm" color="whiteAlpha.700" mt={1}>Complete log of all system actions and user activities</Text>
-          </Box>
-          <Flex align="center" gap={2} bg="whiteAlpha.200" px={4} py={2} borderRadius="xl">
-            <Icon as={FaHistory} color="white" fontSize="14px" />
-            <Text fontSize="sm" color="white" fontWeight="semibold">{logs.length} total logs</Text>
-          </Flex>
+    <Box bg={T.bg} minH="100vh" p={5}>
+      <Box maxW="1400px" mx="auto">
+        <Flex justify="space-between" mb={5}>
+          <Box><Text fontSize="xl" fontWeight="bold" color={T.text}>Audit Logs</Text><Text color={T.muted}>Track all system activities</Text></Box>
+          <Button leftIcon={<FaFileExcel />} variant="outline" borderColor={T.border} color={T.muted} _hover={{ borderColor: T.green }} onClick={handleExport}>Export</Button>
         </Flex>
-      </Box>
 
-      {/* Filters */}
-      <Box bg="white" borderRadius="2xl" p={4} mb={4} shadow="sm" border="1px solid" borderColor="gray.100">
-        <Flex gap={3} wrap="wrap" align="center">
-          <InputGroup flex="1" minW="200px">
-            <InputLeftElement pointerEvents="none"><Icon as={FaSearch} color="gray.300" fontSize="13px" /></InputLeftElement>
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by user, action or details..."
-              borderRadius="xl" bg="gray.50" fontSize="sm" focusBorderColor="#374151" />
-          </InputGroup>
-          <Select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)} w="200px" borderRadius="xl" fontSize="sm" focusBorderColor="#374151">
-            <option value="All">All Actions</option>
-            {uniqueActions.map((a) => <option key={a} value={a}>{a}</option>)}
-          </Select>
-          {(search || actionFilter !== "All") && (
-            <Text fontSize="xs" color="gray.400" cursor="pointer" onClick={() => { setSearch(""); setActionFilter("All"); }} _hover={{ color: "gray.600" }} textDecor="underline">Clear</Text>
-          )}
-        </Flex>
-        <Text mt={2} fontSize="xs" color="gray.400">Showing {filteredLogs.length} of {logs.length} entries</Text>
-      </Box>
+        <Box bg={T.surface} p={4} borderRadius="14px" mb={4} display="flex" gap={3} flexWrap="wrap">
+          <InputGroup maxW="300px"><InputLeftElement><FaSearch color={T.muted}/></InputLeftElement><Input placeholder="Search user/action" value={search} onChange={e=>setSearch(e.target.value)} bg={T.bg} borderColor={T.border} color={T.text}/></InputGroup>
+          <Select value={actionFilter} onChange={e=>setActionFilter(e.target.value)} w="150px" bg={T.bg} borderColor={T.border} color={T.text}><option>All</option><option>CREATE</option><option>UPDATE</option><option>DELETE</option><option>LOGIN</option><option>LOGOUT</option></Select>
+        </Box>
 
-      {loading ? (
-        <Flex justify="center" align="center" h="250px" direction="column" gap={3}>
-          <Spinner size="xl" color="#374151" thickness="3px" />
-          <Text color="gray.400" fontSize="sm">Loading audit logs...</Text>
-        </Flex>
-      ) : error ? (
-        <Box bg="red.50" borderRadius="xl" p={6}><Text color="red.500">{error}</Text></Box>
-      ) : (
-        <Box bg="white" shadow="sm" borderRadius="2xl" border="1px solid" borderColor="gray.100" overflow="hidden">
-          <Box overflowX="auto">
-            <Table variant="simple" size="sm">
-              <Thead>
-                <Tr bg="gray.50">
-                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Timestamp</Th>
-                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">User</Th>
-                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Action</Th>
-                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Details</Th>
-                </Tr>
-              </Thead>
+        {loading ? <Spinner /> : (
+          <Box bg={T.surface} borderRadius="14px" overflowX="auto">
+            <Table variant="simple">
+              <Thead><Tr bg={T.surface2}><Th>User</Th><Th>Action</Th><Th>Details</Th><Th>IP Address</Th><Th>Timestamp</Th></Tr></Thead>
               <Tbody>
-                {filteredLogs.length === 0 ? (
-                  <Tr><Td colSpan={4} textAlign="center" py={12} color="gray.400">No audit logs found.</Td></Tr>
-                ) : filteredLogs.map((log) => {
-                  const userName = log.user?.name || "System";
-                  const dt = new Date(log.createdAt);
-                  return (
-                    <Tr key={log._id} _hover={{ bg: "gray.50" }} transition="background 0.15s">
-                      <Td py={3} whiteSpace="nowrap">
-                        <Text fontSize="sm" fontWeight="medium" color="gray.700">{dt.toLocaleDateString()}</Text>
-                        <Text fontSize="xs" color="gray.400">{dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</Text>
-                      </Td>
-                      <Td py={3}>
-                        <Flex align="center" gap={2}>
-                          <Avatar size="xs" name={userName} bg={getAvatarBg(userName)} color="white" fontSize="10px" />
-                          <Text fontSize="sm" fontWeight="semibold" color="gray.800">{userName}</Text>
-                        </Flex>
-                      </Td>
-                      <Td py={3}>
-                        <Badge colorScheme={getActionColor(log.action)} borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold">{log.action}</Badge>
-                      </Td>
-                      <Td py={3} maxW="300px">
-                        <Text fontSize="sm" color="gray.600" noOfLines={2} title={log.details}>{log.details || "—"}</Text>
-                      </Td>
-                    </Tr>
-                  );
-                })}
+                {logs.map(l => (
+                  <Tr key={l._id} _hover={{bg:T.surface2}}>
+                    <Td><Flex align="center" gap={2}><Icon as={FaUser} color={T.muted}/><Text>{l.userName}</Text></Flex></Td>
+                    <Td><Badge bg={`${actionColors[l.action] || T.muted}20`} color={actionColors[l.action] || T.muted}>{l.action}</Badge></Td>
+                    <Td maxW="300px"><Text noOfLines={1} color={T.muted}>{l.details}</Text></Td>
+                    <Td>{l.ipAddress}</Td>
+                    <Td><Flex align="center" gap={1}><Icon as={FaClock} fontSize="10px" color={T.muted}/>{new Date(l.createdAt).toLocaleString()}</Flex></Td>
+                  </Tr>
+                ))}
               </Tbody>
             </Table>
+            <Flex justify="space-between" p={3} borderTop={`1px solid ${T.border}`}>
+              <Text fontSize="xs" color={T.muted}>{(page-1)*limit+1} - {Math.min(page*limit,total)} of {total}</Text>
+              <HStack><Button size="xs" isDisabled={page===1} onClick={()=>setPage(p=>p-1)} leftIcon={<FaChevronLeft/>}>Prev</Button><Button size="xs" isDisabled={page===Math.ceil(total/limit)} onClick={()=>setPage(p=>p+1)} rightIcon={<FaChevronRight/>}>Next</Button></HStack>
+            </Flex>
           </Box>
-        </Box>
-      )}
+        )}
+      </Box>
     </Box>
   );
 };
-
 export default AuditLogs;

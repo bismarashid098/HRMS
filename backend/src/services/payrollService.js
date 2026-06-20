@@ -17,50 +17,68 @@ exports.calculateDeductions = async (
   basicSalary,
   monthlyOffDays = 3
 ) => {
-  const m      = Number(month);
-  const y      = Number(year);
-  const mOff   = Number(monthlyOffDays) || 3;
+  const m    = Number(month);
+  const y    = Number(year);
+  const mOff = Number(monthlyOffDays) || 3;
 
-  const monthStart = new Date(y, m - 1, 1);
-  const monthEnd   = new Date(y, m, 0);               // last day of month
-  const daysInMonth = monthEnd.getDate();
+  const monthStart  = new Date(y, m - 1, 1);
+  const monthEnd    = new Date(y, m, 0, 23, 59, 59, 999); // last moment of last day
+  const daysInMonth = new Date(y, m, 0).getDate();
 
   // Working days = total days − company off days
   const workingDays = Math.max(1, daysInMonth - mOff);
   const perDay      = basicSalary / workingDays;
 
-  /* ── 1. UNPAID LEAVE DEDUCTION ── */
+  /* ── 1. UNPAID LEAVE DEDUCTION (cross-month aware) ── */
   const unpaidLeaves = await Leave.find({
     employee: employeeId,
-    paid: false,
-    status: "Approved",
-    fromDate: { $gte: monthStart, $lte: monthEnd }
+    paid:     false,
+    status:   "Approved",
+    fromDate: { $lte: monthEnd },
+    toDate:   { $gte: monthStart }
   });
-  const unpaidDays     = unpaidLeaves.reduce((s, l) => s + (l.totalDays || 0), 0);
+
+  const unpaidDays = unpaidLeaves.reduce((s, l) => {
+    // Clamp leave range to this month
+    const start = l.fromDate < monthStart ? monthStart : l.fromDate;
+    const end   = l.toDate   > monthEnd   ? monthEnd   : l.toDate;
+    const days  = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    return s + Math.max(0, days);
+  }, 0);
   const leaveDeduction = unpaidDays * perDay;
 
-  /* ── 2. EXTRA OFF DEDUCTION (attendance-based absent days) ── */
-  // How many days did the employee actually punch in this month?
-  const presentRecords = await Attendance.find({
+  /* ── 2. PRESENT DAYS — Half Day counts as 0.5 ── */
+  const attendanceRecords = await Attendance.find({
     employee: employeeId,
     date:     { $gte: monthStart, $lte: monthEnd },
     status:   { $in: ["Present", "Late", "Half Day"] }
   });
-  const presentDays = presentRecords.length;
 
-  // All approved leave days (paid or unpaid) — they count as "accounted for"
+  const presentDays = attendanceRecords.reduce((s, a) => {
+    return s + (a.status === "Half Day" ? 0.5 : 1);
+  }, 0);
+
+  /* ── 3. ALL APPROVED LEAVE DAYS THIS MONTH (cross-month aware) ── */
   const allApprovedLeaves = await Leave.find({
     employee: employeeId,
     status:   "Approved",
-    fromDate: { $gte: monthStart, $lte: monthEnd }
+    fromDate: { $lte: monthEnd },
+    toDate:   { $gte: monthStart }
   });
-  const approvedLeaveDays = allApprovedLeaves.reduce((s, l) => s + (l.totalDays || 0), 0);
 
-  // Extra absent days = working days − present − all approved leaves
+  const approvedLeaveDays = allApprovedLeaves.reduce((s, l) => {
+    const start = l.fromDate < monthStart ? monthStart : l.fromDate;
+    const end   = l.toDate   > monthEnd   ? monthEnd   : l.toDate;
+    const days  = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    return s + Math.max(0, days);
+  }, 0);
+
+  /* ── 4. EXTRA ABSENT DEDUCTION ── */
+  // Days unaccounted for = working days − effective present − approved leaves
   const extraOffDays      = Math.max(0, workingDays - presentDays - approvedLeaveDays);
   const extraOffDeduction = extraOffDays * perDay;
 
-  /* ── 3. ADVANCE DEDUCTION ── */
+  /* ── 5. ADVANCE DEDUCTION ── */
   const advances = await Advance.find({
     employee: employeeId,
     month:    m,

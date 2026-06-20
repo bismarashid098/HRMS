@@ -1,471 +1,339 @@
-import { useState, useEffect, useContext, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
-  Box, Flex, Table, Thead, Tbody, Tr, Th, Td, Button, Badge, Select,
-  HStack, Spinner, Text, useToast, IconButton, Tooltip, Grid, Icon,
-  Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody,
-  ModalCloseButton, useDisclosure, Progress, Input, InputGroup, InputLeftElement, Avatar
+  Box, Flex, Grid, Text, Button, useToast, Input, Spinner,
+  Table, Thead, Tbody, Tr, Th, Td, Badge, HStack, Icon,
+  InputGroup, InputLeftElement, Avatar, Modal, ModalOverlay,
+  ModalContent, ModalHeader, ModalBody, ModalCloseButton,
+  useDisclosure, IconButton, VStack, Divider
 } from "@chakra-ui/react";
-import { AuthContext } from "../../context/AuthContext";
+import {
+  FaSearch, FaFileExcel, FaMoneyBillWave, FaCheckCircle,
+  FaClock, FaEye, FaPlay
+} from "react-icons/fa";
 import api from "../../api/axios";
 import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
-import "jspdf-autotable";
-import {
-  FaFilePdf, FaFileExcel, FaSyncAlt, FaMoneyBillWave, FaSearch,
-  FaFilter, FaUsers, FaCheckCircle, FaClock, FaWallet, FaBookOpen
-} from "react-icons/fa";
 
-const StatCard = ({ label, value, color, bg, icon }) => (
-  <Box bg="white" borderRadius="2xl" p={4} shadow="sm" border="1px solid" borderColor="gray.100" borderLeft="4px solid" borderLeftColor={color}>
-    <Flex align="center" justify="space-between">
-      <Box>
-        <Text fontSize="xs" color="gray.500" fontWeight="medium" textTransform="uppercase" letterSpacing="wide">{label}</Text>
-        <Text fontSize="xl" fontWeight="bold" color="gray.800" mt={1}>{value}</Text>
-      </Box>
-      <Flex w={10} h={10} borderRadius="xl" bg={bg} align="center" justify="center">
-        <Icon as={icon} color={color} fontSize="16px" />
-      </Flex>
+const T = {
+  bg: "#0D1117", surface: "#161B22", surface2: "#1C2330", border: "#30363D",
+  teal: "#00D4B4", blue: "#58A6FF", red: "#FF6B6B", amber: "#F0A500", green: "#3FB950",
+  text: "#E6EDF3", muted: "#8B949E"
+};
+
+const MONTHS = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December"
+];
+
+const StatCard = ({ label, value, color, icon }) => (
+  <Box bg={T.surface} p={4} borderRadius="14px" border={`1px solid ${T.border}`}>
+    <Flex justify="space-between" mb={1}>
+      <Text fontSize="xs" color={T.muted}>{label}</Text>
+      <Icon as={icon} color={color} />
     </Flex>
+    <Text fontSize="2xl" fontWeight="bold" color={color}>{value}</Text>
   </Box>
 );
 
-const avatarBgColors = ["#065f46", "#1d4ed8", "#7c3aed", "#d97706", "#dc2626"];
-const getAvatarBg = (name = "") => avatarBgColors[name.charCodeAt(0) % avatarBgColors.length];
+const statusColor = (s) =>
+  s === "Approved" ? T.green : s === "Generated" ? T.blue : T.amber;
 
 const Payroll = () => {
-  const { user } = useContext(AuthContext);
-  const today = new Date();
-  const defaultMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
-
-  const [month, setMonth] = useState(defaultMonth);
-
-  const prevMonth = () => {
-    const [y, m] = month.split("-").map(Number);
-    const d = new Date(y, m - 2, 1);
-    setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
-  };
-  const nextMonth = () => {
-    const [y, m] = month.split("-").map(Number);
-    const d = new Date(y, m, 1);
-    setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
-  };
-  const monthDisplayLabel = (() => {
-    const [y, m] = month.split("-").map(Number);
-    return new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
-  })();
-  const [payrolls, setPayrolls] = useState([]);
-  const [overview, setOverview] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [overviewLoading, setOverviewLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [generateProgress, setGenerateProgress] = useState(0);
-  const [actionLoadingId, setActionLoadingId] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [departmentFilter, setDepartmentFilter] = useState("All");
-  const [search, setSearch] = useState("");
-
-  const [ledger, setLedger] = useState(null);
-  const [ledgerLoading, setLedgerLoading] = useState(false);
-
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { isOpen: isLedgerOpen, onOpen: onLedgerOpen, onClose: onLedgerClose } = useDisclosure();
-  const isAdmin = user?.role === "Admin";
 
-  const handleOpenLedger = async (payrollId) => {
-    setLedger(null);
-    onLedgerOpen();
-    setLedgerLoading(true);
-    try {
-      const { data } = await api.get(`/payroll/${payrollId}/breakdown`);
-      setLedger(data);
-    } catch {
-      toast({ title: "Failed to load ledger", status: "error", duration: 3000, isClosable: true });
-      onLedgerClose();
-    } finally {
-      setLedgerLoading(false);
-    }
-  };
-
-  const fetchPayrolls = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [year, m] = month.split("-");
-      const { data } = await api.get(`/payroll?month=${parseInt(m)}&year=${year}`);
-      setPayrolls(data);
-    } catch { toast({ title: "Error fetching payrolls", status: "error", duration: 3000, isClosable: true }); }
-    finally { setLoading(false); }
-  }, [month, toast]);
+  const now = new Date();
+  const [selMonth, setSelMonth] = useState(now.getMonth() + 1);
+  const [selYear,  setSelYear]  = useState(now.getFullYear());
+  const [search,   setSearch]   = useState("");
+  const [overview, setOverview] = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [generating, setGenerating] = useState({});
+  const [approving,  setApproving]  = useState({});
+  const [genAllLoading, setGenAllLoading] = useState(false);
+  const [breakdown, setBreakdown] = useState(null);
+  const [breakdownLoading, setBreakdownLoading] = useState(false);
 
   const fetchOverview = useCallback(async () => {
-    setOverviewLoading(true);
+    setLoading(true);
     try {
-      const [year, m] = month.split("-");
-      const { data } = await api.get(`/payroll/overview?month=${parseInt(m)}&year=${year}`);
-      setOverview(data);
-    } catch {}
-    finally { setOverviewLoading(false); }
-  }, [month]);
+      const res = await api.get("/payroll/overview", {
+        params: { month: selMonth, year: selYear }
+      });
+      setOverview(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      toast({ title: "Error loading payroll data", status: "error", duration: 3000 });
+    } finally {
+      setLoading(false);
+    }
+  }, [selMonth, selYear]);
 
-  useEffect(() => { fetchPayrolls(); }, [fetchPayrolls]);
-  useEffect(() => { if (isAdmin) fetchOverview(); }, [fetchOverview, isAdmin]);
+  useEffect(() => { fetchOverview(); }, [fetchOverview]);
 
-  const handleApprove = async (id) => {
-    setActionLoadingId(id);
-    try {
-      await api.put(`/payroll/${id}/approve`);
-      toast({ title: "Payroll approved", status: "success", duration: 3000, isClosable: true });
-      fetchPayrolls();
-    } catch (err) {
-      toast({ title: "Error", description: err.response?.data?.message || "Failed", status: "error", duration: 3000, isClosable: true });
-    } finally { setActionLoadingId(null); }
+  const doGenerate = async (emp) => {
+    await api.post("/payroll/generate", {
+      employeeId: emp.employeeId,
+      month: selMonth,
+      year:  selYear
+    });
   };
 
-  const handleOpenGenerateModal = () => {
-    api.get("/employees").then(({ data }) => setEmployees(data.filter((e) => e.employmentStatus === "Active"))).catch(() => {});
-    onOpen();
+  const handleGenerate = async (emp) => {
+    setGenerating(g => ({ ...g, [emp.employeeId]: true }));
+    try {
+      await doGenerate(emp);
+      toast({ title: `Payroll generated for ${emp.name}`, status: "success", duration: 2500 });
+      fetchOverview();
+    } catch (err) {
+      toast({ title: err.response?.data?.message || "Generate failed", status: "error", duration: 3000 });
+    } finally {
+      setGenerating(g => ({ ...g, [emp.employeeId]: false }));
+    }
   };
 
   const handleGenerateAll = async () => {
-    if (!employees.length) { toast({ title: "No active employees", status: "warning" }); return; }
-    setGenerating(true);
-    setGenerateProgress(0);
-    const [year, m] = month.split("-");
-    let successCount = 0;
-    for (let i = 0; i < employees.length; i++) {
+    const pending = filtered.filter(e => e.payrollStatus === "Not Generated");
+    if (!pending.length) return;
+    setGenAllLoading(true);
+    let success = 0, failed = 0;
+    for (const emp of pending) {
+      setGenerating(g => ({ ...g, [emp.employeeId]: true }));
       try {
-        await api.post("/payroll/generate", { employeeId: employees[i]._id, month: parseInt(m), year: parseInt(year) });
-        successCount++;
-      } catch {}
-      setGenerateProgress(Math.round(((i + 1) / employees.length) * 100));
+        await doGenerate(emp);
+        success++;
+      } catch {
+        failed++;
+      } finally {
+        setGenerating(g => ({ ...g, [emp.employeeId]: false }));
+      }
     }
-    setGenerating(false);
-    onClose();
-    toast({ title: "Generation Complete", description: `Generated for ${successCount}/${employees.length} employees.`, status: "success", duration: 5000, isClosable: true });
-    fetchPayrolls();
+    setGenAllLoading(false);
+    fetchOverview();
+    toast({
+      title: `Generated ${success} payrolls${failed ? `, ${failed} failed` : ""}`,
+      status: failed && !success ? "error" : "success",
+      duration: 3000
+    });
   };
 
-  const exportExcel = () => {
-    const rows = filteredPayrolls.map((p) => ({
-      Employee:          p.employee?.name || p.employee?.user?.name || "",
-      Department:        p.employee?.department || "",
-      Basic:             p.basicSalary,
-      Allowance:         p.allowance,
-      "Advance Deducted":  p.advanceDeduction  || 0,
-      "Leave Deduction":   p.leaveDeduction    || 0,
-      "Extra Off Deduction": p.extraOffDeduction || 0,
-      "Total Deductions": p.deductions || 0,
-      "Net Salary":       p.netSalary,
-      Status:             p.status
+  const handleApprove = async (emp) => {
+    if (!emp.payrollId) return;
+    setApproving(a => ({ ...a, [emp.payrollId]: true }));
+    try {
+      await api.put(`/payroll/${emp.payrollId}/approve`);
+      toast({ title: `Payroll approved for ${emp.name}`, status: "success", duration: 2500 });
+      fetchOverview();
+    } catch {
+      toast({ title: "Approve failed", status: "error", duration: 3000 });
+    } finally {
+      setApproving(a => ({ ...a, [emp.payrollId]: false }));
+    }
+  };
+
+  const handleViewBreakdown = async (emp) => {
+    if (!emp.payrollId) return;
+    setBreakdown(null);
+    onOpen();
+    setBreakdownLoading(true);
+    try {
+      const res = await api.get(`/payroll/${emp.payrollId}/breakdown`);
+      setBreakdown(res.data);
+    } catch {
+      toast({ title: "Could not load breakdown", status: "error", duration: 3000 });
+      onClose();
+    } finally {
+      setBreakdownLoading(false);
+    }
+  };
+
+  const handleExport = () => {
+    if (!filtered.length) return;
+    const rows = filtered.map(e => ({
+      Employee:         e.name,
+      "Employee Code":  e.employeeCode,
+      Department:       e.department,
+      "Basic Salary":   e.basicSalary,
+      Allowance:        e.allowance || 0,
+      "Total Deductions": (e.totalDeductions || 0) + (e.taxDeduction || 0),
+      "Net Salary":     Math.max(0, e.netSalary || 0),
+      "Present Days":   e.presentDays,
+      "Working Days":   e.workingDays,
+      Status:           e.payrollStatus
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Payroll");
-    XLSX.writeFile(wb, `Payroll-${month}.xlsx`);
+    XLSX.writeFile(wb, `payroll_${selYear}_${String(selMonth).padStart(2,"0")}.xlsx`);
   };
 
-  const generatePDF = (payroll) => {
-    const doc = new jsPDF();
-    doc.setFillColor(6, 95, 70);
-    doc.rect(0, 0, 210, 45, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.text("SALARY SLIP", 105, 22, null, "center");
-    doc.setFontSize(11);
-    doc.text("WorkSphere HRMS", 105, 32, null, "center");
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(11);
-    doc.text(`Employee: ${payroll.employee?.name || payroll.employee?.user?.name}`, 15, 58);
-    doc.text(`ID: ${payroll.employee?.employeeId}`, 15, 66);
-    doc.text(`Department: ${payroll.employee?.department}`, 15, 74);
-    doc.text(`Designation: ${payroll.employee?.designation}`, 15, 82);
-    doc.text(`Month: ${month}`, 130, 58);
-    doc.text(`Generated: ${new Date(payroll.createdAt).toLocaleDateString()}`, 130, 66);
-    const pdfBody = [
-      ["Basic Salary",  payroll.basicSalary.toLocaleString()],
-      ["Allowance",     payroll.allowance.toLocaleString()],
-      ["Gross Salary",  (payroll.basicSalary + payroll.allowance).toLocaleString()],
-      ["", ""],
-      ["Advance Deduction",         payroll.advanceDeduction  > 0 ? `- Rs ${Math.round(payroll.advanceDeduction).toLocaleString()}`  : "—"],
-      ["Unpaid Leave Deduction",   payroll.leaveDeduction    > 0 ? `- Rs ${Math.round(payroll.leaveDeduction).toLocaleString()}`   : "—"],
-      ["Extra Off (Absent Days)",  payroll.extraOffDeduction > 0 ? `- Rs ${Math.round(payroll.extraOffDeduction).toLocaleString()}` : "—"],
-      ["Total Deductions",        `- Rs ${Math.round(payroll.deductions).toLocaleString()}`],
-      [{ content: "NET PAYABLE", styles: { fontStyle: "bold", fillColor: [220, 252, 231] } },
-       { content: `Rs ${payroll.netSalary.toLocaleString()}`, styles: { fontStyle: "bold", fillColor: [220, 252, 231] } }],
-    ];
-    doc.autoTable({
-      startY: 92,
-      head: [["Description", "Amount (Rs)"]],
-      body: pdfBody,
-      theme: "grid",
-      headStyles: { fillColor: [6, 95, 70] },
-    });
-    doc.setFontSize(9);
-    doc.text("This is a computer-generated document and does not require a signature.", 105, 282, null, "center");
-    doc.save(`Payslip-${payroll.employee?.name || payroll.employee?.user?.name}-${month}.pdf`);
-  };
+  const filtered = overview.filter(e =>
+    !search ||
+    e.name?.toLowerCase().includes(search.toLowerCase()) ||
+    e.department?.toLowerCase().includes(search.toLowerCase()) ||
+    e.employeeCode?.toLowerCase().includes(search.toLowerCase())
+  );
 
-  const getMonthOptions = () => {
-    const options = [];
-    const current = new Date();
-    current.setMonth(current.getMonth() + 1);
-    for (let i = 0; i < 13; i++) {
-      const y = current.getFullYear();
-      const m = String(current.getMonth() + 1).padStart(2, "0");
-      options.push(<option key={`${y}-${m}`} value={`${y}-${m}`}>{current.toLocaleString("default", { month: "long", year: "numeric" })}</option>);
-      current.setMonth(current.getMonth() - 1);
-    }
-    return options;
-  };
-
-  const departmentOptions = Array.from(new Set(payrolls.map((p) => p.employee?.department).filter(Boolean))).sort();
-
-  const filteredPayrolls = payrolls.filter((p) => {
-    if (statusFilter !== "All" && p.status !== statusFilter) return false;
-    if (departmentFilter !== "All" && p.employee?.department !== departmentFilter) return false;
-    const q = search.trim().toLowerCase();
-    if (q) {
-      const name = (p.employee?.name || p.employee?.user?.name || "").toLowerCase();
-      const dept = (p.employee?.department || "").toLowerCase();
-      const eid = (p.employee?.employeeId || "").toLowerCase();
-      if (!name.includes(q) && !dept.includes(q) && !eid.includes(q)) return false;
-    }
-    return true;
-  });
-
-  const summary = filteredPayrolls.reduce((acc, p) => {
-    acc.count++;
-    if (p.status === "Approved") acc.approved++;
-    else acc.pending++;
-    acc.totalNet += p.netSalary || 0;
-    acc.totalDeductions += p.deductions || 0;
-    acc.totalAdvance += p.advanceDeduction || 0;
-    return acc;
-  }, { count: 0, approved: 0, pending: 0, totalNet: 0, totalDeductions: 0, totalAdvance: 0 });
-
-  const fmtMoney = (n) => n >= 1000000 ? `Rs ${(n / 1000000).toFixed(1)}M` : n >= 1000 ? `Rs ${(n / 1000).toFixed(0)}K` : `Rs ${n}`;
+  const totalNet   = filtered.reduce((s, e) => s + Math.max(0, e.netSalary || 0), 0);
+  const generated  = filtered.filter(e => e.payrollStatus !== "Not Generated").length;
+  const approved   = filtered.filter(e => e.payrollStatus === "Approved").length;
+  const notGenerated = filtered.filter(e => e.payrollStatus === "Not Generated").length;
 
   return (
-    <Box>
-      {/* Header Banner */}
-      <Box bgGradient="linear(135deg, #021024 0%, #065f46 100%)" borderRadius="2xl" p={6} mb={5} position="relative" overflow="hidden">
-        <Box position="absolute" top={-8} right={-8} w="140px" h="140px" borderRadius="full" bg="whiteAlpha.100" />
-        <Flex justify="space-between" align="center" wrap="wrap" gap={4} position="relative">
+    <Box bg={T.bg} minH="100vh" p={5}>
+      <Box maxW="1400px" mx="auto">
+
+        {/* Header */}
+        <Flex justify="space-between" align="center" mb={5} flexWrap="wrap" gap={3}>
           <Box>
-            <Text fontSize="2xl" fontWeight="bold" color="white">Payroll Management</Text>
-            <Text fontSize="sm" color="whiteAlpha.700" mt={1}>
-              {monthDisplayLabel} — Generate, review and approve monthly salary payouts
+            <Text fontSize="xl" fontWeight="bold" color={T.text}>Payroll Management</Text>
+            <Text color={T.muted} fontSize="sm">
+              {MONTHS[selMonth - 1]} {selYear}
             </Text>
           </Box>
-          <Flex gap={2} wrap="wrap">
-            <Button leftIcon={<FaFileExcel />} variant="outline" borderColor="whiteAlpha.400" color="white" _hover={{ bg: "whiteAlpha.200" }} size="sm" borderRadius="xl" onClick={exportExcel} isDisabled={!filteredPayrolls.length}>Export</Button>
-            <Button leftIcon={<FaSyncAlt />} variant="outline" borderColor="whiteAlpha.400" color="white" _hover={{ bg: "whiteAlpha.200" }} size="sm" borderRadius="xl" isLoading={loading} onClick={() => { fetchPayrolls(); if (isAdmin) fetchOverview(); }}>Refresh</Button>
-            {isAdmin && (
-              <Button leftIcon={<FaMoneyBillWave />} bg="white" color="#065f46" _hover={{ bg: "gray.100" }} size="sm" fontWeight="bold" borderRadius="xl" onClick={handleOpenGenerateModal}>Generate Payroll</Button>
-            )}
-          </Flex>
+          <HStack>
+            <Button
+              size="sm" leftIcon={<FaFileExcel />} variant="outline"
+              borderColor={T.border} color={T.muted}
+              _hover={{ borderColor: T.green, color: T.green }}
+              onClick={handleExport}
+            >
+              Export
+            </Button>
+            <Button
+              size="sm" leftIcon={<FaPlay />}
+              bg={T.teal} color={T.bg}
+              _hover={{ opacity: 0.85 }}
+              isLoading={genAllLoading}
+              isDisabled={notGenerated === 0}
+              onClick={handleGenerateAll}
+            >
+              Generate All ({notGenerated})
+            </Button>
+          </HStack>
         </Flex>
-      </Box>
 
-      {/* Stats */}
-      {filteredPayrolls.length > 0 && (
-        <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(5, 1fr)" }} gap={4} mb={4}>
-          <StatCard label="Total Payslips"     value={summary.count}                    color="#065f46" bg="#f0fdf4" icon={FaUsers}       />
-          <StatCard label="Approved"           value={summary.approved}                 color="#1d4ed8" bg="#eff6ff" icon={FaCheckCircle}  />
-          <StatCard label="Pending"            value={summary.pending}                  color="#d97706" bg="#fffbeb" icon={FaClock}        />
-          <StatCard label="Advance Deductions" value={fmtMoney(summary.totalAdvance)}   color="#dc2626" bg="#fef2f2" icon={FaMoneyBillWave}/>
-          <StatCard label="Total Net Salary"   value={fmtMoney(summary.totalNet)}       color="#7c3aed" bg="#f5f3ff" icon={FaWallet}       />
+        {/* Stats */}
+        <Grid templateColumns="repeat(4,1fr)" gap={4} mb={5}>
+          <StatCard label="Total Employees" value={filtered.length}         color={T.teal}  icon={FaMoneyBillWave} />
+          <StatCard label="Generated"        value={generated}               color={T.blue}  icon={FaClock} />
+          <StatCard label="Approved"         value={approved}                color={T.green} icon={FaCheckCircle} />
+          <StatCard label="Total Net Pay"    value={`Rs ${totalNet.toLocaleString()}`} color={T.amber} icon={FaMoneyBillWave} />
         </Grid>
-      )}
 
-      {/* Salary Overview (Admin) */}
-      {isAdmin && (
-        <Box bg="white" borderRadius="2xl" p={5} mb={4} shadow="sm" border="1px solid" borderColor="gray.100">
-          <Flex justify="space-between" align="center" mb={4}>
-            <Box>
-              <Text fontWeight="bold" fontSize="md" color="gray.800">Employee Salary Overview</Text>
-              <Text fontSize="xs" color="gray.400">Active employees with expected net salary for {month}</Text>
-            </Box>
-          </Flex>
-          {overviewLoading ? (
-            <Flex justify="center" h="120px" align="center"><Spinner color="#065f46" /></Flex>
-          ) : overview.length === 0 ? (
-            <Text fontSize="sm" color="gray.400">No active employees found.</Text>
-          ) : (
-            <Box overflowX="auto">
-              <Table size="sm">
-                <Thead>
-                  <Tr bg="gray.50">
-                    <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Employee</Th>
-                    <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Department</Th>
-                    <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Fixed Salary</Th>
-                    <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Unpaid Days</Th>
-                    <Th py={3} fontSize="xs" color="orange.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Advance</Th>
-                    <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Other Deductions</Th>
-                    <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Net Salary</Th>
-                    <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Status</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {overview.map((item) => (
-                    <Tr key={item.employeeId} _hover={{ bg: "gray.50" }}>
-                      <Td py={3}>
-                        <Flex align="center" gap={2}>
-                          <Avatar size="xs" name={item.name} bg={getAvatarBg(item.name)} color="white" fontSize="10px" />
-                          <Box>
-                            <Text fontSize="sm" fontWeight="semibold" color="gray.800">{item.name}</Text>
-                            <Text fontSize="xs" color="gray.400">{item.employeeCode}</Text>
-                          </Box>
-                        </Flex>
-                      </Td>
-                      <Td py={3}><Badge bg="gray.100" color="gray.600" borderRadius="full" px={2} fontSize="xs">{item.department}</Badge></Td>
-                      <Td py={3} isNumeric><Text fontSize="sm" color="gray.700">Rs {Number(item.basicSalary || 0).toLocaleString()}</Text></Td>
-                      <Td py={3} isNumeric><Text fontSize="sm" color={item.unpaidLeaveDays > 0 ? "red.500" : "gray.500"}>{item.unpaidLeaveDays || 0}</Text></Td>
-                      <Td py={3} isNumeric>
-                        {item.advanceDeduction > 0 ? (
-                          <Text fontSize="sm" fontWeight="semibold" color="orange.500">- Rs {Number(item.advanceDeduction).toLocaleString()}</Text>
-                        ) : (
-                          <Text fontSize="sm" color="gray.300">—</Text>
-                        )}
-                      </Td>
-                      <Td py={3} isNumeric>
-                        <Text fontSize="sm" color="red.500">
-                          {(item.totalDeductions - (item.advanceDeduction || 0)) > 0
-                            ? `- Rs ${Math.round(item.totalDeductions - (item.advanceDeduction || 0)).toLocaleString()}`
-                            : "—"}
-                        </Text>
-                      </Td>
-                      <Td py={3} isNumeric><Text fontSize="sm" fontWeight="bold" color="#065f46">Rs {Number(item.netSalary || 0).toLocaleString()}</Text></Td>
-                      <Td py={3}>
-                        <Badge colorScheme={item.payrollStatus === "Approved" ? "green" : item.payrollStatus === "Generated" ? "orange" : "gray"}
-                          borderRadius="full" px={2} fontSize="xs">{item.payrollStatus || "Pending"}</Badge>
-                      </Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            </Box>
-          )}
-        </Box>
-      )}
-
-      {/* Filters */}
-      <Box bg="white" borderRadius="2xl" p={4} mb={4} shadow="sm" border="1px solid" borderColor="gray.100">
-        <Flex gap={3} wrap="wrap" align="flex-end">
-          <Box>
-            <Text fontSize="xs" fontWeight="semibold" color="gray.500" mb={1} textTransform="uppercase">Month</Text>
-            <Flex align="center" gap={1}>
-              <Button size="sm" variant="outline" borderRadius="lg" borderColor="gray.200"
-                px={2} onClick={prevMonth} _hover={{ bg: "gray.50" }}>←</Button>
-              <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)}
-                w="175px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46" textAlign="center" />
-              <Button size="sm" variant="outline" borderRadius="lg" borderColor="gray.200"
-                px={2} onClick={nextMonth} _hover={{ bg: "gray.50" }}>→</Button>
-            </Flex>
-          </Box>
-          <InputGroup flex="1" minW="200px">
-            <InputLeftElement pointerEvents="none"><Icon as={FaSearch} color="gray.300" fontSize="13px" /></InputLeftElement>
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, department or ID..."
-              borderRadius="xl" bg="gray.50" fontSize="sm" focusBorderColor="#065f46" />
+        {/* Filters */}
+        <Box bg={T.surface} p={4} borderRadius="14px" mb={4} display="flex" gap={3} flexWrap="wrap" alignItems="center">
+          <InputGroup maxW="280px">
+            <InputLeftElement pointerEvents="none">
+              <FaSearch color={T.muted} />
+            </InputLeftElement>
+            <Input
+              placeholder="Search employee, department..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              bg={T.bg} borderColor={T.border} color={T.text}
+              _placeholder={{ color: T.muted }}
+            />
           </InputGroup>
-          <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} w="150px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46">
-            <option value="All">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-          </Select>
-          {isAdmin && (
-            <Select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)} w="180px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46">
-              <option value="All">All Departments</option>
-              {departmentOptions.map((d) => <option key={d} value={d}>{d}</option>)}
-            </Select>
-          )}
-        </Flex>
-        <Text mt={2} fontSize="xs" color="gray.400">Showing {filteredPayrolls.length} of {payrolls.length} payslips</Text>
-      </Box>
-
-      {/* Table */}
-      {loading ? (
-        <Flex justify="center" align="center" h="250px" direction="column" gap={3}>
-          <Spinner size="xl" color="#065f46" thickness="3px" />
-          <Text color="gray.400" fontSize="sm">Loading payroll records...</Text>
-        </Flex>
-      ) : payrolls.length === 0 ? (
-        <Box bg="white" borderRadius="2xl" p={12} textAlign="center" shadow="sm" border="1px dashed" borderColor="gray.200">
-          <Icon as={FaWallet} fontSize="48px" color="gray.200" mb={4} />
-          <Text color="gray.500" fontWeight="medium">No payroll records for {month}.</Text>
-          {isAdmin && <Button mt={4} size="sm" bg="#065f46" color="white" borderRadius="xl" onClick={handleOpenGenerateModal}>Generate Now</Button>}
+          <Input
+            type="month"
+            value={`${selYear}-${String(selMonth).padStart(2, "0")}`}
+            onChange={e => {
+              const [y, m] = e.target.value.split("-");
+              setSelYear(+y);
+              setSelMonth(+m);
+            }}
+            w="180px" bg={T.bg} borderColor={T.border} color={T.text}
+          />
         </Box>
-      ) : (
-        <Box bg="white" shadow="sm" borderRadius="2xl" border="1px solid" borderColor="gray.100" overflow="hidden">
-          <Box overflowX="auto">
-            <Table variant="simple" size="sm">
+
+        {/* Table */}
+        {loading ? (
+          <Flex justify="center" p={10}>
+            <Spinner color={T.teal} size="xl" />
+          </Flex>
+        ) : (
+          <Box bg={T.surface} borderRadius="14px" overflowX="auto">
+            <Table variant="simple">
               <Thead>
-                <Tr bg="gray.50">
-                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Employee</Th>
-                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Basic</Th>
-                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Allowance</Th>
-                  <Th py={3} fontSize="xs" color="orange.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Advance Deducted</Th>
-                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Other Deductions</Th>
-                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Net Salary</Th>
-                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Status</Th>
-                  <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Actions</Th>
+                <Tr bg={T.surface2}>
+                  {["Employee","Department","Basic","Allowance","Deductions","Net Pay","Days","Status","Actions"].map(h => (
+                    <Th key={h} color={T.muted} borderColor={T.border} fontSize="xs">{h}</Th>
+                  ))}
                 </Tr>
               </Thead>
               <Tbody>
-                {filteredPayrolls.length === 0 ? (
-                  <Tr><Td colSpan={9} textAlign="center" color="gray.400" py={8}>No payrolls match the current filters.</Td></Tr>
-                ) : filteredPayrolls.map((p) => {
-                  const name = p.employee?.name || p.employee?.user?.name || "Unknown";
+                {filtered.length === 0 ? (
+                  <Tr>
+                    <Td colSpan={9} textAlign="center" color={T.muted} py={10} borderColor={T.border}>
+                      No employees found
+                    </Td>
+                  </Tr>
+                ) : filtered.map(emp => {
+                  const totalDed = (emp.totalDeductions || 0) + (emp.taxDeduction || 0);
                   return (
-                    <Tr key={p._id} _hover={{ bg: "gray.50" }} transition="background 0.15s">
-                      <Td py={3}>
-                        <Flex align="center" gap={3}>
-                          <Avatar size="xs" name={name} bg={getAvatarBg(name)} color="white" fontSize="10px" />
+                    <Tr key={emp.employeeId} _hover={{ bg: T.surface2 }} color={T.text}>
+                      <Td borderColor={T.border}>
+                        <Flex align="center" gap={2}>
+                          <Avatar size="xs" name={emp.name} />
                           <Box>
-                            <Text fontSize="sm" fontWeight="semibold" color="gray.800">{name}</Text>
-                            <Text fontSize="xs" color="gray.400">{p.employee?.department}</Text>
+                            <Text fontSize="sm" fontWeight="medium">{emp.name}</Text>
+                            <Text fontSize="xs" color={T.muted}>{emp.employeeCode}</Text>
                           </Box>
                         </Flex>
                       </Td>
-                      <Td py={3} isNumeric><Text fontSize="sm" color="gray.700">Rs {p.basicSalary?.toLocaleString()}</Text></Td>
-                      <Td py={3} isNumeric><Text fontSize="sm" color="gray.700">Rs {p.allowance?.toLocaleString()}</Text></Td>
-                      <Td py={3} isNumeric>
-                        {p.advanceDeduction > 0 ? (
-                          <Tooltip label={`Advance salary deducted`} hasArrow>
-                            <Text fontSize="sm" fontWeight="semibold" color="orange.500" cursor="default">
-                              - Rs {p.advanceDeduction?.toLocaleString()}
-                            </Text>
-                          </Tooltip>
-                        ) : (
-                          <Text fontSize="sm" color="gray.300">—</Text>
-                        )}
+                      <Td borderColor={T.border} color={T.muted} fontSize="sm">{emp.department}</Td>
+                      <Td borderColor={T.border} fontSize="sm">
+                        Rs {(emp.basicSalary || 0).toLocaleString()}
                       </Td>
-                      <Td py={3} isNumeric>
-                        <Text fontSize="sm" color="red.500">
-                          {(p.deductions - (p.advanceDeduction || 0)) > 0
-                            ? `- Rs ${Math.round(p.deductions - (p.advanceDeduction || 0)).toLocaleString()}`
-                            : "—"}
-                        </Text>
+                      <Td borderColor={T.border} fontSize="sm">
+                        Rs {(emp.allowance || 0).toLocaleString()}
                       </Td>
-                      <Td py={3} isNumeric><Text fontSize="sm" fontWeight="bold" color="#065f46">Rs {p.netSalary?.toLocaleString()}</Text></Td>
-                      <Td py={3}>
-                        <Badge colorScheme={p.status === "Approved" ? "green" : "orange"} borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold">{p.status}</Badge>
+                      <Td borderColor={T.border} fontSize="sm" color={T.red}>
+                        {totalDed > 0 ? `- Rs ${totalDed.toLocaleString()}` : "—"}
                       </Td>
-                      <Td py={3}>
+                      <Td borderColor={T.border} fontSize="sm" fontWeight="bold" color={T.green}>
+                        Rs {Math.max(0, emp.netSalary || 0).toLocaleString()}
+                      </Td>
+                      <Td borderColor={T.border} fontSize="xs" color={T.muted}>
+                        {emp.presentDays}/{emp.workingDays}
+                      </Td>
+                      <Td borderColor={T.border}>
+                        <Badge
+                          px={2} py={1} borderRadius="full" fontSize="xs"
+                          bg={`${statusColor(emp.payrollStatus)}22`}
+                          color={statusColor(emp.payrollStatus)}
+                        >
+                          {emp.payrollStatus}
+                        </Badge>
+                      </Td>
+                      <Td borderColor={T.border}>
                         <HStack spacing={1}>
-                          {isAdmin && p.status !== "Approved" && (
-                            <Button size="xs" colorScheme="green" borderRadius="lg" onClick={() => handleApprove(p._id)}
-                              isLoading={actionLoadingId === p._id} isDisabled={actionLoadingId && actionLoadingId !== p._id}>Approve</Button>
+                          {emp.payrollStatus === "Not Generated" && (
+                            <Button
+                              size="xs" bg={T.teal} color={T.bg}
+                              _hover={{ opacity: 0.85 }}
+                              isLoading={!!generating[emp.employeeId]}
+                              onClick={() => handleGenerate(emp)}
+                            >
+                              Generate
+                            </Button>
                           )}
-                          <Tooltip label="Salary Ledger" hasArrow>
-                            <IconButton icon={<FaBookOpen />} colorScheme="blue" variant="ghost" size="sm" borderRadius="lg"
-                              onClick={() => handleOpenLedger(p._id)} aria-label="Ledger" />
-                          </Tooltip>
-                          <Tooltip label="Download Payslip PDF" hasArrow>
-                            <IconButton icon={<FaFilePdf />} colorScheme="red" variant="ghost" size="sm" borderRadius="lg"
-                              onClick={() => generatePDF(p)} aria-label="PDF" />
-                          </Tooltip>
+                          {emp.payrollStatus === "Generated" && (
+                            <Button
+                              size="xs" bg={T.green} color={T.bg}
+                              _hover={{ opacity: 0.85 }}
+                              isLoading={!!approving[emp.payrollId]}
+                              onClick={() => handleApprove(emp)}
+                            >
+                              Approve
+                            </Button>
+                          )}
+                          {emp.payrollId && (
+                            <IconButton
+                              size="xs" variant="ghost" icon={<FaEye />}
+                              color={T.blue} aria-label="View breakdown"
+                              onClick={() => handleViewBreakdown(emp)}
+                            />
+                          )}
                         </HStack>
                       </Td>
                     </Tr>
@@ -474,200 +342,97 @@ const Payroll = () => {
               </Tbody>
             </Table>
           </Box>
-        </Box>
-      )}
+        )}
+      </Box>
 
-      {/* ── Ledger Modal ── */}
-      <Modal isOpen={isLedgerOpen} onClose={onLedgerClose} isCentered size="md">
-        <ModalOverlay bg="blackAlpha.500" backdropFilter="blur(4px)" />
-        <ModalContent borderRadius="2xl" shadow="2xl" overflow="hidden">
-          {/* Header */}
-          <Box bgGradient="linear(135deg, #021024, #065f46)" px={6} py={5}>
-            <Flex align="center" gap={3}>
-              <Flex w={10} h={10} borderRadius="xl" bg="whiteAlpha.200" align="center" justify="center">
-                <Icon as={FaBookOpen} color="white" fontSize="16px" />
-              </Flex>
-              <Box>
-                <Text fontWeight="bold" fontSize="md" color="white">Salary Ledger</Text>
-                <Text fontSize="xs" color="whiteAlpha.700">
-                  {ledger ? `${ledger.employeeName} — ${new Date(ledger.year, ledger.month - 1).toLocaleString("default", { month: "long", year: "numeric" })}` : "Loading..."}
-                </Text>
-              </Box>
-            </Flex>
-            <ModalCloseButton color="white" top={4} right={4} />
-          </Box>
-
-          <ModalBody px={6} py={5}>
-            {ledgerLoading ? (
-              <Flex justify="center" align="center" h="200px" direction="column" gap={3}>
-                <Spinner color="#065f46" size="lg" thickness="3px" />
-                <Text fontSize="sm" color="gray.400">Loading ledger...</Text>
-              </Flex>
-            ) : ledger && (
-              <Box>
-                {/* Employee Info */}
-                <Flex align="center" gap={3} mb={5} p={3} bg="gray.50" borderRadius="xl">
-                  <Avatar size="sm" name={ledger.employeeName} bg={getAvatarBg(ledger.employeeName)} color="white" />
-                  <Box>
-                    <Text fontWeight="bold" fontSize="sm" color="gray.800">{ledger.employeeName}</Text>
-                    <Text fontSize="xs" color="gray.400">{ledger.designation} · {ledger.department}</Text>
-                  </Box>
-                  <Badge ml="auto" colorScheme={ledger.status === "Approved" ? "green" : "orange"} borderRadius="full" px={3} fontSize="xs">{ledger.status}</Badge>
-                </Flex>
-
-                {/* Earnings */}
-                <Text fontSize="xs" fontWeight="700" color="gray.400" textTransform="uppercase" letterSpacing="wider" mb={2}>Earnings</Text>
-                <Box bg="green.50" border="1px solid" borderColor="green.100" borderRadius="xl" overflow="hidden" mb={4}>
-                  <Flex justify="space-between" px={4} py={3} borderBottom="1px solid" borderColor="green.100">
-                    <Text fontSize="sm" color="gray.600">Basic Salary</Text>
-                    <Text fontSize="sm" fontWeight="semibold" color="gray.800">Rs {ledger.basicSalary.toLocaleString()}</Text>
-                  </Flex>
-                  <Flex justify="space-between" px={4} py={3} borderBottom="1px solid" borderColor="green.100">
-                    <Text fontSize="sm" color="gray.600">Allowance</Text>
-                    <Text fontSize="sm" fontWeight="semibold" color="gray.800">Rs {ledger.allowance.toLocaleString()}</Text>
-                  </Flex>
-                  <Flex justify="space-between" px={4} py={3} bg="green.100">
-                    <Text fontSize="sm" fontWeight="bold" color="green.800">Gross Total</Text>
-                    <Text fontSize="sm" fontWeight="bold" color="green.800">Rs {ledger.grossSalary.toLocaleString()}</Text>
-                  </Flex>
-                </Box>
-
-                {/* Attendance Info */}
-                <Flex gap={3} mb={4}>
-                  <Flex flex={1} direction="column" align="center" bg="green.50" borderRadius="xl" py={3} border="1px solid" borderColor="green.100">
-                    <Text fontSize="xl" fontWeight="800" color="green.600">{ledger.presentDays || 0}</Text>
-                    <Text fontSize="10px" color="gray.500" textTransform="uppercase">Present Days</Text>
-                  </Flex>
-                  <Flex flex={1} direction="column" align="center" bg="blue.50" borderRadius="xl" py={3} border="1px solid" borderColor="blue.100">
-                    <Text fontSize="xl" fontWeight="800" color="blue.600">{ledger.workingDays || 0}</Text>
-                    <Text fontSize="10px" color="gray.500" textTransform="uppercase">Working Days</Text>
-                  </Flex>
-                  <Flex flex={1} direction="column" align="center" bg="orange.50" borderRadius="xl" py={3} border="1px solid" borderColor="orange.100">
-                    <Text fontSize="xl" fontWeight="800" color="orange.500">{ledger.extraOffDays || 0}</Text>
-                    <Text fontSize="10px" color="gray.500" textTransform="uppercase">Extra Absent</Text>
-                  </Flex>
-                  <Flex flex={1} direction="column" align="center" bg="gray.50" borderRadius="xl" py={3} border="1px solid" borderColor="gray.100">
-                    <Text fontSize="xl" fontWeight="800" color="gray.600">{ledger.monthlyOffDays || 3}</Text>
-                    <Text fontSize="10px" color="gray.500" textTransform="uppercase">Company Off</Text>
-                  </Flex>
-                </Flex>
-
-                {/* Deductions */}
-                <Text fontSize="xs" fontWeight="700" color="gray.400" textTransform="uppercase" letterSpacing="wider" mb={2}>Deductions</Text>
-                <Box bg="red.50" border="1px solid" borderColor="red.100" borderRadius="xl" overflow="hidden" mb={4}>
-                  <Box borderBottom="1px solid" borderColor="red.100">
-                    <Flex justify="space-between" px={4} py={3}
-                      bg={ledger.advanceEntries?.length > 0 ? "orange.50" : undefined}>
-                      <Box>
-                        <Text fontSize="sm" color="gray.600" fontWeight="600">Advance Deduction</Text>
-                        {ledger.advanceDeduction > 0 && (
-                          <Text fontSize="10px" color="gray.400" mt={0.5}>
-                            {ledger.advanceEntries?.length || 0} advance{ledger.advanceEntries?.length !== 1 ? "s" : ""} this month
-                          </Text>
-                        )}
-                      </Box>
-                      <Text fontSize="sm" fontWeight="semibold" color="red.600">
-                        {ledger.advanceDeduction > 0 ? `- Rs ${Math.round(ledger.advanceDeduction).toLocaleString()}` : "—"}
-                      </Text>
-                    </Flex>
-                    {/* Individual advance entries */}
-                    {ledger.advanceEntries?.length > 0 && ledger.advanceEntries.map((adv, i) => (
-                      <Flex key={adv._id || i} justify="space-between" align="center"
-                        px={4} py={2} bg="orange.50" borderTop="1px dashed" borderColor="orange.200">
-                        <Flex align="center" gap={2}>
-                          <Box w={1.5} h={1.5} borderRadius="full" bg="orange.400" />
-                          <Box>
-                            <Text fontSize="11px" color="gray.600">
-                              {new Date(adv.date).toLocaleDateString()} — {adv.reason}
-                            </Text>
-                          </Box>
-                        </Flex>
-                        <Text fontSize="11px" fontWeight="700" color="orange.600">
-                          Rs {adv.amount?.toLocaleString()}
-                        </Text>
-                      </Flex>
-                    ))}
-                  </Box>
-                  <Flex justify="space-between" px={4} py={3} borderBottom="1px solid" borderColor="red.100">
-                    <Box>
-                      <Text fontSize="sm" color="gray.600">Unpaid Leave Deduction</Text>
-                      {ledger.unpaidDays > 0 && (
-                        <Text fontSize="xs" color="gray.400">{ledger.unpaidDays} unpaid day{ledger.unpaidDays !== 1 ? "s" : ""}</Text>
-                      )}
-                    </Box>
-                    <Text fontSize="sm" fontWeight="semibold" color="red.600">
-                      {ledger.leaveDeduction > 0 ? `- Rs ${Math.round(ledger.leaveDeduction).toLocaleString()}` : "—"}
-                    </Text>
-                  </Flex>
-                  <Flex justify="space-between" px={4} py={3} borderBottom="1px solid" borderColor="red.100">
-                    <Box>
-                      <Text fontSize="sm" color="gray.600">Extra Off (Absent Days)</Text>
-                      {ledger.extraOffDays > 0 && (
-                        <Text fontSize="xs" color="gray.400">
-                          {ledger.extraOffDays} day{ledger.extraOffDays !== 1 ? "s" : ""} × Rs {Math.round((ledger.basicSalary || 0) / (ledger.workingDays || 1)).toLocaleString()}/day
-                        </Text>
-                      )}
-                    </Box>
-                    <Text fontSize="sm" fontWeight="semibold" color="red.600">
-                      {ledger.extraOffDeduction > 0 ? `- Rs ${Math.round(ledger.extraOffDeduction).toLocaleString()}` : "—"}
-                    </Text>
-                  </Flex>
-                  <Flex justify="space-between" px={4} py={3} bg="red.100">
-                    <Text fontSize="sm" fontWeight="bold" color="red.800">Total Deductions</Text>
-                    <Text fontSize="sm" fontWeight="bold" color="red.800">- Rs {Math.round(ledger.totalDeductions).toLocaleString()}</Text>
-                  </Flex>
-                </Box>
-
-                {/* Net Pay */}
-                <Box bgGradient="linear(135deg, #021024, #065f46)" borderRadius="xl" px={5} py={4}>
-                  <Flex justify="space-between" align="center">
-                    <Box>
-                      <Text fontSize="xs" color="whiteAlpha.700" textTransform="uppercase" letterSpacing="wider">Net Remaining Pay</Text>
-                      <Text fontSize="xs" color="whiteAlpha.500" mt={0.5}>Gross − All Deductions</Text>
-                    </Box>
-                    <Text fontSize="2xl" fontWeight="extrabold" color="white">
-                      Rs {Math.round(ledger.netSalary).toLocaleString()}
-                    </Text>
-                  </Flex>
-                </Box>
-              </Box>
-            )}
-          </ModalBody>
-
-          <ModalFooter borderTop="1px solid" borderColor="gray.100">
-            <Button variant="ghost" onClick={onLedgerClose} borderRadius="xl" size="sm">Close</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* Generate Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay bg="blackAlpha.400" />
-        <ModalContent borderRadius="2xl" shadow="xl">
-          <ModalHeader borderBottom="1px solid" borderColor="gray.100" fontSize="md" fontWeight="bold">Generate Payroll — {month}</ModalHeader>
+      {/* Breakdown Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="lg">
+        <ModalOverlay bg="blackAlpha.800" />
+        <ModalContent bg={T.surface} color={T.text} border={`1px solid ${T.border}`}>
+          <ModalHeader borderBottom={`1px solid ${T.border}`} fontSize="md">
+            {breakdown
+              ? `${breakdown.employeeName} — ${MONTHS[(breakdown.month || 1) - 1]} ${breakdown.year}`
+              : "Payroll Breakdown"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody py={5}>
-            <Box bg="green.50" borderRadius="xl" p={4} mb={4}>
-              <Text fontSize="sm" color="green.800" fontWeight="medium">Ready to generate</Text>
-              <Text fontSize="sm" color="green.700" mt={1}>
-                Payroll will be calculated for <Text as="span" fontWeight="bold">{employees.length} active employees</Text> based on attendance and leaves.
-              </Text>
-            </Box>
-            {generating && (
-              <Box>
-                <Flex justify="space-between" mb={1}>
-                  <Text fontSize="xs" color="gray.500">Processing...</Text>
-                  <Text fontSize="xs" fontWeight="bold" color="#065f46">{generateProgress}%</Text>
+            {breakdownLoading ? (
+              <Flex justify="center" p={6}><Spinner color={T.teal} /></Flex>
+            ) : breakdown ? (
+              <VStack align="stretch" spacing={3}>
+                <Grid templateColumns="1fr 1fr" gap={2} fontSize="sm">
+                  <Text color={T.muted}>Department</Text><Text>{breakdown.department}</Text>
+                  <Text color={T.muted}>Designation</Text><Text>{breakdown.designation}</Text>
+                  <Text color={T.muted}>Working Days</Text><Text>{breakdown.workingDays}</Text>
+                  <Text color={T.muted}>Present Days</Text><Text>{breakdown.presentDays}</Text>
+                  <Text color={T.muted}>Monthly Off Days</Text><Text>{breakdown.monthlyOffDays}</Text>
+                  <Text color={T.muted}>Status</Text>
+                  <Badge w="fit-content" px={2} bg={`${statusColor(breakdown.status)}22`} color={statusColor(breakdown.status)}>
+                    {breakdown.status}
+                  </Badge>
+                </Grid>
+
+                <Divider borderColor={T.border} />
+
+                <VStack align="stretch" spacing={2} fontSize="sm">
+                  <Flex justify="space-between">
+                    <Text color={T.muted}>Basic Salary</Text>
+                    <Text>Rs {(breakdown.basicSalary || 0).toLocaleString()}</Text>
+                  </Flex>
+                  <Flex justify="space-between">
+                    <Text color={T.muted}>Allowance</Text>
+                    <Text>Rs {(breakdown.allowance || 0).toLocaleString()}</Text>
+                  </Flex>
+                  <Flex justify="space-between" fontWeight="medium">
+                    <Text color={T.muted}>Gross Salary</Text>
+                    <Text>Rs {(breakdown.grossSalary || 0).toLocaleString()}</Text>
+                  </Flex>
+                </VStack>
+
+                <Divider borderColor={T.border} />
+
+                <VStack align="stretch" spacing={2} fontSize="sm">
+                  {breakdown.leaveDeduction > 0 && (
+                    <Flex justify="space-between">
+                      <Text color={T.red}>Unpaid Leave ({breakdown.unpaidDays} days)</Text>
+                      <Text color={T.red}>- Rs {breakdown.leaveDeduction.toLocaleString()}</Text>
+                    </Flex>
+                  )}
+                  {breakdown.extraOffDeduction > 0 && (
+                    <Flex justify="space-between">
+                      <Text color={T.red}>Absent ({breakdown.extraOffDays} days)</Text>
+                      <Text color={T.red}>- Rs {breakdown.extraOffDeduction.toLocaleString()}</Text>
+                    </Flex>
+                  )}
+                  {breakdown.advanceDeduction > 0 && (
+                    <Flex justify="space-between">
+                      <Text color={T.red}>Advance Deduction</Text>
+                      <Text color={T.red}>- Rs {breakdown.advanceDeduction.toLocaleString()}</Text>
+                    </Flex>
+                  )}
+                  {breakdown.taxDeduction > 0 && (
+                    <Flex justify="space-between">
+                      <Text color={T.red}>Tax ({breakdown.taxPercentage}%)</Text>
+                      <Text color={T.red}>- Rs {breakdown.taxDeduction.toLocaleString()}</Text>
+                    </Flex>
+                  )}
+                  {(breakdown.leaveDeduction || breakdown.extraOffDeduction ||
+                    breakdown.advanceDeduction || breakdown.taxDeduction) ? null : (
+                    <Text color={T.muted} fontSize="xs">No deductions this month</Text>
+                  )}
+                </VStack>
+
+                <Divider borderColor={T.border} />
+
+                <Flex justify="space-between" fontWeight="bold" fontSize="lg">
+                  <Text>Net Salary</Text>
+                  <Text color={T.green}>
+                    Rs {Math.max(0, breakdown.netSalary || 0).toLocaleString()}
+                  </Text>
                 </Flex>
-                <Progress value={generateProgress} size="sm" colorScheme="green" borderRadius="full" bg="gray.100" />
-              </Box>
-            )}
+              </VStack>
+            ) : null}
           </ModalBody>
-          <ModalFooter borderTop="1px solid" borderColor="gray.100" gap={2}>
-            <Button variant="ghost" onClick={onClose} isDisabled={generating} borderRadius="xl">Cancel</Button>
-            <Button bg="#065f46" color="white" _hover={{ bg: "#047857" }} borderRadius="xl"
-              onClick={handleGenerateAll} isLoading={generating} loadingText="Generating...">Confirm Generate</Button>
-          </ModalFooter>
         </ModalContent>
       </Modal>
     </Box>

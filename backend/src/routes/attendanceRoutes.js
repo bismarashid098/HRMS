@@ -3,8 +3,9 @@ const {
   punchIn,
   punchOut,
   getMonthlyAttendance,
-  getDailyAttendanceList,
+  getDailyAttendance,
   getAttendanceRange,
+  getAttendanceReport,      // ✅ added for report endpoint
   requestCorrection,
   approveCorrection,
   manualMark
@@ -15,20 +16,28 @@ const authorize = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
+// All routes require authentication
 router.use(protect);
 
+// ──────────────────────────────────────────
 // Admin only - write operations
+// ──────────────────────────────────────────
 router.post("/punch-in", authorize("Admin"), punchIn);
 router.post("/punch-out", authorize("Admin"), punchOut);
 router.post("/manual", authorize("Admin"), manualMark);
 router.put("/correction/:id", authorize("Admin"), approveCorrection);
 
+// ──────────────────────────────────────────
 // Admin & Manager - read operations
-router.get("/", authorize("Admin", "Manager"), getMonthlyAttendance);
-router.get("/daily", authorize("Admin", "Manager"), getDailyAttendanceList);
+// ──────────────────────────────────────────
+router.get("/monthly", authorize("Admin", "Manager"), getMonthlyAttendance);
+router.get("/daily", authorize("Admin", "Manager"), getDailyAttendance);
 router.get("/range", authorize("Admin", "Manager"), getAttendanceRange);
+router.get("/report", authorize("Admin", "Manager"), getAttendanceReport);
 
-// Correction request (no role in original, keep open for any authenticated)
-router.post("/correction", protect, requestCorrection);
+// ──────────────────────────────────────────
+// Correction request (any authenticated user)
+// ──────────────────────────────────────────
+router.post("/correction", requestCorrection);
 
 module.exports = router;

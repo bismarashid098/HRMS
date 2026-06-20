@@ -24,7 +24,7 @@ exports.register = asyncHandler(async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        token: generateToken(user._id)
+        token: generateToken(user)
     });
 });
 
@@ -50,7 +50,7 @@ exports.login = asyncHandler(async (req, res) => {
         email: user.email,
         role: user.role,
         employeeId: employee ? employee._id : null,
-        token: generateToken(user._id)
+        token: generateToken(user)
     });
 });
 

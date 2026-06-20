@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mongod *)",
+      "PowerShell(mongod *)",
+      "PowerShell(Get-Service *)",
+      "PowerShell(Get-Command *)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); const mongoose = require\\('mongoose'\\); mongoose.connect\\(process.env.MONGO_URI\\).then\\(\\(\\) => { console.log\\('DB Connected OK'\\); console.log\\('readyState:', mongoose.connection.readyState\\); console.log\\('host:', mongoose.connection.host\\); console.log\\('poolSize \\(default\\):', mongoose.connection.pool?.size ?? 'N/A'\\); process.exit\\(0\\); }\\).catch\\(e => { console.error\\('DB Error:', e.message\\); process.exit\\(1\\); }\\);\")",
+      "PowerShell(sc.exe query MongoDB 2>$null; echo \"done\")"
+    ]
+  }
+}

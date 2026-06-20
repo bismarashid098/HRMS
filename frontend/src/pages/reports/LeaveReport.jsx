@@ -7,20 +7,39 @@ import api from "../../api/axios";
 import * as XLSX from "xlsx";
 import { FaFileExcel, FaSearch, FaCalendarCheck, FaClock, FaCalendarTimes, FaCalendarAlt } from "react-icons/fa";
 
-const statusColors = { Approved: "green", Rejected: "red", Pending: "yellow" };
-const typeColors = { Casual: "blue", Sick: "red", Annual: "green" };
+/* ─── Dark Theme (matches Dashboard) ─── */
+const T = {
+  bg:       "#0D1117",
+  surface:  "#161B22",
+  surface2: "#1C2330",
+  border:   "#30363D",
+  teal:     "#00D4B4",
+  tealDim:  "#00A896",
+  blue:     "#58A6FF",
+  red:      "#FF6B6B",
+  amber:    "#F0A500",
+  green:    "#3FB950",
+  text:     "#E6EDF3",
+  muted:    "#8B949E",
+};
+
+const statusColors = { Approved: T.green, Rejected: T.red, Pending: T.amber };
+const typeColors = { Casual: T.blue, Sick: T.red, Annual: T.green };
 const avatarBgColors = ["#065f46", "#1d4ed8", "#7c3aed", "#d97706", "#dc2626"];
 const getAvatarBg = (name = "") => avatarBgColors[name.charCodeAt(0) % avatarBgColors.length];
 
-const StatCard = ({ label, value, color, bg, icon }) => (
-  <Box bg="white" borderRadius="2xl" p={4} shadow="sm" border="1px solid" borderColor="gray.100" borderLeft="4px solid" borderLeftColor={color}>
+/* ── Stat Card Dark ── */
+const StatCard = ({ label, value, color, icon }) => (
+  <Box bg={T.surface} borderRadius="14px" p={4} border={`1px solid ${T.border}`}
+    position="relative" overflow="hidden" _hover={{ borderColor: color, transform: "translateY(-2px)" }} transition="all 0.2s">
+    <Box position="absolute" top="0" left="0" right="0" h="2px" bg={`linear-gradient(90deg, ${color}, transparent)`} />
     <Flex align="center" justify="space-between">
       <Box>
-        <Text fontSize="xs" color="gray.500" fontWeight="medium" textTransform="uppercase" letterSpacing="wide">{label}</Text>
-        <Text fontSize="2xl" fontWeight="bold" color="gray.800" mt={1}>{value}</Text>
+        <Text fontSize="10px" fontWeight="700" textTransform="uppercase" letterSpacing="0.1em" color={T.muted} mb={2}>{label}</Text>
+        <Text fontSize="28px" fontWeight="900" color={T.text} lineHeight="1">{value}</Text>
       </Box>
-      <Flex w={10} h={10} borderRadius="xl" bg={bg} align="center" justify="center">
-        <Icon as={icon} color={color} fontSize="16px" />
+      <Flex w="36px" h="36px" borderRadius="10px" bg={`${color}18`} border={`1px solid ${color}30`} align="center" justify="center">
+        <Icon as={icon} fontSize="16px" color={color} />
       </Flex>
     </Flex>
   </Box>
@@ -90,108 +109,120 @@ const LeaveReport = () => {
     XLSX.writeFile(wb, "leave-report.xlsx");
   };
 
-  if (loading) return <Flex justify="center" align="center" h="400px" direction="column" gap={3}><Spinner size="xl" color="#065f46" thickness="3px" /><Text color="gray.400" fontSize="sm">Loading report...</Text></Flex>;
-  if (error) return <Box bg="red.50" borderRadius="xl" p={6}><Text color="red.500">{error}</Text></Box>;
+  if (loading) return <Flex justify="center" align="center" h="400px" direction="column" gap={3}><Spinner size="xl" color={T.teal} thickness="3px" /><Text color={T.muted} fontSize="sm">Loading report...</Text></Flex>;
+  if (error) return <Box bg="rgba(255,107,107,0.1)" borderRadius="14px" p={6} border={`1px solid ${T.red}`}><Text color={T.red}>{error}</Text></Box>;
 
   return (
-    <Box>
-      <Box bgGradient="linear(135deg, #021024 0%, #065f46 100%)" borderRadius="2xl" p={6} mb={5} position="relative" overflow="hidden">
-        <Box position="absolute" top={-8} right={-8} w="140px" h="140px" borderRadius="full" bg="whiteAlpha.100" />
-        <Flex justify="space-between" align="center" wrap="wrap" gap={4} position="relative">
+    <Box bg={T.bg} minH="100vh" p={5}>
+      <Box maxW="1400px" mx="auto">
+        {/* Header */}
+        <Flex justify="space-between" align="center" mb={5} wrap="wrap" gap={3}>
           <Box>
-            <Text fontSize="2xl" fontWeight="bold" color="white">Leave Report</Text>
-            <Text fontSize="sm" color="whiteAlpha.700" mt={1}>Approved and pending leave requests for all employees</Text>
+            <Text fontSize="xl" fontWeight="700" color={T.text}>Leave Report</Text>
+            <Text fontSize="sm" color={T.muted}>Approved and pending leave requests for all employees</Text>
           </Box>
-          <Button leftIcon={<FaFileExcel />} variant="outline" borderColor="whiteAlpha.400" color="white" _hover={{ bg: "whiteAlpha.200" }} size="sm" borderRadius="xl"
+          <Button leftIcon={<FaFileExcel />} variant="outline" borderColor={T.border} color={T.muted}
+            _hover={{ borderColor: T.green, color: T.green }} size="sm" borderRadius="10px"
             onClick={handleExport} isDisabled={!filteredLeaves.length}>Export Excel</Button>
         </Flex>
-      </Box>
 
-      <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(4, 1fr)" }} gap={4} mb={5}>
-        <StatCard label="Total Requests" value={summary.total} color="#065f46" bg="#f0fdf4" icon={FaCalendarAlt} />
-        <StatCard label="Approved" value={summary.approved} color="#1d4ed8" bg="#eff6ff" icon={FaCalendarCheck} />
-        <StatCard label="Pending" value={summary.pending} color="#d97706" bg="#fffbeb" icon={FaClock} />
-        <StatCard label="Rejected" value={summary.rejected} color="#dc2626" bg="#fef2f2" icon={FaCalendarTimes} />
-      </Grid>
+        {/* Stats */}
+        <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(4, 1fr)" }} gap={4} mb={5}>
+          <StatCard label="Total Requests" value={summary.total} color={T.teal} icon={FaCalendarAlt} />
+          <StatCard label="Approved" value={summary.approved} color={T.green} icon={FaCalendarCheck} />
+          <StatCard label="Pending" value={summary.pending} color={T.amber} icon={FaClock} />
+          <StatCard label="Rejected" value={summary.rejected} color={T.red} icon={FaCalendarTimes} />
+        </Grid>
 
-      <Box bg="white" borderRadius="2xl" p={4} mb={4} shadow="sm" border="1px solid" borderColor="gray.100">
-        <Flex gap={3} wrap="wrap" align="center">
-          <InputGroup flex="1" minW="200px">
-            <InputLeftElement pointerEvents="none"><Icon as={FaSearch} color="gray.300" fontSize="13px" /></InputLeftElement>
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by employee, type or reason..."
-              borderRadius="xl" bg="gray.50" fontSize="sm" focusBorderColor="#065f46" />
-          </InputGroup>
-          <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} w="150px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46">
-            <option value="All">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-          </Select>
-          <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} w="150px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46">
-            <option value="All">All Types</option>
-            <option value="Casual">Casual</option>
-            <option value="Sick">Sick</option>
-            <option value="Annual">Annual</option>
-          </Select>
-          <Select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} w="110px" borderRadius="xl" fontSize="sm" focusBorderColor="#065f46">
-            <option value="All">All Years</option>
-            {years.map((y) => <option key={y} value={y.toString()}>{y}</option>)}
-          </Select>
-          {(search || statusFilter !== "All" || typeFilter !== "All" || yearFilter !== "All") && (
-            <Button size="sm" variant="ghost" borderRadius="xl" onClick={() => { setSearch(""); setStatusFilter("All"); setTypeFilter("All"); setYearFilter("All"); }}>Clear</Button>
-          )}
-        </Flex>
-        <Text mt={2} fontSize="xs" color="gray.400">Showing {filteredLeaves.length} of {leaves.length} leave records</Text>
-      </Box>
+        {/* Filters */}
+        <Box bg={T.surface} borderRadius="14px" p={4} mb={4} border={`1px solid ${T.border}`}>
+          <Flex gap={3} wrap="wrap" align="center">
+            <InputGroup flex="1" minW="200px">
+              <InputLeftElement pointerEvents="none"><Icon as={FaSearch} color={T.muted} fontSize="13px" /></InputLeftElement>
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by employee, type or reason..."
+                borderRadius="10px" bg={T.bg} borderColor={T.border} color={T.text} _focus={{ borderColor: T.teal }} fontSize="sm" />
+            </InputGroup>
+            <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} w="150px" borderRadius="10px"
+              bg={T.bg} borderColor={T.border} color={T.text} _focus={{ borderColor: T.teal }} fontSize="sm">
+              <option value="All">All Status</option><option value="Pending">Pending</option>
+              <option value="Approved">Approved</option><option value="Rejected">Rejected</option>
+            </Select>
+            <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} w="150px" borderRadius="10px"
+              bg={T.bg} borderColor={T.border} color={T.text} _focus={{ borderColor: T.teal }} fontSize="sm">
+              <option value="All">All Types</option><option value="Casual">Casual</option>
+              <option value="Sick">Sick</option><option value="Annual">Annual</option>
+            </Select>
+            <Select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} w="110px" borderRadius="10px"
+              bg={T.bg} borderColor={T.border} color={T.text} _focus={{ borderColor: T.teal }} fontSize="sm">
+              <option value="All">All Years</option>
+              {years.map((y) => <option key={y} value={y.toString()}>{y}</option>)}
+            </Select>
+            {(search || statusFilter !== "All" || typeFilter !== "All" || yearFilter !== "All") && (
+              <Button size="sm" variant="ghost" color={T.muted} _hover={{ color: T.text, bg: T.surface2 }} borderRadius="10px"
+                onClick={() => { setSearch(""); setStatusFilter("All"); setTypeFilter("All"); setYearFilter("All"); }}>Clear</Button>
+            )}
+          </Flex>
+          <Text mt={2} fontSize="xs" color={T.muted}>Showing {filteredLeaves.length} of {leaves.length} leave records</Text>
+        </Box>
 
-      <Box bg="white" shadow="sm" borderRadius="2xl" border="1px solid" borderColor="gray.100" overflow="hidden">
-        <Box overflowX="auto">
-          <Table variant="simple" size="sm">
-            <Thead>
-              <Tr bg="gray.50">
-                <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Employee</Th>
-                <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Type</Th>
-                <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Applied On</Th>
-                <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Period</Th>
-                <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider" isNumeric>Days</Th>
-                <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Reason</Th>
-                <Th py={3} fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" letterSpacing="wider">Status</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {leaves.length === 0 ? (
-                <Tr><Td colSpan={7} textAlign="center" py={12} color="gray.400">No leave records found.</Td></Tr>
-              ) : filteredLeaves.length === 0 ? (
-                <Tr><Td colSpan={7} textAlign="center" py={8} color="gray.400">No leaves match the current filters.</Td></Tr>
-              ) : filteredLeaves.map((leave) => {
-                const name = (leave.employee?.user?.name) || (leave.employee?.name) || "Unknown";
-                return (
-                  <Tr key={leave._id} _hover={{ bg: "gray.50" }} transition="background 0.15s">
-                    <Td py={3}>
-                      <Flex align="center" gap={2}>
-                        <Avatar size="xs" name={name} bg={getAvatarBg(name)} color="white" fontSize="10px" />
-                        <Box>
-                          <Text fontSize="sm" fontWeight="semibold" color="gray.800">{name}</Text>
-                          <Text fontSize="xs" color="gray.400">{leave.employee?.department || "N/A"}</Text>
-                        </Box>
-                      </Flex>
-                    </Td>
-                    <Td py={3}><Badge colorScheme={typeColors[leave.type] || "gray"} borderRadius="full" px={2} fontSize="xs">{leave.type}</Badge></Td>
-                    <Td py={3}><Text fontSize="sm" color="gray.600">{leave.createdAt ? new Date(leave.createdAt).toLocaleDateString() : "—"}</Text></Td>
-                    <Td py={3}>
-                      <Text fontSize="sm" color="gray.700">{leave.fromDate ? new Date(leave.fromDate).toLocaleDateString() : "—"}</Text>
-                      <Text fontSize="xs" color="gray.400">to {leave.toDate ? new Date(leave.toDate).toLocaleDateString() : "—"}</Text>
-                    </Td>
-                    <Td py={3} isNumeric><Text fontSize="sm" fontWeight="bold" color="gray.700">{leave.totalDays}</Text></Td>
-                    <Td py={3} maxW="180px"><Text fontSize="sm" color="gray.600" noOfLines={2} title={leave.reason}>{leave.reason}</Text></Td>
-                    <Td py={3}>
-                      <Badge colorScheme={statusColors[leave.status] || "gray"} borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold">{leave.status}</Badge>
-                    </Td>
-                  </Tr>
-                );
-              })}
-            </Tbody>
-          </Table>
+        {/* Table */}
+        <Box bg={T.surface} borderRadius="14px" border={`1px solid ${T.border}`} overflow="hidden">
+          <Box overflowX="auto">
+            <Table variant="simple" size="sm">
+              <Thead>
+                <Tr bg={T.surface2}>
+                  <Th borderColor={T.border} color={T.muted} py={3} fontSize="xs" fontWeight="semibold" textTransform="uppercase">Employee</Th>
+                  <Th borderColor={T.border} color={T.muted} py={3} fontSize="xs" fontWeight="semibold" textTransform="uppercase">Type</Th>
+                  <Th borderColor={T.border} color={T.muted} py={3} fontSize="xs" fontWeight="semibold" textTransform="uppercase">Applied On</Th>
+                  <Th borderColor={T.border} color={T.muted} py={3} fontSize="xs" fontWeight="semibold" textTransform="uppercase">Period</Th>
+                  <Th borderColor={T.border} color={T.muted} py={3} fontSize="xs" fontWeight="semibold" textTransform="uppercase" isNumeric>Days</Th>
+                  <Th borderColor={T.border} color={T.muted} py={3} fontSize="xs" fontWeight="semibold" textTransform="uppercase">Reason</Th>
+                  <Th borderColor={T.border} color={T.muted} py={3} fontSize="xs" fontWeight="semibold" textTransform="uppercase">Status</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {leaves.length === 0 ? (
+                  <Tr><Td colSpan={7} textAlign="center" py={12}><Text color={T.muted}>No leave records found.</Text></Td></Tr>
+                ) : filteredLeaves.length === 0 ? (
+                  <Tr><Td colSpan={7} textAlign="center" py={8}><Text color={T.muted}>No leaves match the current filters.</Text></Td></Tr>
+                ) : filteredLeaves.map((leave) => {
+                  const name = (leave.employee?.user?.name) || (leave.employee?.name) || "Unknown";
+                  return (
+                    <Tr key={leave._id} _hover={{ bg: T.surface2 }} transition="background 0.15s">
+                      <Td borderColor={T.border} py={3}>
+                        <Flex align="center" gap={2}>
+                          <Avatar size="xs" name={name} bg={getAvatarBg(name)} color="white" fontSize="10px" />
+                          <Box>
+                            <Text fontSize="sm" fontWeight="semibold" color={T.text}>{name}</Text>
+                            <Text fontSize="xs" color={T.muted}>{leave.employee?.department || "N/A"}</Text>
+                          </Box>
+                        </Flex>
+                      </Td>
+                      <Td borderColor={T.border} py={3}>
+                        <Badge bg={`${typeColors[leave.type] || T.muted}20`} color={typeColors[leave.type] || T.muted} borderRadius="full" px={2} fontSize="xs">{leave.type}</Badge>
+                      </Td>
+                      <Td borderColor={T.border} py={3}>
+                        <Text fontSize="sm" color={T.text}>{leave.createdAt ? new Date(leave.createdAt).toLocaleDateString() : "—"}</Text>
+                      </Td>
+                      <Td borderColor={T.border} py={3}>
+                        <Text fontSize="sm" color={T.text}>{leave.fromDate ? new Date(leave.fromDate).toLocaleDateString() : "—"}</Text>
+                        <Text fontSize="xs" color={T.muted}>to {leave.toDate ? new Date(leave.toDate).toLocaleDateString() : "—"}</Text>
+                      </Td>
+                      <Td borderColor={T.border} py={3} isNumeric>
+                        <Text fontSize="sm" fontWeight="bold" color={T.text}>{leave.totalDays}</Text>
+                      </Td>
+                      <Td borderColor={T.border} py={3} maxW="180px">
+                        <Text fontSize="sm" color={T.muted} noOfLines={2} title={leave.reason}>{leave.reason}</Text>
+                      </Td>
+                      <Td borderColor={T.border} py={3}>
+                        <Badge bg={`${statusColors[leave.status] || T.muted}20`} color={statusColors[leave.status] || T.muted} borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold">{leave.status}</Badge>
+                      </Td>
+                    </Tr>
+                  );
+                })}
+              </Tbody>
+            </Table>
+          </Box>
         </Box>
       </Box>
     </Box>

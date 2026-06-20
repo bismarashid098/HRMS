@@ -1,12 +1,10 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "./pages/auth/Login";
 import Profile from "./pages/auth/Profile";
-import Dashboard from "./pages/dashboard/Dashboard";
-import DashboardHome from "./pages/dashboard/DashboardHome";
+import Dashboard from "./pages/dashboard/Dashboard";   // your combined Dashboard + DashboardHome
 import EmployeeList from "./pages/employees/EmployeeList";
 import EmployeeForm from "./pages/employees/EmployeeForm";
 import EmployeeView from "./pages/employees/EmployeeView";
-import Attendance from "./pages/attendance/Attendance"; // ✅ fixed import path
 import AttendancePage from "./pages/attendance/AttendancePage";
 import Leaves from "./pages/leaves/Leaves";
 import Payroll from "./pages/payroll/Payroll";
@@ -20,17 +18,18 @@ import AdvanceReport from "./pages/reports/AdvanceReport";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import UserManagement from "./pages/users/UserManagement";
 
-// Wrapper: Admin access only
+// Admin guard wrapper
 const AdminOnly = ({ children }) => (
   <ProtectedRoute allowedRoles={["Admin"]}>{children}</ProtectedRoute>
 );
 
-const App = () => {
+function App() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
 
+      {/* Dashboard Layout with nested routes */}
       <Route
         path="/dashboard"
         element={
@@ -39,45 +38,35 @@ const App = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<DashboardHome />} />
-
-        {/* Admin & Manager - Employee list & view */}
+        {/* Employees */}
         <Route path="employees" element={<EmployeeList />} />
-        <Route path="employees/:id" element={<EmployeeView />} />
-
-        {/* Admin only - Employee create & edit */}
         <Route path="employees/create" element={<AdminOnly><EmployeeForm /></AdminOnly>} />
         <Route path="employees/edit/:id" element={<AdminOnly><EmployeeForm /></AdminOnly>} />
+        <Route path="employees/:id" element={<EmployeeView />} />
 
-        {/* Admin & Manager - Attendance */}
+        {/* Attendance */}
         <Route path="attendance" element={<AttendancePage />} />
-        <Route path="attendance" element={<Attendance />} />
+        <Route path="reports/attendance" element={<AttendanceReport />} />
 
-        {/* Admin & Manager - Leaves */}
+        {/* Leaves */}
         <Route path="leaves" element={<Leaves />} />
+        <Route path="reports/leaves" element={<LeaveReport />} />
 
-        {/* Admin only - Payroll */}
+        {/* Payroll (Admin only) */}
         <Route path="payroll" element={<AdminOnly><Payroll /></AdminOnly>} />
         <Route path="advance" element={<AdminOnly><AdvanceSalary /></AdminOnly>} />
-
-        {/* Admin only - System management */}
+        <Route path="reports/payroll" element={<AdminOnly><PayrollReport /></AdminOnly>} />
+        <Route path="reports/advances" element={<AdminOnly><AdvanceReport /></AdminOnly>} />
+        {/* System (Admin only) */}
         <Route path="users" element={<AdminOnly><UserManagement /></AdminOnly>} />
         <Route path="settings" element={<AdminOnly><Settings /></AdminOnly>} />
         <Route path="audit" element={<AdminOnly><AuditLogs /></AdminOnly>} />
 
-        {/* Both roles - Profile */}
+        {/* Profile (both roles) */}
         <Route path="profile" element={<Profile />} />
-
-        {/* Admin & Manager - Attendance & Leave Reports */}
-        <Route path="reports/attendance" element={<AttendanceReport />} />
-        <Route path="reports/leaves" element={<LeaveReport />} />
-
-        {/* Admin only - Payroll & Advance Reports */}
-        <Route path="reports/payroll" element={<AdminOnly><PayrollReport /></AdminOnly>} />
-        <Route path="reports/advances" element={<AdminOnly><AdvanceReport /></AdminOnly>} />
       </Route>
     </Routes>
   );
-};
+}
 
 export default App;

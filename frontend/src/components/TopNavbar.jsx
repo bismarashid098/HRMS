@@ -1,33 +1,76 @@
 import { useContext } from "react";
 import {
-  Box, Flex, Text, Button, Menu, MenuButton, MenuList, MenuItem,
-  Avatar, Badge, Icon, IconButton
+  Box,
+  Flex,
+  Text,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Avatar,
+  Icon,
+  Portal,
 } from "@chakra-ui/react";
+
 import { useNavigate, useLocation } from "react-router-dom";
+
 import { AuthContext } from "../context/AuthContext";
-import { FaChevronDown, FaSignOutAlt, FaUser, FaCog, FaBars } from "react-icons/fa";
+
+import {
+  FaChevronDown,
+  FaSignOutAlt,
+  FaUser,
+  FaCog,
+  FaBars,
+  FaShieldAlt,
+  FaKey,
+} from "react-icons/fa";
+
+import { FiBell } from "react-icons/fi";
+
+/* ── Theme ── */
+const C = {
+  accent: "#00E5C4",
+  accentGlow: "rgba(0,229,196,0.15)",
+  accentBorder: "rgba(0,229,196,0.22)",
+  accentDim: "rgba(0,229,196,0.08)",
+
+  bg: "#080E1A",
+
+  surface: "rgba(255,255,255,0.04)",
+  surfaceHover: "rgba(255,255,255,0.07)",
+
+  border: "rgba(255,255,255,0.08)",
+
+  text: "#E8F0FE",
+  muted: "rgba(255,255,255,0.38)",
+};
+
+const avatarColors = [
+  "#065f46",
+  "#1d4ed8",
+  "#7c3aed",
+  "#d97706",
+  "#dc2626",
+];
+
+const getAvatarBg = (name = "") =>
+  avatarColors[name.charCodeAt(0) % avatarColors.length];
 
 const pageTitles = {
   "/dashboard": "Dashboard",
   "/dashboard/employees": "Employees",
-  "/dashboard/employees/create": "Add Employee",
-  "/dashboard/attendance": "Attendance Ledger",
-  "/dashboard/attendance/daily": "Daily Attendance",
-  "/dashboard/leaves": "Leave Management",
+  "/dashboard/attendance": "Attendance",
+  "/dashboard/leaves": "Leaves",
   "/dashboard/payroll": "Payroll",
-  "/dashboard/advance": "Advance Salary",
-  "/dashboard/users": "User Management",
   "/dashboard/settings": "Settings",
-  "/dashboard/audit": "Audit Logs",
-  "/dashboard/profile": "My Profile",
-  "/dashboard/reports/attendance": "Attendance Report",
-  "/dashboard/reports/leaves": "Leave Report",
-  "/dashboard/reports/payroll": "Payroll Report",
-  "/dashboard/reports/advances": "Advance Report",
+  "/dashboard/profile": "Profile",
 };
 
 const TopNavbar = ({ onMenuOpen }) => {
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout } =
+    useContext(AuthContext);
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -36,97 +79,309 @@ const TopNavbar = ({ onMenuOpen }) => {
     navigate("/login");
   };
 
-  const pageTitle = pageTitles[location.pathname] || "Dashboard";
-  const roleBadgeColor = user?.role === "Admin" ? "green" : "blue";
+  const pageTitle =
+    pageTitles[location.pathname] ||
+    "Dashboard";
 
   return (
-    <Box bg="white" px={{ base: 3, md: 6 }} py={3} shadow="sm" borderBottom="1px" borderColor="gray.100" flexShrink={0}>
-      <Flex justify="space-between" align="center">
-        {/* Left: hamburger (mobile) + Page title */}
-        <Flex align="center" gap={2}>
+    <Box
+      bg={C.bg}
+      px={{ base: 4, md: 6 }}
+      borderBottom="1px solid"
+      borderColor={C.border}
+      position="sticky"
+      top="0"
+      zIndex="999"
+      backdropFilter="blur(14px)"
+    >
+      <Flex
+        justify="space-between"
+        align="center"
+        h="68px"
+      >
+        {/* LEFT */}
+        <Flex align="center" gap={3}>
           {onMenuOpen && (
-            <IconButton
-              icon={<Icon as={FaBars} />}
-              variant="ghost"
+            <Flex
+              w="38px"
+              h="38px"
+              borderRadius="12px"
+              bg={C.surface}
+              border="1px solid"
+              borderColor={C.border}
+              align="center"
+              justify="center"
+              cursor="pointer"
+              color={C.muted}
+              transition="0.2s"
+              _hover={{
+                bg: C.surfaceHover,
+                color: C.text,
+                borderColor: C.accentBorder,
+              }}
               onClick={onMenuOpen}
-              aria-label="Open navigation"
-              size="sm"
-              borderRadius="lg"
-              color="gray.600"
-              _hover={{ bg: "gray.100" }}
-            />
+            >
+              <Icon as={FaBars} />
+            </Flex>
           )}
+
           <Box>
-            <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" color="gray.800">{pageTitle}</Text>
-            <Text fontSize="xs" color="gray.400" display={{ base: "none", sm: "block" }}>
-              {new Date().toLocaleDateString("en-PK", { weekday: "long", day: "numeric", month: "short" })}
+            <Text
+              color={C.text}
+              fontWeight="800"
+              fontSize="17px"
+            >
+              {pageTitle}
+            </Text>
+
+            <Text
+              color={C.muted}
+              fontSize="11px"
+            >
+              HRMS Management System
             </Text>
           </Box>
         </Flex>
 
-        {/* Right: Role badge + user menu */}
+        {/* RIGHT */}
         <Flex align="center" gap={3}>
-          <Badge colorScheme={roleBadgeColor} borderRadius="full" px={3} py={1} fontSize="xs" fontWeight="semibold">
-            {user?.role}
-          </Badge>
-
-          <Menu>
-            <MenuButton
-              as={Button}
-              rightIcon={<FaChevronDown fontSize="11px" />}
-              variant="ghost"
-              borderRadius="xl"
-              _hover={{ bg: "gray.50" }}
-              px={2}
+          {/* Notification */}
+          <Box position="relative">
+            <Flex
+              w="38px"
+              h="38px"
+              borderRadius="12px"
+              bg={C.surface}
+              border="1px solid"
+              borderColor={C.border}
+              align="center"
+              justify="center"
+              cursor="pointer"
+              transition="0.2s"
+              _hover={{
+                bg: C.surfaceHover,
+                borderColor: C.accentBorder,
+              }}
             >
-              <Flex align="center" gap={2}>
-                <Avatar size="sm" name={user?.name} bg="#065f46" color="white" />
-                <Box display={{ base: "none", md: "block" }} textAlign="left">
-                  <Text fontSize="sm" fontWeight="semibold" lineHeight="1.2">{user?.name}</Text>
-                  <Text fontSize="10px" color="gray.400" lineHeight="1.2">{user?.email}</Text>
-                </Box>
-              </Flex>
-            </MenuButton>
-            <MenuList shadow="xl" borderRadius="xl" border="1px solid" borderColor="gray.100" py={2}>
-              <Box px={4} py={2} mb={1}>
-                <Text fontSize="sm" fontWeight="bold" color="gray.700">{user?.name}</Text>
-                <Text fontSize="xs" color="gray.400">{user?.email}</Text>
-              </Box>
-              <Box h="1px" bg="gray.100" mx={4} mb={1} />
-              <MenuItem
-                icon={<FaUser />}
-                onClick={() => navigate("/dashboard/profile")}
-                borderRadius="lg"
-                mx={2}
-                fontSize="sm"
-              >
-                My Profile
-              </MenuItem>
-              {user?.role === "Admin" && (
-                <MenuItem
-                  icon={<FaCog />}
-                  onClick={() => navigate("/dashboard/settings")}
-                  borderRadius="lg"
-                  mx={2}
-                  fontSize="sm"
+              <Icon
+                as={FiBell}
+                color={C.text}
+                fontSize="16px"
+              />
+            </Flex>
+
+            <Box
+              position="absolute"
+              top="8px"
+              right="8px"
+              w="7px"
+              h="7px"
+              borderRadius="full"
+              bg="#ff4d4f"
+            />
+          </Box>
+
+          {/* USER MENU */}
+          {user && (
+            <Menu placement="bottom-end">
+              <MenuButton>
+                <Flex
+                  align="center"
+                  gap={3}
+                  px={3}
+                  py={2}
+                  borderRadius="14px"
+                  bg={C.surface}
+                  border="1px solid"
+                  borderColor={C.border}
+                  cursor="pointer"
+                  transition="0.2s"
+                  _hover={{
+                    bg: C.surfaceHover,
+                    borderColor: C.accentBorder,
+                  }}
                 >
-                  Settings
-                </MenuItem>
-              )}
-              <Box h="1px" bg="gray.100" mx={4} my={1} />
-              <MenuItem
-                icon={<FaSignOutAlt />}
-                onClick={handleLogout}
-                color="red.500"
-                borderRadius="lg"
-                mx={2}
-                fontSize="sm"
-                _hover={{ bg: "red.50" }}
-              >
-                Logout
-              </MenuItem>
-            </MenuList>
-          </Menu>
+                  <Box position="relative">
+                    <Avatar
+                      size="sm"
+                      name={user.name}
+                      bg={getAvatarBg(
+                        user.name || ""
+                      )}
+                    />
+
+                    <Box
+                      position="absolute"
+                      bottom="0"
+                      right="0"
+                      w="10px"
+                      h="10px"
+                      borderRadius="full"
+                      bg={C.accent}
+                      border={`2px solid ${C.bg}`}
+                    />
+                  </Box>
+
+                  <Box
+                    display={{
+                      base: "none",
+                      md: "block",
+                    }}
+                  >
+                    <Text
+                      color={C.text}
+                      fontWeight="700"
+                      fontSize="13px"
+                      lineHeight="1"
+                    >
+                      {user.name}
+                    </Text>
+
+                    <Flex
+                      align="center"
+                      gap={1}
+                      mt="3px"
+                    >
+                      <Icon
+                        as={FaShieldAlt}
+                        fontSize="9px"
+                        color={C.accent}
+                      />
+
+                      <Text
+                        color={C.accent}
+                        fontSize="10px"
+                        fontWeight="700"
+                        textTransform="uppercase"
+                      >
+                        {user.role}
+                      </Text>
+                    </Flex>
+                  </Box>
+
+                  <Icon
+                    as={FaChevronDown}
+                    color={C.muted}
+                    fontSize="11px"
+                  />
+                </Flex>
+              </MenuButton>
+
+              {/* FIXED DROPDOWN */}
+              <Portal>
+                <MenuList
+                  bg="#111827"
+                  border="1px solid"
+                  borderColor={C.border}
+                  borderRadius="16px"
+                  p={2}
+                  minW="240px"
+                  zIndex="99999"
+                  boxShadow="0 25px 60px rgba(0,0,0,0.6)"
+                >
+                  {/* USER INFO */}
+                  <Box
+                    p={3}
+                    borderRadius="12px"
+                    bg={C.accentDim}
+                    mb={2}
+                  >
+                    <Text
+                      color={C.text}
+                      fontWeight="800"
+                      fontSize="14px"
+                    >
+                      {user.name}
+                    </Text>
+
+                    <Text
+                      color={C.muted}
+                      fontSize="11px"
+                      mt={1}
+                    >
+                      {user.email}
+                    </Text>
+                  </Box>
+
+                  {/* PROFILE */}
+                  <MenuItem
+                    icon={<FaUser />}
+                    borderRadius="10px"
+                    bg="transparent"
+                    color={C.text}
+                    _hover={{
+                      bg: C.surfaceHover,
+                    }}
+                    onClick={() =>
+                      navigate(
+                        "/dashboard/profile"
+                      )
+                    }
+                  >
+                    My Profile
+                  </MenuItem>
+
+                  {/* CHANGE PASSWORD */}
+                  <MenuItem
+                    icon={<FaKey />}
+                    borderRadius="10px"
+                    bg="transparent"
+                    color={C.text}
+                    _hover={{
+                      bg: C.surfaceHover,
+                    }}
+                    onClick={() =>
+                      navigate(
+                        "/dashboard/change-password"
+                      )
+                    }
+                  >
+                    Change Password
+                  </MenuItem>
+
+                  {/* SETTINGS */}
+                  {user?.role === "Admin" && (
+                    <MenuItem
+                      icon={<FaCog />}
+                      borderRadius="10px"
+                      bg="transparent"
+                      color={C.text}
+                      _hover={{
+                        bg: C.surfaceHover,
+                      }}
+                      onClick={() =>
+                        navigate(
+                          "/dashboard/settings"
+                        )
+                      }
+                    >
+                      Settings
+                    </MenuItem>
+                  )}
+
+                  <Box
+                    h="1px"
+                    bg={C.border}
+                    my={2}
+                  />
+
+                  {/* LOGOUT */}
+                  <MenuItem
+                    icon={<FaSignOutAlt />}
+                    borderRadius="10px"
+                    bg="transparent"
+                    color="#f87171"
+                    _hover={{
+                      bg: "rgba(248,113,113,0.12)",
+                    }}
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </MenuItem>
+                </MenuList>
+              </Portal>
+            </Menu>
+          )}
         </Flex>
       </Flex>
     </Box>

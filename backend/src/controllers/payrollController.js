@@ -5,21 +5,45 @@ const { calculateDeductions } = require("../services/payrollService");
 const Settings = require("../models/Settings");
 
 exports.getAllPayrolls = asyncHandler(async (req, res) => {
-    const { month, year } = req.query;
-    const query = {};
-    
+  const { month, year, search, page = 1, limit = 10 } = req.query;
+  const query = {};
+
+  // Accept YYYY-MM format from frontend
+  if (month && String(month).includes("-")) {
+    const [y, m] = month.split("-");
+    query.year  = parseInt(y);
+    query.month = parseInt(m);
+  } else {
     if (month) query.month = parseInt(month);
-    if (year) query.year = parseInt(year);
+    if (year)  query.year  = parseInt(year);
+  }
 
-    const payrolls = await Payroll.find(query)
-        .populate({
-            path: "employee",
-            select: "name employeeId department designation",
-            populate: { path: "user", select: "name" }
-        })
-        .sort({ year: -1, month: -1 });
+  const skip  = (parseInt(page) - 1) * parseInt(limit);
+  const total = await Payroll.countDocuments(query);
 
-    res.json(payrolls);
+  const payrolls = await Payroll.find(query)
+    .populate({ path: "employee", select: "name employeeId department designation" })
+    .sort({ year: -1, month: -1 })
+    .skip(skip)
+    .limit(parseInt(limit));
+
+  const records = payrolls.map(p => ({
+    _id:          p._id,
+    employeeName: p.employee?.name || "—",
+    employeeCode: p.employee?.employeeId || "",
+    department:   p.employee?.department || "",
+    designation:  p.employee?.designation || "",
+    month:        `${p.year}-${String(p.month).padStart(2, "0")}`,
+    basicSalary:  p.basicSalary,
+    allowance:    p.allowance || 0,
+    deductions:   p.deductions || 0,
+    netPay:       p.netSalary,
+    status:       p.status,
+    workingDays:  p.workingDays,
+    presentDays:  p.presentDays
+  }));
+
+  res.json({ records, total });
 });
 
 // ===============================
