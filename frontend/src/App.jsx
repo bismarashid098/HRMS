@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/auth/Login";
 import Profile from "./pages/auth/Profile";
 import Dashboard from "./pages/dashboard/Dashboard";   // your combined Dashboard + DashboardHome
@@ -64,7 +64,13 @@ function App() {
 
         {/* Profile (both roles) */}
         <Route path="profile" element={<Profile />} />
+
+        {/* Catch-all: unknown sub-routes redirect to dashboard home */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
+
+      {/* Catch-all: any unknown top-level route goes to login */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
