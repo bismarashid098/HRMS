@@ -28,22 +28,22 @@ import {
 
 import { FiBell } from "react-icons/fi";
 
-/* ── Theme ── */
+/* ── Light Theme ── */
 const C = {
-  accent: "#00E5C4",
-  accentGlow: "rgba(0,229,196,0.15)",
-  accentBorder: "rgba(0,229,196,0.22)",
-  accentDim: "rgba(0,229,196,0.08)",
+  accent:       "#0891B2",
+  accentBorder: "#BAE6FD",
+  accentDim:    "#E0F2FE",
 
-  bg: "#080E1A",
+  bg:           "#FFFFFF",
 
-  surface: "rgba(255,255,255,0.04)",
-  surfaceHover: "rgba(255,255,255,0.07)",
+  surface:      "#F1F5F9",
+  surfaceHover: "#E2E8F0",
 
-  border: "rgba(255,255,255,0.08)",
+  border:       "#E2E8F0",
 
-  text: "#E8F0FE",
-  muted: "rgba(255,255,255,0.38)",
+  text:         "#0F172A",
+  textMd:       "#334155",
+  muted:        "#64748B",
 };
 
 const avatarColors = [
@@ -92,7 +92,7 @@ const TopNavbar = ({ onMenuOpen }) => {
       position="sticky"
       top="0"
       zIndex="999"
-      backdropFilter="blur(14px)"
+      boxShadow="0 1px 3px rgba(0,0,0,0.06)"
     >
       <Flex
         justify="space-between"
@@ -165,7 +165,7 @@ const TopNavbar = ({ onMenuOpen }) => {
             >
               <Icon
                 as={FiBell}
-                color={C.text}
+                color={C.textMd}
                 fontSize="16px"
               />
             </Flex>
@@ -177,7 +177,7 @@ const TopNavbar = ({ onMenuOpen }) => {
               w="7px"
               h="7px"
               borderRadius="full"
-              bg="#ff4d4f"
+              bg="#DC2626"
             />
           </Box>
 
@@ -270,14 +270,14 @@ const TopNavbar = ({ onMenuOpen }) => {
               {/* FIXED DROPDOWN */}
               <Portal>
                 <MenuList
-                  bg="#111827"
+                  bg="white"
                   border="1px solid"
                   borderColor={C.border}
                   borderRadius="16px"
                   p={2}
                   minW="240px"
                   zIndex="99999"
-                  boxShadow="0 25px 60px rgba(0,0,0,0.6)"
+                  boxShadow="0 10px 40px rgba(0,0,0,0.12)"
                 >
                   {/* USER INFO */}
                   <Box
@@ -370,9 +370,9 @@ const TopNavbar = ({ onMenuOpen }) => {
                     icon={<FaSignOutAlt />}
                     borderRadius="10px"
                     bg="transparent"
-                    color="#f87171"
+                    color="#DC2626"
                     _hover={{
-                      bg: "rgba(248,113,113,0.12)",
+                      bg: "#FEE2E2",
                     }}
                     onClick={handleLogout}
                   >

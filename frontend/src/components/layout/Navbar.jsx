@@ -34,23 +34,23 @@ import { AuthContext } from "../../context/AuthContext";
 /* ───────────────── THEME ───────────────── */
 
 const C = {
-  accent: "#00E5C4",
-  accentGlow: "rgba(0,229,196,0.15)",
-  accentBorder: "rgba(0,229,196,0.22)",
-  accentDim: "rgba(0,229,196,0.08)",
+  accent: "#0891B2",
+  accentGlow: "rgba(8,145,178,0.15)",
+  accentBorder: "rgba(8,145,178,0.22)",
+  accentDim: "rgba(8,145,178,0.06)",
 
-  bg: "#080E1A",
+  bg: "#FFFFFF",
 
-  surface: "rgba(255,255,255,0.04)",
-  surfaceHover: "rgba(255,255,255,0.07)",
+  surface: "#F1F5F9",
+  surfaceHover: "#E2E8F0",
 
-  border: "rgba(255,255,255,0.08)",
+  border: "#E2E8F0",
 
-  text: "#E8F0FE",
-  muted: "rgba(255,255,255,0.45)",
+  text: "#0F172A",
+  muted: "#64748B",
 };
 
-const DOT_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='1' cy='1' r='1' fill='rgba(255,255,255,0.03)'/%3E%3C/svg%3E")`;
+const DOT_BG = "";
 
 const avatarColors = [
   "#065f46",
@@ -154,9 +154,9 @@ const NavIconBtn = ({ icon, badge }) => (
         w="6px"
         h="6px"
         borderRadius="full"
-        bg="#FF6B6B"
+        bg="#DC2626"
         border={`1.5px solid ${C.bg}`}
-        boxShadow="0 0 6px rgba(255,107,107,0.7)"
+        boxShadow="0 0 6px rgba(220,38,38,0.5)"
       />
     )}
   </Box>
@@ -381,7 +381,7 @@ const Navbar = () => {
             {/* ───────────────── DROPDOWN ───────────────── */}
 
             <MenuList
-              bg="#0F1623"
+              bg="#FFFFFF"
               border="1px solid"
               borderColor={C.border}
               borderRadius="14px"
@@ -389,10 +389,7 @@ const Navbar = () => {
               minW="230px"
               mt={3}
               zIndex={9999}
-              boxShadow="
-                0 24px 60px rgba(0,0,0,0.65),
-                0 0 0 1px rgba(255,255,255,0.05)
-              "
+              boxShadow="0 8px 30px rgba(0,0,0,0.12)"
             >
               {/* HEADER */}
               <Box

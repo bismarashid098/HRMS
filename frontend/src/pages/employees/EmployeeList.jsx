@@ -13,20 +13,20 @@ import {
 } from "react-icons/fa";
 import { AuthContext } from "../../context/AuthContext";
 
-/* ─── Theme constants (Matches Dashboard) ─── */
+/* ─── Light Theme ─── */
 const T = {
-  bg:       "#0D1117",
-  surface:  "#161B22",
-  surface2: "#1C2330",
-  border:   "#30363D",
-  teal:     "#00D4B4",
-  tealDim:  "#00A896",
-  blue:     "#58A6FF",
-  red:      "#FF6B6B",
-  amber:    "#F0A500",
-  green:    "#3FB950",
-  text:     "#E6EDF3",
-  muted:    "#8B949E",
+  bg:       "#F8FAFC",
+  surface:  "#FFFFFF",
+  surface2: "#F1F5F9",
+  border:   "#E2E8F0",
+  teal:     "#0891B2",
+  tealDim:  "#0E7490",
+  blue:     "#1D4ED8",
+  red:      "#DC2626",
+  amber:    "#D97706",
+  green:    "#059669",
+  text:     "#0F172A",
+  muted:    "#64748B",
 };
 
 /* ─── Helper functions ─── */
@@ -45,8 +45,17 @@ const getStatusColor = (status) => {
   }
 };
 
-/* ─── Stat Card (Dark themed) ─── */
-const StatCard = ({ label, value, icon, color, bg }) => (
+const getStatusBg = (status) => {
+  switch (status) {
+    case "Active": return "#DCFCE7";
+    case "Resigned": return "#FEF3C7";
+    case "Terminated": return "#FEE2E2";
+    default: return T.surface2;
+  }
+};
+
+/* ─── Stat Card ─── */
+const StatCard = ({ label, value, icon, color }) => (
   <Box
     bg={T.surface}
     borderRadius="14px"
@@ -57,6 +66,7 @@ const StatCard = ({ label, value, icon, color, bg }) => (
     overflow="hidden"
     _hover={{ borderColor: color, transform: "translateY(-2px)" }}
     transition="all 0.2s ease"
+    boxShadow="0 1px 3px rgba(0,0,0,0.06)"
   >
     <Box
       position="absolute"
@@ -242,8 +252,8 @@ const EmployeeList = () => {
             <Button
               leftIcon={<FaPlus />}
               bg={T.teal}
-              color={T.bg}
-              _hover={{ bg: T.tealDim, opacity: 0.9 }}
+              color="white"
+              _hover={{ bg: T.tealDim }}
               borderRadius="10px"
               size="sm"
               fontWeight="600"
@@ -264,7 +274,7 @@ const EmployeeList = () => {
       </Grid>
 
       {/* Filters */}
-      <Box bg={T.surface} borderRadius="14px" p={4} mb={4} border="1px solid" borderColor={T.border}>
+      <Box bg={T.surface} borderRadius="14px" p={4} mb={4} border="1px solid" borderColor={T.border} boxShadow="0 1px 3px rgba(0,0,0,0.05)">
         <Flex gap={3} wrap="wrap" align="center">
           <InputGroup flex="1" minW="200px">
             <InputLeftElement pointerEvents="none">
@@ -278,8 +288,8 @@ const EmployeeList = () => {
               bg={T.bg}
               border="1px solid"
               borderColor={T.border}
-              _focus={{ borderColor: T.teal, bg: T.surface2 }}
-              _hover={{ borderColor: T.muted }}
+              _focus={{ borderColor: T.teal }}
+              _hover={{ borderColor: "#CBD5E1" }}
               color={T.text}
               fontSize="sm"
             />
@@ -299,7 +309,7 @@ const EmployeeList = () => {
               fontSize="sm"
               pl={8}
               _focus={{ borderColor: T.teal }}
-              _hover={{ borderColor: T.muted }}
+              _hover={{ borderColor: "#CBD5E1" }}
             >
               <option value="All">All Status</option>
               <option value="Active">Active</option>
@@ -318,7 +328,7 @@ const EmployeeList = () => {
             color={T.text}
             fontSize="sm"
             _focus={{ borderColor: T.teal }}
-            _hover={{ borderColor: T.muted }}
+            _hover={{ borderColor: "#CBD5E1" }}
           >
             <option value="All">All Departments</option>
             {departmentOptions.map((d) => (
@@ -348,7 +358,7 @@ const EmployeeList = () => {
           <Text color={T.muted} fontSize="sm">Loading employees...</Text>
         </Flex>
       ) : error ? (
-        <Box bg="rgba(255,107,107,0.1)" borderRadius="14px" p={6} textAlign="center" border="1px solid" borderColor={T.red}>
+        <Box bg="#FEE2E2" borderRadius="14px" p={6} textAlign="center" border="1px solid" borderColor="#FECACA">
           <Text color={T.red}>{error}</Text>
         </Box>
       ) : employees.length === 0 ? (
@@ -360,7 +370,7 @@ const EmployeeList = () => {
               mt={4}
               size="sm"
               bg={T.teal}
-              color={T.bg}
+              color="white"
               borderRadius="10px"
               leftIcon={<FaPlus />}
               _hover={{ bg: T.tealDim }}
@@ -371,7 +381,7 @@ const EmployeeList = () => {
           )}
         </Box>
       ) : (
-        <Box bg={T.surface} borderRadius="14px" border="1px solid" borderColor={T.border} overflow="hidden">
+        <Box bg={T.surface} borderRadius="14px" border="1px solid" borderColor={T.border} overflow="hidden" boxShadow="0 1px 3px rgba(0,0,0,0.05)">
           <Box overflowX="auto">
             <Table variant="simple" size="sm">
               <Thead>
@@ -415,7 +425,6 @@ const EmployeeList = () => {
                 {pageEmployees.map((emp, idx) => {
                   const name = emp.name || emp.user?.name || "N/A";
                   const email = emp.email || emp.user?.email || "";
-                  const initials = getInitials(name);
                   const avatarBg = getAvatarColor(name);
                   return (
                     <Tr
@@ -471,7 +480,7 @@ const EmployeeList = () => {
                       </Td>
                       <Td py={3} borderColor={T.border}>
                         <Badge
-                          bg={`${getStatusColor(emp.employmentStatus)}20`}
+                          bg={getStatusBg(emp.employmentStatus)}
                           color={getStatusColor(emp.employmentStatus)}
                           borderRadius="full"
                           px={3}
@@ -592,9 +601,9 @@ const EmployeeList = () => {
                     borderRadius="lg"
                     variant={safePage === page ? "solid" : "outline"}
                     bg={safePage === page ? T.teal : "transparent"}
-                    color={safePage === page ? T.bg : T.muted}
+                    color={safePage === page ? "white" : T.muted}
                     borderColor={safePage === page ? T.teal : T.border}
-                    _hover={{ borderColor: T.teal, color: safePage === page ? T.bg : T.teal }}
+                    _hover={{ borderColor: T.teal, color: safePage === page ? "white" : T.teal }}
                     onClick={() => setCurrentPage(page)}
                   >
                     {page}

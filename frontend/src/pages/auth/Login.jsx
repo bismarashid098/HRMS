@@ -1,74 +1,8 @@
 
 import { useNavigate } from "react-router-dom";
-import { useState, useContext, useEffect, useRef } from "react";
+import { useState, useContext, useEffect } from "react";
 import api from "../../api/axios";
 import { AuthContext } from "../../context/AuthContext";
-
-const StarCanvas = () => {
-    const canvasRef = useRef(null);
-
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext("2d");
-        let animationId;
-
-        const resize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        };
-
-        resize();
-        window.addEventListener("resize", resize);
-
-        const stars = Array.from({ length: 220 }, () => ({
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * window.innerHeight,
-            r: Math.random() * 1.5 + 0.3,
-            alpha: Math.random(),
-            speed: Math.random() * 0.3 + 0.05,
-            drift: (Math.random() - 0.5) * 0.2,
-        }));
-
-        const draw = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            stars.forEach((s) => {
-                s.y -= s.speed;
-                s.x += s.drift;
-
-                if (s.y < 0) {
-                    s.y = canvas.height;
-                    s.x = Math.random() * canvas.width;
-                }
-
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255,255,255,${s.alpha})`;
-                ctx.fill();
-            });
-
-            animationId = requestAnimationFrame(draw);
-        };
-
-        draw();
-
-        return () => {
-            cancelAnimationFrame(animationId);
-            window.removeEventListener("resize", resize);
-        };
-    }, []);
-
-    return (
-        <canvas
-            ref={canvasRef}
-            style={{
-                position: "fixed",
-                inset: 0,
-                zIndex: 0,
-            }}
-        />
-    );
-};
 
 const Login = () => {
     const navigate = useNavigate();
@@ -120,34 +54,9 @@ const Login = () => {
             minHeight: "100vh",
             overflow: "hidden",
             position: "relative",
-            background:
-                "radial-gradient(circle at top left, #18213b 0%, transparent 40%), radial-gradient(circle at bottom right, #0f172a 0%, transparent 40%), #020617",
-            color: "white",
-            fontFamily: "Inter, sans-serif",
-        },
-
-        blob1: {
-            position: "absolute",
-            width: 300,
-            height: 300,
-            borderRadius: "50%",
-            background: "#10b981",
-            filter: "blur(120px)",
-            top: -80,
-            left: -80,
-            opacity: 0.2,
-        },
-
-        blob2: {
-            position: "absolute",
-            width: 300,
-            height: 300,
-            borderRadius: "50%",
-            background: "#06b6d4",
-            filter: "blur(120px)",
-            bottom: -80,
-            right: -80,
-            opacity: 0.2,
+            background: "linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 40%, #F8FAFC 100%)",
+            color: "#0F172A",
+            fontFamily: "Inter, system-ui, sans-serif",
         },
 
         container: {
@@ -168,12 +77,11 @@ const Login = () => {
         card: {
             width: "100%",
             maxWidth: 460,
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            backdropFilter: "blur(20px)",
-            borderRadius: 30,
+            background: "#FFFFFF",
+            border: "1px solid #E2E8F0",
+            borderRadius: 24,
             padding: 40,
-            boxShadow: "0 20px 60px rgba(0,0,0,0.45)",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05)",
             animation: "fadeUp 0.7s ease",
         },
 
@@ -188,47 +96,63 @@ const Login = () => {
             width: 46,
             height: 46,
             borderRadius: 14,
-            background: "linear-gradient(135deg,#10b981,#06b6d4)",
+            background: "linear-gradient(135deg, #0891B2, #0EA5E9)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontWeight: "bold",
             fontSize: 20,
+            color: "white",
+        },
+
+        logoText: {
+            fontSize: 20,
+            fontWeight: 700,
+            color: "#0F172A",
         },
 
         title: {
-            fontSize: 42,
+            fontSize: 36,
             fontWeight: 800,
             marginBottom: 10,
+            color: "#0F172A",
         },
 
         subtitle: {
-            color: "rgba(255,255,255,0.7)",
+            color: "#64748B",
             marginBottom: 30,
             lineHeight: 1.6,
+            fontSize: 15,
         },
 
         form: {
             display: "flex",
             flexDirection: "column",
-            gap: 22,
+            gap: 20,
         },
 
         field: {
             display: "flex",
             flexDirection: "column",
-            gap: 10,
+            gap: 8,
+        },
+
+        label: {
+            fontSize: 14,
+            fontWeight: 600,
+            color: "#334155",
         },
 
         input: {
-            height: 56,
-            borderRadius: 16,
-            border: "1px solid rgba(255,255,255,0.1)",
-            background: "rgba(255,255,255,0.06)",
+            height: 52,
+            borderRadius: 12,
+            border: "1px solid #E2E8F0",
+            background: "#F8FAFC",
             padding: "0 18px",
-            color: "white",
+            color: "#0F172A",
             fontSize: 15,
             outline: "none",
+            transition: "border-color 0.2s",
         },
 
         passWrap: {
@@ -242,7 +166,7 @@ const Login = () => {
             transform: "translateY(-50%)",
             background: "transparent",
             border: "none",
-            color: "white",
+            color: "#64748B",
             cursor: "pointer",
             fontSize: 18,
         },
@@ -252,33 +176,38 @@ const Login = () => {
             justifyContent: "space-between",
             alignItems: "center",
             fontSize: 14,
+            color: "#334155",
         },
 
         forgotBtn: {
             border: "none",
             background: "transparent",
-            color: "#10b981",
+            color: "#0891B2",
             cursor: "pointer",
             fontWeight: 600,
+            fontSize: 14,
         },
 
         button: {
-            height: 58,
+            height: 54,
             border: "none",
-            borderRadius: 18,
-            background: "linear-gradient(135deg,#10b981,#06b6d4)",
+            borderRadius: 14,
+            background: "linear-gradient(135deg, #0891B2, #0EA5E9)",
             color: "white",
             fontSize: 16,
             fontWeight: 700,
             cursor: "pointer",
+            boxShadow: "0 4px 14px rgba(8,145,178,0.3)",
+            transition: "opacity 0.2s",
         },
 
         error: {
-            background: "rgba(239,68,68,0.12)",
-            border: "1px solid rgba(239,68,68,0.2)",
+            background: "#FEE2E2",
+            border: "1px solid #FECACA",
             padding: 14,
-            borderRadius: 14,
-            color: "#fca5a5",
+            borderRadius: 12,
+            color: "#DC2626",
+            fontSize: 14,
         },
 
         right: {
@@ -286,35 +215,47 @@ const Login = () => {
             flexDirection: "column",
             justifyContent: "center",
             padding: 60,
+            background: "linear-gradient(135deg, #0891B2, #0EA5E9)",
+            color: "white",
         },
 
         brandTitle: {
-            fontSize: 68,
+            fontSize: 56,
             fontWeight: 800,
             lineHeight: 1.1,
             marginBottom: 24,
+            color: "white",
+        },
+
+        brandSubtitle: {
+            color: "rgba(255,255,255,0.85)",
+            lineHeight: 1.8,
+            maxWidth: 480,
+            fontSize: 16,
         },
 
         featureGrid: {
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
-            gap: 18,
+            gap: 16,
             marginTop: 40,
         },
 
         featureCard: {
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 22,
-            padding: 24,
-            backdropFilter: "blur(10px)",
+            background: "rgba(255,255,255,0.12)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            borderRadius: 18,
+            padding: 20,
+            color: "white",
+            fontSize: 14,
+            fontWeight: 500,
         },
 
         modalOverlay: {
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.6)",
-            backdropFilter: "blur(8px)",
+            background: "rgba(15,23,42,0.4)",
+            backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -324,10 +265,24 @@ const Login = () => {
         modal: {
             width: "100%",
             maxWidth: 420,
-            background: "#0f172a",
-            borderRadius: 28,
+            background: "white",
+            borderRadius: 24,
             padding: 40,
-            border: "1px solid rgba(255,255,255,0.08)",
+            border: "1px solid #E2E8F0",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.12)",
+        },
+
+        modalTitle: {
+            fontSize: 22,
+            fontWeight: 700,
+            color: "#0F172A",
+            marginBottom: 8,
+        },
+
+        modalSub: {
+            color: "#64748B",
+            marginBottom: 24,
+            fontSize: 14,
         },
     };
 
@@ -338,22 +293,21 @@ const Login = () => {
                     @keyframes fadeUp {
                         from {
                             opacity: 0;
-                            transform: translateY(30px);
+                            transform: translateY(24px);
                         }
                         to {
                             opacity: 1;
                             transform: translateY(0);
                         }
                     }
+                    input:focus {
+                        border-color: #0891B2 !important;
+                        box-shadow: 0 0 0 3px rgba(8,145,178,0.1);
+                    }
                 `}
             </style>
 
             <div style={styles.root}>
-                <StarCanvas />
-
-                <div style={styles.blob1}></div>
-                <div style={styles.blob2}></div>
-
                 {forgotOpen && (
                     <div
                         style={styles.modalOverlay}
@@ -365,16 +319,11 @@ const Login = () => {
                         >
                             {!forgotSuccess ? (
                                 <>
-                                    <h2 style={{ marginBottom: 10 }}>
+                                    <h2 style={styles.modalTitle}>
                                         Forgot Password
                                     </h2>
 
-                                    <p
-                                        style={{
-                                            color: "rgba(255,255,255,0.7)",
-                                            marginBottom: 24,
-                                        }}
-                                    >
+                                    <p style={styles.modalSub}>
                                         Enter your email to receive reset link.
                                     </p>
 
@@ -390,6 +339,7 @@ const Login = () => {
                                                 ...styles.input,
                                                 width: "100%",
                                                 marginBottom: 20,
+                                                boxSizing: "border-box",
                                             }}
                                             required
                                         />
@@ -416,11 +366,11 @@ const Login = () => {
                                         ✅
                                     </div>
 
-                                    <h2>Email Sent</h2>
+                                    <h2 style={{ color: "#0F172A" }}>Email Sent</h2>
 
                                     <p
                                         style={{
-                                            color: "rgba(255,255,255,0.7)",
+                                            color: "#64748B",
                                             marginTop: 12,
                                         }}
                                     >
@@ -437,8 +387,7 @@ const Login = () => {
                         <div style={styles.card}>
                             <div style={styles.logo}>
                                 <div style={styles.logoIcon}>W</div>
-
-                                <h2>WorkSphere</h2>
+                                <span style={styles.logoText}>WorkSphere</span>
                             </div>
 
                             <h1 style={styles.title}>Welcome Back</h1>
@@ -452,7 +401,7 @@ const Login = () => {
                                 style={styles.form}
                             >
                                 <div style={styles.field}>
-                                    <label>Email Address</label>
+                                    <label style={styles.label}>Email Address</label>
 
                                     <input
                                         type="email"
@@ -467,7 +416,7 @@ const Login = () => {
                                 </div>
 
                                 <div style={styles.field}>
-                                    <label>Password</label>
+                                    <label style={styles.label}>Password</label>
 
                                     <div style={styles.passWrap}>
                                         <input
@@ -480,6 +429,7 @@ const Login = () => {
                                             style={{
                                                 ...styles.input,
                                                 width: "100%",
+                                                boxSizing: "border-box",
                                             }}
                                             required
                                         />
@@ -497,7 +447,7 @@ const Login = () => {
                                 </div>
 
                                 <div style={styles.options}>
-                                    <label>
+                                    <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                         <input type="checkbox" /> Remember me
                                     </label>
 
@@ -532,13 +482,7 @@ const Login = () => {
                             workforce smarter.
                         </h1>
 
-                        <p
-                            style={{
-                                color: "rgba(255,255,255,0.7)",
-                                lineHeight: 1.8,
-                                maxWidth: 600,
-                            }}
-                        >
+                        <p style={styles.brandSubtitle}>
                             Powerful all-in-one HRMS solution for attendance,
                             payroll, employee management and analytics.
                         </p>

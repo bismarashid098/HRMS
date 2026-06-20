@@ -11,20 +11,20 @@ import {
   FaMoneyBillWave, FaCalendarAlt, FaClock, FaBuilding,
 } from "react-icons/fa";
 
-/* ─── Theme constants (Matches Dashboard) ─── */
+/* ─── Light Theme ─── */
 const T = {
-  bg:       "#0D1117",
-  surface:  "#161B22",
-  surface2: "#1C2330",
-  border:   "#30363D",
-  teal:     "#00D4B4",
-  tealDim:  "#00A896",
-  blue:     "#58A6FF",
-  red:      "#FF6B6B",
-  amber:    "#F0A500",
-  green:    "#3FB950",
-  text:     "#E6EDF3",
-  muted:    "#8B949E",
+  bg:       "#F8FAFC",
+  surface:  "#FFFFFF",
+  surface2: "#F1F5F9",
+  border:   "#E2E8F0",
+  teal:     "#0891B2",
+  tealDim:  "#0E7490",
+  blue:     "#1D4ED8",
+  red:      "#DC2626",
+  amber:    "#D97706",
+  green:    "#059669",
+  text:     "#0F172A",
+  muted:    "#64748B",
 };
 
 /* ─── Helper Components ─── */
@@ -170,7 +170,7 @@ const EmployeeForm = () => {
       <Box maxW="1000px" mx="auto">
         {/* Header Banner */}
         <Box
-          bg={`linear-gradient(135deg, ${T.surface2} 0%, ${T.bg} 100%)`}
+          bg={`linear-gradient(135deg, #F0F9FF 0%, #F8FAFC 100%)`}
           borderRadius="14px"
           p={6}
           mb={6}
@@ -178,17 +178,18 @@ const EmployeeForm = () => {
           overflow="hidden"
           border="1px solid"
           borderColor={T.border}
+          boxShadow="0 1px 3px rgba(0,0,0,0.05)"
         >
           <Box
             position="absolute" top={-8} right={-8} w="150px" h="150px"
-            borderRadius="full" bg={`${T.teal}10`}
+            borderRadius="full" bg={`${T.teal}08`}
           />
           <Flex justify="space-between" align="center" position="relative" wrap="wrap" gap={3}>
             <Box>
               <Flex align="center" gap={2} mb={1}>
                 <Badge
                   bg={T.surface2}
-                  color={T.text}
+                  color={T.muted}
                   borderRadius="full"
                   px={3}
                   py={1}
@@ -223,8 +224,8 @@ const EmployeeForm = () => {
               <Button
                 leftIcon={<FaSave />}
                 bg={T.teal}
-                color={T.bg}
-                _hover={{ bg: T.tealDim, opacity: 0.9 }}
+                color="white"
+                _hover={{ bg: T.tealDim }}
                 onClick={handleSubmit}
                 isLoading={loading}
                 loadingText="Saving..."
@@ -248,6 +249,7 @@ const EmployeeForm = () => {
             borderColor={T.border}
             transition="all 0.2s"
             _hover={{ borderColor: T.teal }}
+            boxShadow="0 1px 3px rgba(0,0,0,0.05)"
           >
             <SectionHeader icon={FaUser} title="Personal Information" subtitle="Basic identity details" />
             <VStack spacing={4} align="stretch">
@@ -266,8 +268,8 @@ const EmployeeForm = () => {
                     bg={T.bg}
                     borderColor={T.border}
                     color={T.text}
-                    _focus={{ borderColor: T.teal, bg: T.surface2 }}
-                    _hover={{ borderColor: T.muted }}
+                    _focus={{ borderColor: T.teal }}
+                    _hover={{ borderColor: "#CBD5E1" }}
                     _placeholder={{ color: T.muted }}
                   />
                 </InputGroup>
@@ -284,8 +286,8 @@ const EmployeeForm = () => {
                   bg={T.bg}
                   borderColor={T.border}
                   color={T.text}
-                  _focus={{ borderColor: T.teal, bg: T.surface2 }}
-                  _hover={{ borderColor: T.muted }}
+                  _focus={{ borderColor: T.teal }}
+                  _hover={{ borderColor: "#CBD5E1" }}
                   _placeholder={{ color: T.muted }}
                 />
               </FormControl>
@@ -302,8 +304,8 @@ const EmployeeForm = () => {
                     bg={T.bg}
                     borderColor={T.border}
                     color={T.text}
-                    _focus={{ borderColor: T.teal, bg: T.surface2 }}
-                    _hover={{ borderColor: T.muted }}
+                    _focus={{ borderColor: T.teal }}
+                    _hover={{ borderColor: "#CBD5E1" }}
                   >
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
@@ -322,8 +324,8 @@ const EmployeeForm = () => {
                     bg={T.bg}
                     borderColor={T.border}
                     color={T.text}
-                    _focus={{ borderColor: T.teal, bg: T.surface2 }}
-                    _hover={{ borderColor: T.muted }}
+                    _focus={{ borderColor: T.teal }}
+                    _hover={{ borderColor: "#CBD5E1" }}
                   >
                     <option value="Islam">Islam</option>
                     <option value="Christianity">Christianity</option>
@@ -344,6 +346,7 @@ const EmployeeForm = () => {
             borderColor={T.border}
             transition="all 0.2s"
             _hover={{ borderColor: T.blue }}
+            boxShadow="0 1px 3px rgba(0,0,0,0.05)"
           >
             <SectionHeader icon={FaBriefcase} title="Job Details" subtitle="Position and employment information" color={T.blue} />
             <VStack spacing={4} align="stretch">
@@ -362,8 +365,8 @@ const EmployeeForm = () => {
                     bg={T.bg}
                     borderColor={T.border}
                     color={T.text}
-                    _focus={{ borderColor: T.blue, bg: T.surface2 }}
-                    _hover={{ borderColor: T.muted }}
+                    _focus={{ borderColor: T.blue }}
+                    _hover={{ borderColor: "#CBD5E1" }}
                     _placeholder={{ color: T.muted }}
                   />
                 </InputGroup>
@@ -384,8 +387,8 @@ const EmployeeForm = () => {
                     bg={T.bg}
                     borderColor={T.border}
                     color={T.text}
-                    _focus={{ borderColor: T.blue, bg: T.surface2 }}
-                    _hover={{ borderColor: T.muted }}
+                    _focus={{ borderColor: T.blue }}
+                    _hover={{ borderColor: "#CBD5E1" }}
                     _placeholder={{ color: T.muted }}
                   />
                 </InputGroup>
@@ -407,8 +410,8 @@ const EmployeeForm = () => {
                       bg={T.bg}
                       borderColor={T.border}
                       color={T.text}
-                      _focus={{ borderColor: T.blue, bg: T.surface2 }}
-                      _hover={{ borderColor: T.muted }}
+                      _focus={{ borderColor: T.blue }}
+                      _hover={{ borderColor: "#CBD5E1" }}
                     />
                   </InputGroup>
                 </FormControl>
@@ -428,8 +431,8 @@ const EmployeeForm = () => {
                       bg={T.bg}
                       borderColor={T.border}
                       color={T.text}
-                      _focus={{ borderColor: T.blue, bg: T.surface2 }}
-                      _hover={{ borderColor: T.muted }}
+                      _focus={{ borderColor: T.blue }}
+                      _hover={{ borderColor: "#CBD5E1" }}
                     />
                   </InputGroup>
                 </FormControl>
@@ -446,8 +449,8 @@ const EmployeeForm = () => {
                     bg={T.bg}
                     borderColor={T.border}
                     color={T.text}
-                    _focus={{ borderColor: T.blue, bg: T.surface2 }}
-                    _hover={{ borderColor: T.muted }}
+                    _focus={{ borderColor: T.blue }}
+                    _hover={{ borderColor: "#CBD5E1" }}
                   >
                     <option value="Active">Active</option>
                     <option value="Resigned">Resigned</option>
@@ -467,6 +470,7 @@ const EmployeeForm = () => {
             borderColor={T.border}
             transition="all 0.2s"
             _hover={{ borderColor: T.amber }}
+            boxShadow="0 1px 3px rgba(0,0,0,0.05)"
           >
             <SectionHeader icon={FaMoneyBillWave} title="Compensation" subtitle="Salary and financial details" color={T.amber} />
             <VStack spacing={4} align="stretch">
@@ -486,8 +490,8 @@ const EmployeeForm = () => {
                     bg={T.bg}
                     borderColor={T.border}
                     color={T.text}
-                    _focus={{ borderColor: T.amber, bg: T.surface2 }}
-                    _hover={{ borderColor: T.muted }}
+                    _focus={{ borderColor: T.amber }}
+                    _hover={{ borderColor: "#CBD5E1" }}
                     _placeholder={{ color: T.muted }}
                   />
                 </InputGroup>
@@ -508,8 +512,8 @@ const EmployeeForm = () => {
                   bg={T.bg}
                   borderColor={T.border}
                   color={T.text}
-                  _focus={{ borderColor: T.amber, bg: T.surface2 }}
-                  _hover={{ borderColor: T.muted }}
+                  _focus={{ borderColor: T.amber }}
+                  _hover={{ borderColor: "#CBD5E1" }}
                 >
                   {[0,1,2,3,4,5,6,7,8].map(n => (
                     <option key={n} value={n}>
@@ -522,7 +526,7 @@ const EmployeeForm = () => {
                 </Text>
               </FormControl>
 
-              <Alert status="info" bg={`${T.amber}10`} border="1px solid" borderColor={`${T.amber}30`} borderRadius="10px">
+              <Alert status="info" bg="#FEF3C7" border="1px solid" borderColor="#FDE68A" borderRadius="10px">
                 <AlertIcon color={T.amber} />
                 <Text fontSize="xs" color={T.muted}>
                   Additional allowances and deductions can be configured during payroll processing.
@@ -540,6 +544,7 @@ const EmployeeForm = () => {
             borderColor={T.border}
             transition="all 0.2s"
             _hover={{ borderColor: T.teal }}
+            boxShadow="0 1px 3px rgba(0,0,0,0.05)"
           >
             <SectionHeader icon={FaPhone} title="Contact Information" subtitle="Phone and address details" />
             <VStack spacing={4} align="stretch">
@@ -558,8 +563,8 @@ const EmployeeForm = () => {
                     bg={T.bg}
                     borderColor={T.border}
                     color={T.text}
-                    _focus={{ borderColor: T.teal, bg: T.surface2 }}
-                    _hover={{ borderColor: T.muted }}
+                    _focus={{ borderColor: T.teal }}
+                    _hover={{ borderColor: "#CBD5E1" }}
                     _placeholder={{ color: T.muted }}
                   />
                 </InputGroup>
@@ -576,8 +581,8 @@ const EmployeeForm = () => {
                   bg={T.bg}
                   borderColor={T.border}
                   color={T.text}
-                  _focus={{ borderColor: T.teal, bg: T.surface2 }}
-                  _hover={{ borderColor: T.muted }}
+                  _focus={{ borderColor: T.teal }}
+                  _hover={{ borderColor: "#CBD5E1" }}
                   _placeholder={{ color: T.muted }}
                 />
               </FormControl>
@@ -593,6 +598,7 @@ const EmployeeForm = () => {
           mt={5}
           border="1px solid"
           borderColor={T.border}
+          boxShadow="0 1px 3px rgba(0,0,0,0.05)"
         >
           <Flex justify="space-between" align="center" wrap="wrap" gap={3}>
             <Box>
@@ -618,8 +624,8 @@ const EmployeeForm = () => {
               <Button
                 leftIcon={<FaSave />}
                 bg={T.teal}
-                color={T.bg}
-                _hover={{ bg: T.tealDim, opacity: 0.9 }}
+                color="white"
+                _hover={{ bg: T.tealDim }}
                 onClick={handleSubmit}
                 isLoading={loading}
                 loadingText="Saving..."

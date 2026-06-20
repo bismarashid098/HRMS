@@ -13,31 +13,35 @@ import {
   FaCalendarCheck, FaClock, FaCalendarTimes, FaCalendarAlt, FaMoneyBillWave
 } from "react-icons/fa";
 
-/* ─── Dark Theme (matches Dashboard) ─── */
+/* ─── Light Theme ─── */
 const T = {
-  bg:       "#0D1117",
-  surface:  "#161B22",
-  surface2: "#1C2330",
-  border:   "#30363D",
-  teal:     "#00D4B4",
-  tealDim:  "#00A896",
-  blue:     "#58A6FF",
-  red:      "#FF6B6B",
-  amber:    "#F0A500",
-  green:    "#3FB950",
-  text:     "#E6EDF3",
-  muted:    "#8B949E",
+  bg:       "#F8FAFC",
+  surface:  "#FFFFFF",
+  surface2: "#F1F5F9",
+  border:   "#E2E8F0",
+  teal:     "#0891B2",
+  tealDim:  "#0E7490",
+  blue:     "#1D4ED8",
+  red:      "#DC2626",
+  amber:    "#D97706",
+  green:    "#059669",
+  text:     "#0F172A",
+  muted:    "#64748B",
 };
 
 const statusColors = { Approved: T.green, Rejected: T.red, Pending: T.amber };
-const typeColors = { Casual: T.blue, Sick: T.red, Annual: T.green };
+const statusBgs    = { Approved: "#DCFCE7", Rejected: "#FEE2E2", Pending: "#FEF3C7" };
+const typeColors   = { Casual: T.blue, Sick: T.red, Annual: T.green };
+const typeBgs      = { Casual: "#DBEAFE", Sick: "#FEE2E2", Annual: "#DCFCE7" };
 const avatarBgColors = ["#065f46", "#1d4ed8", "#7c3aed", "#d97706", "#dc2626"];
 const getAvatarBg = (name = "") => avatarBgColors[name.charCodeAt(0) % avatarBgColors.length];
 
-/* ── Stat Card (Dark) ── */
+/* ── Stat Card ── */
 const StatCard = ({ label, value, color, icon }) => (
-  <Box bg={T.surface} borderRadius="14px" p={4} border={`1px solid ${T.border}`}
-    position="relative" overflow="hidden" _hover={{ borderColor: color, transform: "translateY(-2px)" }} transition="all 0.2s">
+  <Box bg={T.surface} borderRadius="14px" p={4} border="1px solid" borderColor={T.border}
+    position="relative" overflow="hidden"
+    _hover={{ borderColor: color, transform: "translateY(-2px)" }} transition="all 0.2s"
+    boxShadow="0 1px 3px rgba(0,0,0,0.06)">
     <Box position="absolute" top="0" left="0" right="0" h="2px" bg={`linear-gradient(90deg, ${color}, transparent)`} />
     <Flex align="center" justify="space-between">
       <Box>
@@ -161,7 +165,7 @@ const Leaves = () => {
   return (
     <Box bg={T.bg} minH="100vh" p={5}>
       <Box maxW="1400px" mx="auto">
-        {/* Header Banner */}
+        {/* Header */}
         <Flex justify="space-between" align="center" mb={5} wrap="wrap" gap={3}>
           <Box>
             <Text fontSize="xl" fontWeight="700" color={T.text}>Leave Management</Text>
@@ -172,7 +176,7 @@ const Leaves = () => {
               _hover={{ borderColor: T.green, color: T.green }} size="sm" borderRadius="10px"
               onClick={handleExport} isDisabled={!filteredLeaves.length}>Export</Button>
             {isAdmin && (
-              <Button leftIcon={<FaPlus />} bg={T.teal} color={T.bg} _hover={{ bg: T.tealDim }}
+              <Button leftIcon={<FaPlus />} bg={T.teal} color="white" _hover={{ bg: T.tealDim }}
                 size="sm" fontWeight="bold" borderRadius="10px" onClick={onOpen}>Add Leave</Button>
             )}
           </Flex>
@@ -189,7 +193,8 @@ const Leaves = () => {
         </Grid>
 
         {/* Filters */}
-        <Box bg={T.surface} borderRadius="14px" p={4} mb={4} border={`1px solid ${T.border}`}>
+        <Box bg={T.surface} borderRadius="14px" p={4} mb={4} border="1px solid" borderColor={T.border}
+          boxShadow="0 1px 3px rgba(0,0,0,0.05)">
           <Flex gap={3} wrap="wrap" align="flex-end">
             <InputGroup flex="1" minW="200px">
               <InputLeftElement pointerEvents="none"><Icon as={FaSearch} color={T.muted} fontSize="13px" /></InputLeftElement>
@@ -226,7 +231,8 @@ const Leaves = () => {
         </Box>
 
         {/* Table */}
-        <Box bg={T.surface} borderRadius="14px" border={`1px solid ${T.border}`} overflow="hidden">
+        <Box bg={T.surface} borderRadius="14px" border="1px solid" borderColor={T.border} overflow="hidden"
+          boxShadow="0 1px 3px rgba(0,0,0,0.05)">
           <Box overflowX="auto">
             <Table variant="simple" size="sm">
               <Thead>
@@ -243,7 +249,7 @@ const Leaves = () => {
               <Tbody>
                 {leaves.length === 0 ? (
                   <Tr><Td colSpan={isAdmin ? 7 : 5} textAlign="center" py={12}>
-                    <Icon as={FaCalendarAlt} fontSize="40px" color={T.muted} opacity={0.5} mb={3} display="block" mx="auto" />
+                    <Icon as={FaCalendarAlt} fontSize="40px" color={T.muted} opacity={0.4} mb={3} display="block" mx="auto" />
                     <Text color={T.muted}>No leave records found.</Text>
                   </Td></Tr>
                 ) : filteredLeaves.length === 0 ? (
@@ -265,7 +271,7 @@ const Leaves = () => {
                           </Td>
                         )}
                         <Td borderColor={T.border} py={3}>
-                          <Badge bg={`${typeColors[leave.type] || T.muted}20`} color={typeColors[leave.type] || T.muted} borderRadius="full" px={2} py={0.5} fontSize="xs">{leave.type}</Badge>
+                          <Badge bg={typeBgs[leave.type] || T.surface2} color={typeColors[leave.type] || T.muted} borderRadius="full" px={2} py={0.5} fontSize="xs">{leave.type}</Badge>
                         </Td>
                         <Td borderColor={T.border} py={3}>
                           <Text fontSize="sm" color={T.text}>{new Date(leave.fromDate).toLocaleDateString()}</Text>
@@ -279,18 +285,18 @@ const Leaves = () => {
                           <Text fontSize="sm" color={T.muted} noOfLines={2} title={leave.reason}>{leave.reason}</Text>
                         </Td>
                         <Td borderColor={T.border} py={3}>
-                          <Badge bg={`${statusColors[leave.status] || T.muted}20`} color={statusColors[leave.status] || T.muted} borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold">{leave.status}</Badge>
+                          <Badge bg={statusBgs[leave.status] || T.surface2} color={statusColors[leave.status] || T.muted} borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold">{leave.status}</Badge>
                         </Td>
                         {isAdmin && (
                           <Td borderColor={T.border} py={3}>
                             {leave.status === "Pending" && (
                               <HStack spacing={1}>
-                                <Button size="xs" bg={`${T.green}20`} color={T.green} border={`1px solid ${T.green}30`}
-                                  _hover={{ bg: T.green, color: T.bg }} leftIcon={<FaCheck />} borderRadius="8px"
+                                <Button size="xs" bg="#DCFCE7" color={T.green} border="1px solid" borderColor="#BBF7D0"
+                                  _hover={{ bg: T.green, color: "white" }} leftIcon={<FaCheck />} borderRadius="8px"
                                   onClick={() => updateStatus(leave._id, "Approved")} isLoading={actionLoading === leave._id}
                                   isDisabled={actionLoading && actionLoading !== leave._id}>Approve</Button>
-                                <Button size="xs" bg={`${T.red}20`} color={T.red} border={`1px solid ${T.red}30`}
-                                  _hover={{ bg: T.red, color: T.bg }} leftIcon={<FaTimes />} borderRadius="8px"
+                                <Button size="xs" bg="#FEE2E2" color={T.red} border="1px solid" borderColor="#FECACA"
+                                  _hover={{ bg: T.red, color: "white" }} leftIcon={<FaTimes />} borderRadius="8px"
                                   onClick={() => updateStatus(leave._id, "Rejected")} isLoading={actionLoading === leave._id}
                                   isDisabled={actionLoading && actionLoading !== leave._id}>Reject</Button>
                               </HStack>
@@ -306,11 +312,11 @@ const Leaves = () => {
           </Box>
         </Box>
 
-        {/* Apply Leave Modal (Dark) */}
+        {/* Add Leave Modal */}
         <Modal isOpen={isOpen} onClose={onClose} size="md" isCentered>
-          <ModalOverlay bg="blackAlpha.600" />
-          <ModalContent bg={T.surface} borderRadius="14px">
-            <ModalHeader borderBottom={`1px solid ${T.border}`} fontSize="md" fontWeight="bold" color={T.text}>Add Manual Leave</ModalHeader>
+          <ModalOverlay bg="rgba(15,23,42,0.4)" />
+          <ModalContent bg={T.surface} borderRadius="14px" border="1px solid" borderColor={T.border}>
+            <ModalHeader borderBottom="1px solid" borderColor={T.border} fontSize="md" fontWeight="bold" color={T.text}>Add Manual Leave</ModalHeader>
             <ModalCloseButton color={T.muted} />
             <ModalBody py={5}>
               {isAdmin && (
@@ -350,9 +356,9 @@ const Leaves = () => {
                   bg={T.bg} borderColor={T.border} color={T.text} _focus={{ borderColor: T.teal }} />
               </FormControl>
             </ModalBody>
-            <ModalFooter borderTop={`1px solid ${T.border}`} gap={2}>
+            <ModalFooter borderTop="1px solid" borderColor={T.border} gap={2}>
               <Button variant="ghost" color={T.muted} _hover={{ bg: T.surface2 }} onClick={onClose} borderRadius="10px">Cancel</Button>
-              <Button bg={T.teal} color={T.bg} _hover={{ bg: T.tealDim }} borderRadius="10px" onClick={handleApplyLeave} isLoading={submitting} loadingText="Submitting">Submit Request</Button>
+              <Button bg={T.teal} color="white" _hover={{ bg: T.tealDim }} borderRadius="10px" onClick={handleApplyLeave} isLoading={submitting} loadingText="Submitting">Submit Request</Button>
             </ModalFooter>
           </ModalContent>
         </Modal>

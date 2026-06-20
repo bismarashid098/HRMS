@@ -13,9 +13,9 @@ import * as XLSX from "xlsx";
 import { AuthContext } from "../../context/AuthContext";
 
 const T = {
-  bg: "#0D1117", surface: "#161B22", surface2: "#1C2330", border: "#30363D",
-  teal: "#00D4B4", green: "#3FB950", red: "#FF6B6B", amber: "#F0A500",
-  text: "#E6EDF3", muted: "#8B949E"
+  bg: "#F8FAFC", surface: "#FFFFFF", surface2: "#F1F5F9", border: "#E2E8F0",
+  teal: "#0891B2", tealDim: "#0E7490", green: "#059669", red: "#DC2626", amber: "#D97706",
+  text: "#0F172A", muted: "#64748B"
 };
 
 const StatCard = ({ label, value, color, icon }) => (
@@ -101,7 +101,7 @@ const AdvanceReport = () => {
             <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} w="150px" bg={T.bg} borderColor={T.border} color={T.text}><option value="All">All Status</option><option value="Approved">Approved</option><option value="Pending">Pending</option><option value="Rejected">Rejected</option></Select>
             <Input type="date" placeholder="From" value={fromDate} onChange={(e) => setFromDate(e.target.value)} w="160px" bg={T.bg} borderColor={T.border} color={T.text} />
             <Input type="date" placeholder="To" value={toDate} onChange={(e) => setToDate(e.target.value)} w="160px" bg={T.bg} borderColor={T.border} color={T.text} />
-            <Button bg={T.teal} color={T.bg} onClick={fetchReport} px={6}>Generate</Button>
+            <Button bg={T.teal} color="white" _hover={{ bg: T.tealDim }} onClick={fetchReport} px={6} borderRadius="10px">Generate</Button>
           </Flex>
         </Box>
 
@@ -129,7 +129,7 @@ const AdvanceReport = () => {
                       <Td borderColor={T.border}>{new Date(req.requestedDate).toLocaleDateString()}</Td>
                       <Td borderColor={T.border}>{req.approvedDate ? new Date(req.approvedDate).toLocaleDateString() : "—"}</Td>
                       <Td borderColor={T.border} maxW="250px"><Text noOfLines={2} color={T.muted}>{req.reason}</Text></Td>
-                      <Td borderColor={T.border}><Badge bg={req.status === "Approved" ? `${T.green}20` : req.status === "Pending" ? `${T.amber}20` : `${T.red}20`} color={req.status === "Approved" ? T.green : req.status === "Pending" ? T.amber : T.red}>{req.status}</Badge></Td>
+                      <Td borderColor={T.border}><Badge bg={req.status === "Approved" ? "#DCFCE7" : req.status === "Pending" ? "#FEF3C7" : "#FEE2E2"} color={req.status === "Approved" ? T.green : req.status === "Pending" ? T.amber : T.red} borderRadius="full" px={2}>{req.status}</Badge></Td>
                     </Tr>
                   ))}
                 </Tbody>

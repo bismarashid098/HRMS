@@ -14,11 +14,11 @@ import api from "../../api/axios";
 import * as XLSX from "xlsx";
 import { AuthContext } from "../../context/AuthContext";
 
-/* ─── Dark Theme ─── */
+/* ─── Light Theme ─── */
 const T = {
-  bg: "#0D1117", surface: "#161B22", surface2: "#1C2330", border: "#30363D",
-  teal: "#00D4B4", blue: "#58A6FF", red: "#FF6B6B", amber: "#F0A500", green: "#3FB950",
-  text: "#E6EDF3", muted: "#8B949E"
+  bg: "#F8FAFC", surface: "#FFFFFF", surface2: "#F1F5F9", border: "#E2E8F0",
+  teal: "#0891B2", tealDim: "#0E7490", blue: "#1D4ED8", red: "#DC2626", amber: "#D97706", green: "#059669",
+  text: "#0F172A", muted: "#64748B"
 };
 
 const StatCard = ({ label, value, color, icon }) => (
@@ -100,7 +100,7 @@ const PayrollReport = () => {
             <Box><Text fontSize="xs" color={T.muted} mb={1}>Month</Text><Input type="month" value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)} w="180px" bg={T.bg} borderColor={T.border} color={T.text} borderRadius="10px" /></Box>
             <InputGroup flex="1" minW="200px"><InputLeftElement><Icon as={FaSearch} color={T.muted} /></InputLeftElement><Input placeholder="Search employee..." value={search} onChange={(e) => setSearch(e.target.value)} bg={T.bg} borderColor={T.border} color={T.text} borderRadius="10px" /></InputGroup>
             <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} w="150px" bg={T.bg} borderColor={T.border} color={T.text} borderRadius="10px"><option value="All">All Status</option><option value="Paid">Paid</option><option value="Pending">Pending</option></Select>
-            <Button bg={T.teal} color={T.bg} _hover={{ bg: T.tealDim }} onClick={fetchReport} borderRadius="10px">Generate</Button>
+            <Button bg={T.teal} color="white" _hover={{ bg: T.tealDim }} onClick={fetchReport} borderRadius="10px">Generate</Button>
           </Flex>
         </Box>
 
@@ -128,9 +128,9 @@ const PayrollReport = () => {
                       <Td borderColor={T.border}>Rs {rec.basicSalary?.toLocaleString()}</Td>
                       <Td borderColor={T.border}>Rs {rec.allowances?.toLocaleString()}</Td>
                       <Td borderColor={T.border}>Rs {rec.deductions?.toLocaleString()}</Td>
-                      <Td borderColor={T.border}><Text fontWeight="bold" color={T.teal}>Rs {rec.netPay?.toLocaleString()}</Text></Td>
-                      <Td borderColor={T.border}><Badge bg={rec.status === "Paid" ? `${T.green}20` : `${T.amber}20`} color={rec.status === "Paid" ? T.green : T.amber}>{rec.status}</Badge></Td>
-                      <Td borderColor={T.border}><IconButton icon={<FaEye />} size="xs" variant="ghost" color={T.muted} _hover={{ color: T.teal }} onClick={() => {}} /></Td>
+                      <Td borderColor={T.border}><Text fontWeight="bold" color={T.teal} fontSize="sm">Rs {rec.netPay?.toLocaleString()}</Text></Td>
+                      <Td borderColor={T.border}><Badge bg={rec.status === "Paid" ? "#DCFCE7" : "#FEF3C7"} color={rec.status === "Paid" ? T.green : T.amber} borderRadius="full" px={2}>{rec.status}</Badge></Td>
+                      <Td borderColor={T.border}><Button size="xs" variant="ghost" color={T.muted} _hover={{ color: T.teal }} onClick={() => {}}><Icon as={FaEye} /></Button></Td>
                     </Tr>
                   ))}
                 </Tbody>

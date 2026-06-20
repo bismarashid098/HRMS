@@ -7,20 +7,20 @@ import api from "../../api/axios";
 import * as XLSX from "xlsx";
 import { FaFileExcel, FaSearch, FaCalendarCheck, FaClock, FaCalendarTimes, FaCalendarAlt } from "react-icons/fa";
 
-/* ─── Dark Theme (matches Dashboard) ─── */
+/* ─── Light Theme ─── */
 const T = {
-  bg:       "#0D1117",
-  surface:  "#161B22",
-  surface2: "#1C2330",
-  border:   "#30363D",
-  teal:     "#00D4B4",
-  tealDim:  "#00A896",
-  blue:     "#58A6FF",
-  red:      "#FF6B6B",
-  amber:    "#F0A500",
-  green:    "#3FB950",
-  text:     "#E6EDF3",
-  muted:    "#8B949E",
+  bg:       "#F8FAFC",
+  surface:  "#FFFFFF",
+  surface2: "#F1F5F9",
+  border:   "#E2E8F0",
+  teal:     "#0891B2",
+  tealDim:  "#0E7490",
+  blue:     "#1D4ED8",
+  red:      "#DC2626",
+  amber:    "#D97706",
+  green:    "#059669",
+  text:     "#0F172A",
+  muted:    "#64748B",
 };
 
 const statusColors = { Approved: T.green, Rejected: T.red, Pending: T.amber };
@@ -110,7 +110,7 @@ const LeaveReport = () => {
   };
 
   if (loading) return <Flex justify="center" align="center" h="400px" direction="column" gap={3}><Spinner size="xl" color={T.teal} thickness="3px" /><Text color={T.muted} fontSize="sm">Loading report...</Text></Flex>;
-  if (error) return <Box bg="rgba(255,107,107,0.1)" borderRadius="14px" p={6} border={`1px solid ${T.red}`}><Text color={T.red}>{error}</Text></Box>;
+  if (error) return <Box bg="#FEE2E2" borderRadius="14px" p={6} border={`1px solid ${T.red}`}><Text color={T.red}>{error}</Text></Box>;
 
   return (
     <Box bg={T.bg} minH="100vh" p={5}>
@@ -199,7 +199,7 @@ const LeaveReport = () => {
                         </Flex>
                       </Td>
                       <Td borderColor={T.border} py={3}>
-                        <Badge bg={`${typeColors[leave.type] || T.muted}20`} color={typeColors[leave.type] || T.muted} borderRadius="full" px={2} fontSize="xs">{leave.type}</Badge>
+                        <Badge bg={leave.type === "Casual" ? "#DBEAFE" : leave.type === "Sick" ? "#FEE2E2" : "#DCFCE7"} color={typeColors[leave.type] || T.muted} borderRadius="full" px={2} fontSize="xs">{leave.type}</Badge>
                       </Td>
                       <Td borderColor={T.border} py={3}>
                         <Text fontSize="sm" color={T.text}>{leave.createdAt ? new Date(leave.createdAt).toLocaleDateString() : "—"}</Text>
@@ -215,7 +215,7 @@ const LeaveReport = () => {
                         <Text fontSize="sm" color={T.muted} noOfLines={2} title={leave.reason}>{leave.reason}</Text>
                       </Td>
                       <Td borderColor={T.border} py={3}>
-                        <Badge bg={`${statusColors[leave.status] || T.muted}20`} color={statusColors[leave.status] || T.muted} borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold">{leave.status}</Badge>
+                        <Badge bg={leave.status === "Approved" ? "#DCFCE7" : leave.status === "Pending" ? "#FEF3C7" : "#FEE2E2"} color={statusColors[leave.status] || T.muted} borderRadius="full" px={3} py={0.5} fontSize="xs" fontWeight="semibold">{leave.status}</Badge>
                       </Td>
                     </Tr>
                   );

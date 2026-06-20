@@ -13,14 +13,15 @@ import * as XLSX from "xlsx";
 import { AuthContext } from "../../context/AuthContext";
 import { manualAttendance } from "../../services/attendanceService";
 
-/* ─── Dark Theme ─── */
+/* ─── Light Theme ─── */
 const T = {
-  bg: "#0D1117", surface: "#161B22", surface2: "#1C2330", border: "#30363D",
-  teal: "#00D4B4", blue: "#58A6FF", red: "#FF6B6B", amber: "#F0A500", green: "#3FB950",
-  text: "#E6EDF3", muted: "#8B949E"
+  bg: "#F8FAFC", surface: "#FFFFFF", surface2: "#F1F5F9", border: "#E2E8F0",
+  teal: "#0891B2", tealDim: "#0E7490", blue: "#1D4ED8", red: "#DC2626", amber: "#D97706", green: "#059669",
+  text: "#0F172A", muted: "#64748B"
 };
 
 const statusColors = { Present: T.green, Late: T.amber, "Half Day": T.amber, Absent: T.red };
+const statusBg = { Present: "#DCFCE7", Late: "#FEF3C7", "Half Day": "#FEF3C7", Absent: "#FEE2E2" };
 const getAvatarColor = (name) => ["#065f46","#1d4ed8","#7c3aed","#d97706","#dc2626"][(name?.charCodeAt(0)||0)%5];
 
 const StatCard = ({ label, value, color, icon }) => (
@@ -100,33 +101,33 @@ const DailyAttendance = () => {
           <StatCard label="Rate" value={summary.total ? Math.round(summary.present/summary.total*100) : 0} color={T.blue} icon={FaUserCheck} />
         </Grid>
         
-        <Box bg={T.surface} p={3} borderRadius="14px" mb={4} display="flex" gap={3} flexWrap="wrap">
-          <InputGroup maxW="300px"><InputLeftElement><FaSearch color={T.muted}/></InputLeftElement><Input placeholder="Search name..." value={search} onChange={e=>setSearch(e.target.value)} bg={T.bg} borderColor={T.border} color={T.text}/></InputGroup>
-          <Select w="150px" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} bg={T.bg} borderColor={T.border}><option>All Status</option><option>Present</option><option>Late</option><option>Half Day</option><option>Absent</option></Select>
+        <Box bg={T.surface} p={3} borderRadius="14px" mb={4} border="1px solid" borderColor={T.border} display="flex" gap={3} flexWrap="wrap" boxShadow="0 1px 3px rgba(0,0,0,0.05)">
+          <InputGroup maxW="300px"><InputLeftElement pointerEvents="none"><Icon as={FaSearch} color={T.muted} fontSize="13px"/></InputLeftElement><Input placeholder="Search name..." value={search} onChange={e=>setSearch(e.target.value)} bg={T.bg} borderColor={T.border} color={T.text} borderRadius="10px" _focus={{ borderColor: T.teal }}/></InputGroup>
+          <Select w="150px" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} bg={T.bg} borderColor={T.border} color={T.text} borderRadius="10px" _focus={{ borderColor: T.teal }}><option>All Status</option><option>Present</option><option>Late</option><option>Half Day</option><option>Absent</option></Select>
         </Box>
-        
-        {loading ? <Spinner /> : (
-          <Box bg={T.surface} borderRadius="14px" overflowX="auto">
+
+        {loading ? <Flex justify="center" py={10}><Spinner color={T.teal} size="xl" /></Flex> : (
+          <Box bg={T.surface} borderRadius="14px" overflowX="auto" border="1px solid" borderColor={T.border} boxShadow="0 1px 3px rgba(0,0,0,0.05)">
             <Table variant="simple" size="sm">
-              <Thead><Tr bg={T.surface2}><Th>Employee</Th><Th>Department</Th><Th>Punch In</Th><Th>Punch Out</Th><Th>Status</Th><Th>Actions</Th></Tr></Thead>
+              <Thead><Tr bg={T.surface2}><Th borderColor={T.border} color={T.muted}>Employee</Th><Th borderColor={T.border} color={T.muted}>Department</Th><Th borderColor={T.border} color={T.muted}>Punch In</Th><Th borderColor={T.border} color={T.muted}>Punch Out</Th><Th borderColor={T.border} color={T.muted}>Status</Th><Th borderColor={T.border} color={T.muted}>Actions</Th></Tr></Thead>
               <Tbody>
                 {records.map(rec => (
                   <Tr key={rec._id} _hover={{bg:T.surface2}}>
-                    <Td><Flex align="center" gap={2}><Avatar size="xs" name={rec.name} bg={getAvatarColor(rec.name)}/><Text>{rec.name}</Text></Flex></Td>
-                    <Td>{rec.department}</Td>
-                    <Td>{rec.punchIn ? new Date(rec.punchIn).toLocaleTimeString() : "—"}</Td>
-                    <Td>{rec.punchOut ? new Date(rec.punchOut).toLocaleTimeString() : "—"}</Td>
-                    <Td><Badge bg={`${statusColors[rec.status]}20`} color={statusColors[rec.status]}>{rec.status || "Not Marked"}</Badge></Td>
-                    <Td>{isAdmin && <IconButton icon={<FaEdit/>} size="xs" onClick={()=>{ setSelectedRecord(rec); onOpen(); }} />}</Td>
+                    <Td borderColor={T.border}><Flex align="center" gap={2}><Avatar size="xs" name={rec.name} bg={getAvatarColor(rec.name)}/><Text fontSize="sm" color={T.text}>{rec.name}</Text></Flex></Td>
+                    <Td borderColor={T.border} fontSize="sm" color={T.muted}>{rec.department}</Td>
+                    <Td borderColor={T.border} fontSize="sm" color={T.muted}>{rec.punchIn ? new Date(rec.punchIn).toLocaleTimeString() : "—"}</Td>
+                    <Td borderColor={T.border} fontSize="sm" color={T.muted}>{rec.punchOut ? new Date(rec.punchOut).toLocaleTimeString() : "—"}</Td>
+                    <Td borderColor={T.border}><Badge bg={statusBg[rec.status] || T.surface2} color={statusColors[rec.status] || T.muted} borderRadius="full" px={2} fontSize="xs">{rec.status || "Not Marked"}</Badge></Td>
+                    <Td borderColor={T.border}>{isAdmin && <IconButton icon={<FaEdit/>} size="xs" variant="outline" borderColor={T.border} color={T.muted} _hover={{ borderColor: T.teal, color: T.teal }} borderRadius="8px" onClick={()=>{ setSelectedRecord(rec); onOpen(); }} />}</Td>
                   </Tr>
                 ))}
               </Tbody>
             </Table>
             {/* Pagination controls */}
-            <Flex justify="space-between" p={3} borderTop={`1px solid ${T.border}`}>
-              <HStack><Text fontSize="xs">Rows per page</Text><Select size="xs" w="70px" value={limit} onChange={e=>{setLimit(Number(e.target.value));setPage(1);}}><option>5</option><option>10</option><option>20</option><option>50</option></Select></HStack>
-              <Text fontSize="xs">Showing {(page-1)*limit+1} - {Math.min(page*limit,total)} of {total}</Text>
-              <HStack><IconButton icon={<FaChevronLeft/>} size="xs" isDisabled={page===1} onClick={()=>setPage(p=>p-1)}/><IconButton icon={<FaChevronRight/>} size="xs" isDisabled={page===Math.ceil(total/limit)} onClick={()=>setPage(p=>p+1)}/></HStack>
+            <Flex justify="space-between" align="center" px={5} py={3} borderTop="1px solid" borderColor={T.border} wrap="wrap" gap={3}>
+              <HStack><Text fontSize="xs" color={T.muted}>Rows per page</Text><Select size="xs" w="70px" value={limit} onChange={e=>{setLimit(Number(e.target.value));setPage(1);}} bg={T.bg} borderColor={T.border} color={T.text}><option>5</option><option>10</option><option>20</option><option>50</option></Select></HStack>
+              <Text fontSize="xs" color={T.muted}>Showing {(page-1)*limit+1} - {Math.min(page*limit,total)} of {total}</Text>
+              <HStack spacing={1}><IconButton icon={<FaChevronLeft/>} size="xs" variant="outline" borderColor={T.border} color={T.muted} _hover={{ borderColor: T.teal }} isDisabled={page===1} onClick={()=>setPage(p=>p-1)}/><IconButton icon={<FaChevronRight/>} size="xs" variant="outline" borderColor={T.border} color={T.muted} _hover={{ borderColor: T.teal }} isDisabled={page===Math.ceil(total/limit)} onClick={()=>setPage(p=>p+1)}/></HStack>
             </Flex>
           </Box>
         )}

@@ -15,19 +15,20 @@ import {
 import api from "../../api/axios";
 import * as XLSX from "xlsx";
 
-/* ─── Theme ─── */
+/* ─── Light Theme ─── */
 const T = {
-  bg: "#0D1117", surface: "#161B22", surface2: "#1C2330",
-  border: "#30363D", teal: "#00D4B4", blue: "#58A6FF",
-  red: "#FF6B6B", amber: "#F0A500", green: "#3FB950",
-  text: "#E6EDF3", muted: "#8B949E"
+  bg: "#F8FAFC", surface: "#FFFFFF", surface2: "#F1F5F9",
+  border: "#E2E8F0", teal: "#0891B2", tealDim: "#0E7490", blue: "#1D4ED8",
+  red: "#DC2626", amber: "#D97706", green: "#059669",
+  text: "#0F172A", muted: "#64748B"
 };
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload?.length) {
     return (
-      <Box bg={T.surface2} p={2} borderRadius="8px" border={`1px solid ${T.border}`}>
-        <Text color={T.text} fontSize="sm">{label}</Text>
+      <Box bg="white" p={2} borderRadius="8px" border="1px solid" borderColor={T.border}
+        boxShadow="0 4px 12px rgba(0,0,0,0.08)">
+        <Text color={T.text} fontSize="sm" fontWeight="semibold">{label}</Text>
         {payload.map((p, idx) => (
           <Text key={idx} fontSize="xs" color={p.color}>
             {p.name}: {p.value}
@@ -46,7 +47,6 @@ const AttendanceReport = () => {
   const [data, setData] = useState({ summary: {}, daily: [] });
   const [search, setSearch] = useState("");
 
-  // Set default range: last 7 days
   useEffect(() => {
     const to = new Date();
     const from = new Date();
@@ -65,16 +65,14 @@ const AttendanceReport = () => {
         params: { from: range.from, to: range.to, search: search || undefined }
       });
       setData(res.data);
-    } catch (err) {
+    } catch {
       toast({ title: "Error", description: "Failed to load report", status: "error" });
     } finally {
       setLoading(false);
     }
   }, [range, search, toast]);
 
-  useEffect(() => {
-    fetchReport();
-  }, [fetchReport]);
+  useEffect(() => { fetchReport(); }, [fetchReport]);
 
   const handleExport = () => {
     if (!data.daily.length) return;
@@ -120,7 +118,8 @@ const AttendanceReport = () => {
         </Flex>
 
         {/* Filters */}
-        <Box bg={T.surface} borderRadius="14px" p={4} mb={5} border={`1px solid ${T.border}`}>
+        <Box bg={T.surface} borderRadius="14px" p={4} mb={5} border="1px solid" borderColor={T.border}
+          boxShadow="0 1px 3px rgba(0,0,0,0.05)">
           <Flex gap={4} wrap="wrap" align="flex-end">
             <Box>
               <Text fontSize="xs" color={T.muted} mb={1}>From Date</Text>
@@ -129,7 +128,7 @@ const AttendanceReport = () => {
                 value={range.from}
                 onChange={(e) => setRange(prev => ({ ...prev, from: e.target.value }))}
                 bg={T.bg} borderColor={T.border} color={T.text}
-                borderRadius="10px"
+                _focus={{ borderColor: T.teal }} borderRadius="10px"
               />
             </Box>
             <Box>
@@ -139,24 +138,26 @@ const AttendanceReport = () => {
                 value={range.to}
                 onChange={(e) => setRange(prev => ({ ...prev, to: e.target.value }))}
                 bg={T.bg} borderColor={T.border} color={T.text}
-                borderRadius="10px"
+                _focus={{ borderColor: T.teal }} borderRadius="10px"
               />
             </Box>
             <Box flex="1">
               <Text fontSize="xs" color={T.muted} mb={1}>Search Employee</Text>
               <InputGroup>
-                <InputLeftElement><Icon as={FaSearch} color={T.muted} /></InputLeftElement>
+                <InputLeftElement pointerEvents="none">
+                  <Icon as={FaSearch} color={T.muted} />
+                </InputLeftElement>
                 <Input
                   placeholder="Name or email"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   bg={T.bg} borderColor={T.border} color={T.text}
-                  borderRadius="10px"
+                  _focus={{ borderColor: T.teal }} borderRadius="10px"
                 />
               </InputGroup>
             </Box>
             <Button
-              bg={T.teal} color={T.bg} _hover={{ bg: T.tealDim }}
+              bg={T.teal} color="white" _hover={{ bg: T.tealDim }}
               onClick={fetchReport}
               isLoading={loading}
               borderRadius="10px"
@@ -178,14 +179,16 @@ const AttendanceReport = () => {
         {loading ? (
           <Flex justify="center" py={10}><Spinner size="xl" color={T.teal} /></Flex>
         ) : data.daily.length === 0 ? (
-          <Box bg={T.surface} borderRadius="14px" p={12} textAlign="center">
+          <Box bg={T.surface} borderRadius="14px" p={12} textAlign="center"
+            border="1px solid" borderColor={T.border}>
             <Text color={T.muted}>No data for selected range</Text>
           </Box>
         ) : (
           <>
             <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={6} mb={6}>
               {/* Bar Chart */}
-              <Box bg={T.surface} borderRadius="14px" p={4} border={`1px solid ${T.border}`}>
+              <Box bg={T.surface} borderRadius="14px" p={4} border="1px solid" borderColor={T.border}
+                boxShadow="0 1px 3px rgba(0,0,0,0.05)">
                 <Text fontSize="sm" fontWeight="600" color={T.text} mb={3}>Daily Attendance Overview</Text>
                 <Box h="280px">
                   <ResponsiveContainer width="100%" height="100%">
@@ -202,8 +205,9 @@ const AttendanceReport = () => {
                 </Box>
               </Box>
 
-              {/* Line + Bar Combo */}
-              <Box bg={T.surface} borderRadius="14px" p={4} border={`1px solid ${T.border}`}>
+              {/* Combo Chart */}
+              <Box bg={T.surface} borderRadius="14px" p={4} border="1px solid" borderColor={T.border}
+                boxShadow="0 1px 3px rgba(0,0,0,0.05)">
                 <Text fontSize="sm" fontWeight="600" color={T.text} mb={3}>Present vs Absent Trend</Text>
                 <Box h="280px">
                   <ResponsiveContainer width="100%" height="100%">
@@ -222,7 +226,8 @@ const AttendanceReport = () => {
             </Grid>
 
             {/* Detailed Table */}
-            <Box bg={T.surface} borderRadius="14px" border={`1px solid ${T.border}`} overflow="hidden">
+            <Box bg={T.surface} borderRadius="14px" border="1px solid" borderColor={T.border} overflow="hidden"
+              boxShadow="0 1px 3px rgba(0,0,0,0.05)">
               <Box overflowX="auto">
                 <Table variant="simple" size="sm">
                   <Thead>
@@ -238,10 +243,10 @@ const AttendanceReport = () => {
                       <Tr key={idx} _hover={{ bg: T.surface2 }}>
                         <Td borderColor={T.border} color={T.text}>{day.date}</Td>
                         <Td borderColor={T.border} isNumeric>
-                          <Badge bg={`${T.green}20`} color={T.green} px={2} borderRadius="full">{day.present}</Badge>
+                          <Badge bg="#DCFCE7" color={T.green} px={2} borderRadius="full">{day.present}</Badge>
                         </Td>
                         <Td borderColor={T.border} isNumeric>
-                          <Badge bg={`${T.red}20`} color={T.red} px={2} borderRadius="full">{day.absent}</Badge>
+                          <Badge bg="#FEE2E2" color={T.red} px={2} borderRadius="full">{day.absent}</Badge>
                         </Td>
                         <Td borderColor={T.border} isNumeric>
                           <Text fontSize="sm" fontWeight="500" color={day.rate >= 80 ? T.green : T.amber}>
@@ -263,8 +268,10 @@ const AttendanceReport = () => {
 
 // Stat Card Helper Component
 const StatCard = ({ label, value, sub, icon, color }) => (
-  <Box bg={T.surface} borderRadius="14px" p={4} border={`1px solid ${T.border}`} position="relative" overflow="hidden"
-    _hover={{ borderColor: color, transform: "translateY(-2px)" }} transition="0.2s">
+  <Box bg={T.surface} borderRadius="14px" p={4} border="1px solid" borderColor={T.border}
+    position="relative" overflow="hidden"
+    _hover={{ borderColor: color, transform: "translateY(-2px)" }} transition="0.2s"
+    boxShadow="0 1px 3px rgba(0,0,0,0.06)">
     <Box position="absolute" top="0" left="0" right="0" h="2px" bg={`linear-gradient(90deg, ${color}, transparent)`} />
     <Flex align="center" justify="space-between">
       <Box>

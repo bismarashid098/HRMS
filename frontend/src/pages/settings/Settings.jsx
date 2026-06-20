@@ -13,9 +13,9 @@ import {
 import api from "../../api/axios";
 
 const T = {
-  bg: "#0D1117", surface: "#161B22", surface2: "#1C2330", border: "#30363D",
-  teal: "#00D4B4", blue: "#58A6FF", red: "#FF6B6B", amber: "#F0A500", green: "#3FB950",
-  text: "#E6EDF3", muted: "#8B949E"
+  bg: "#F8FAFC", surface: "#FFFFFF", surface2: "#F1F5F9", border: "#E2E8F0",
+  teal: "#0891B2", tealDim: "#0E7490", blue: "#1D4ED8", red: "#DC2626", amber: "#D97706", green: "#059669",
+  text: "#0F172A", muted: "#64748B"
 };
 
 const Settings = () => {
@@ -144,12 +144,12 @@ const Settings = () => {
         <Box bg={T.surface} borderRadius="14px" border={`1px solid ${T.border}`} p={6}>
           <Tabs variant="soft-rounded" colorScheme="teal">
             <TabList overflowX="auto" pb={2}>
-              <Tab _selected={{ bg: T.teal, color: T.bg }} color={T.muted}>General</Tab>
-              <Tab _selected={{ bg: T.teal, color: T.bg }} color={T.muted}>Attendance</Tab>
-              <Tab _selected={{ bg: T.teal, color: T.bg }} color={T.muted}>Leave</Tab>
-              <Tab _selected={{ bg: T.teal, color: T.bg }} color={T.muted}>Payroll</Tab>
-              <Tab _selected={{ bg: T.teal, color: T.bg }} color={T.muted}>Security</Tab>
-              <Tab _selected={{ bg: T.teal, color: T.bg }} color={T.muted}>Notifications</Tab>
+              <Tab _selected={{ bg: T.teal, color: "white" }} color={T.muted}>General</Tab>
+              <Tab _selected={{ bg: T.teal, color: "white" }} color={T.muted}>Attendance</Tab>
+              <Tab _selected={{ bg: T.teal, color: "white" }} color={T.muted}>Leave</Tab>
+              <Tab _selected={{ bg: T.teal, color: "white" }} color={T.muted}>Payroll</Tab>
+              <Tab _selected={{ bg: T.teal, color: "white" }} color={T.muted}>Security</Tab>
+              <Tab _selected={{ bg: T.teal, color: "white" }} color={T.muted}>Notifications</Tab>
             </TabList>
 
             <TabPanels pt={6}>
@@ -186,7 +186,7 @@ const Settings = () => {
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Button leftIcon={<FaSave />} bg={T.teal} color={T.bg} mt={5} onClick={() => handleSave("General")} isLoading={saving}>Save General</Button>
+                  <Button leftIcon={<FaSave />} bg={T.teal} color="white" _hover={{ bg: T.tealDim }} mt={5} onClick={() => handleSave("General")} isLoading={saving}>Save General</Button>
                 </SettingsSection>
               </TabPanel>
 
@@ -202,7 +202,7 @@ const Settings = () => {
                     <FormControl display="flex" alignItems="center"><FormLabel mb="0">Require Photo on Punch</FormLabel><Switch isChecked={settings.attendance.requirePhoto} onChange={(e) => updateSetting('attendance.requirePhoto', e.target.checked)} colorScheme="green" /></FormControl>
                     <FormControl display="flex" alignItems="center"><FormLabel mb="0">Geo‑fencing (location based)</FormLabel><Switch isChecked={settings.attendance.geoFencing} onChange={(e) => updateSetting('attendance.geoFencing', e.target.checked)} colorScheme="green" /></FormControl>
                   </Grid>
-                  <Button leftIcon={<FaSave />} bg={T.teal} color={T.bg} mt={5} onClick={() => handleSave("Attendance")} isLoading={saving}>Save Attendance</Button>
+                  <Button leftIcon={<FaSave />} bg={T.teal} color="white" _hover={{ bg: T.tealDim }} mt={5} onClick={() => handleSave("Attendance")} isLoading={saving}>Save Attendance</Button>
                 </SettingsSection>
               </TabPanel>
 
@@ -217,7 +217,7 @@ const Settings = () => {
                     <FormControl><FormLabel>Max Carry‑forward Days</FormLabel><NumberInput min={0} isDisabled={!settings.leave.carryForward} value={settings.leave.maxCarryForwardDays} onChange={(v) => updateSetting('leave.maxCarryForwardDays', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
                     <FormControl display="flex" alignItems="center"><FormLabel mb="0">Approval required for leaves</FormLabel><Switch isChecked={settings.leave.approvalRequired} onChange={(e) => updateSetting('leave.approvalRequired', e.target.checked)} colorScheme="green" /></FormControl>
                   </Grid>
-                  <Button leftIcon={<FaSave />} bg={T.teal} color={T.bg} mt={5} onClick={() => handleSave("Leave")} isLoading={saving}>Save Leave Policies</Button>
+                  <Button leftIcon={<FaSave />} bg={T.teal} color="white" _hover={{ bg: T.tealDim }} mt={5} onClick={() => handleSave("Leave")} isLoading={saving}>Save Leave Policies</Button>
                 </SettingsSection>
               </TabPanel>
 
@@ -232,10 +232,10 @@ const Settings = () => {
                     <FormControl><FormLabel>Advance Salary Limit (Rs)</FormLabel><NumberInput min={0} value={settings.payroll.advanceSalaryLimit} onChange={(v) => updateSetting('payroll.advanceSalaryLimit', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
                     <FormControl display="flex" alignItems="center"><FormLabel mb="0">Enable Tax Deduction</FormLabel><Switch isChecked={settings.payroll.taxDeduction} onChange={(e) => updateSetting('payroll.taxDeduction', e.target.checked)} colorScheme="green" /></FormControl>
                   </Grid>
-                  <Alert status="info" bg={`${T.blue}10`} borderRadius="10px" mt={4}>
+                  <Alert status="info" bg="#DBEAFE" borderRadius="10px" mt={4} border="1px solid #BFDBFE">
                     <AlertIcon color={T.blue} /><Text fontSize="xs" color={T.muted}>Tax rules and loan deductions will be applied during payroll processing as per these limits.</Text>
                   </Alert>
-                  <Button leftIcon={<FaSave />} bg={T.teal} color={T.bg} mt={5} onClick={() => handleSave("Payroll")} isLoading={saving}>Save Payroll Settings</Button>
+                  <Button leftIcon={<FaSave />} bg={T.teal} color="white" _hover={{ bg: T.tealDim }} mt={5} onClick={() => handleSave("Payroll")} isLoading={saving}>Save Payroll Settings</Button>
                 </SettingsSection>
               </TabPanel>
 
@@ -249,7 +249,7 @@ const Settings = () => {
                     <FormControl><FormLabel>Max Login Attempts</FormLabel><NumberInput min={3} max={10} value={settings.security.maxLoginAttempts} onChange={(v) => updateSetting('security.maxLoginAttempts', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
                     <FormControl><FormLabel>Account Lockout Duration (minutes)</FormLabel><NumberInput min={5} max={1440} value={settings.security.lockoutDuration} onChange={(v) => updateSetting('security.lockoutDuration', parseInt(v))}><NumberInputField bg={T.bg} borderColor={T.border} color={T.text} /></NumberInput></FormControl>
                   </Grid>
-                  <Button leftIcon={<FaSave />} bg={T.teal} color={T.bg} mt={5} onClick={() => handleSave("Security")} isLoading={saving}>Save Security</Button>
+                  <Button leftIcon={<FaSave />} bg={T.teal} color="white" _hover={{ bg: T.tealDim }} mt={5} onClick={() => handleSave("Security")} isLoading={saving}>Save Security</Button>
                 </SettingsSection>
               </TabPanel>
 
@@ -263,7 +263,7 @@ const Settings = () => {
                     <FormControl><FormLabel>Slack Webhook (optional)</FormLabel><Input value={settings.notifications.slackWebhook} onChange={(e) => updateSetting('notifications.slackWebhook', e.target.value)} placeholder="https://hooks.slack.com/..." bg={T.bg} borderColor={T.border} color={T.text} /></FormControl>
                     <FormControl display="flex" alignItems="center"><FormLabel mb="0">WhatsApp Alerts</FormLabel><Switch isChecked={settings.notifications.whatsappEnabled} onChange={(e) => updateSetting('notifications.whatsappEnabled', e.target.checked)} colorScheme="green" /></FormControl>
                   </Grid>
-                  <Button leftIcon={<FaSave />} bg={T.teal} color={T.bg} mt={5} onClick={() => handleSave("Notifications")} isLoading={saving}>Save Notifications</Button>
+                  <Button leftIcon={<FaSave />} bg={T.teal} color="white" _hover={{ bg: T.tealDim }} mt={5} onClick={() => handleSave("Notifications")} isLoading={saving}>Save Notifications</Button>
                 </SettingsSection>
               </TabPanel>
             </TabPanels>

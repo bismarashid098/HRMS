@@ -19,20 +19,20 @@ import {
 import { FaArrowLeft, FaEdit, FaCalendarCheck, FaClipboardList, FaMoneyBillWave, FaUser } from "react-icons/fa";
 import api from "../../api/axios";
 
-/* ─── Theme constants (Matches Dashboard) ─── */
+/* ─── Light Theme ─── */
 const T = {
-    bg:       "#0D1117",
-    surface:  "#161B22",
-    surface2: "#1C2330",
-    border:   "#30363D",
-    teal:     "#00D4B4",
-    tealDim:  "#00A896",
-    blue:     "#58A6FF",
-    red:      "#FF6B6B",
-    amber:    "#F0A500",
-    green:    "#3FB950",
-    text:     "#E6EDF3",
-    muted:    "#8B949E",
+    bg:       "#F8FAFC",
+    surface:  "#FFFFFF",
+    surface2: "#F1F5F9",
+    border:   "#E2E8F0",
+    teal:     "#0891B2",
+    tealDim:  "#0E7490",
+    blue:     "#1D4ED8",
+    red:      "#DC2626",
+    amber:    "#D97706",
+    green:    "#059669",
+    text:     "#0F172A",
+    muted:    "#64748B",
 };
 
 const getStatusColor = (status) => {
@@ -41,6 +41,15 @@ const getStatusColor = (status) => {
         case "Resigned": return T.amber;
         case "Terminated": return T.red;
         default: return T.muted;
+    }
+};
+
+const getStatusBg = (status) => {
+    switch (status) {
+        case "Active": return "#DCFCE7";
+        case "Resigned": return "#FEF3C7";
+        case "Terminated": return "#FEE2E2";
+        default: return T.surface2;
     }
 };
 
@@ -99,7 +108,7 @@ const EmployeeView = () => {
                     <Button
                         leftIcon={<FaArrowLeft />}
                         bg={T.teal}
-                        color={T.bg}
+                        color="white"
                         _hover={{ bg: T.tealDim }}
                         onClick={() => navigate("/dashboard/employees")}
                         borderRadius="10px"
@@ -124,6 +133,7 @@ const EmployeeView = () => {
                     borderColor={T.border}
                     position="relative"
                     overflow="hidden"
+                    boxShadow="0 1px 3px rgba(0,0,0,0.06)"
                 >
                     <Box
                         position="absolute"
@@ -132,7 +142,7 @@ const EmployeeView = () => {
                         w="150px"
                         h="150px"
                         borderRadius="full"
-                        bg={`${T.teal}10`}
+                        bg={`${T.teal}08`}
                     />
                     <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
                         <Flex align="center" gap={4}>
@@ -140,7 +150,7 @@ const EmployeeView = () => {
                                 w="60px"
                                 h="60px"
                                 borderRadius="full"
-                                bg={T.surface2}
+                                bg="#E0F2FE"
                                 border="2px solid"
                                 borderColor={T.teal}
                                 align="center"
@@ -165,7 +175,7 @@ const EmployeeView = () => {
                                         ID: {employee.employeeId}
                                     </Badge>
                                     <Badge
-                                        bg={`${getStatusColor(employee.employmentStatus)}20`}
+                                        bg={getStatusBg(employee.employmentStatus)}
                                         color={getStatusColor(employee.employmentStatus)}
                                         borderRadius="full"
                                         px={3}
@@ -183,8 +193,8 @@ const EmployeeView = () => {
                                 <Button
                                     leftIcon={<FaEdit />}
                                     bg={T.blue}
-                                    color={T.bg}
-                                    _hover={{ bg: "#3b82f6", opacity: 0.9 }}
+                                    color="white"
+                                    _hover={{ bg: "#1E40AF" }}
                                     size="sm"
                                     borderRadius="10px"
                                     onClick={() => navigate(`/dashboard/employees/edit/${employee._id}`)}
@@ -219,6 +229,7 @@ const EmployeeView = () => {
                         borderColor={T.border}
                         transition="all 0.2s"
                         _hover={{ borderColor: T.teal }}
+                        boxShadow="0 1px 3px rgba(0,0,0,0.05)"
                     >
                         <Heading size="sm" color={T.teal} mb={4} textTransform="uppercase" letterSpacing="0.1em">
                             Personal Details
@@ -244,6 +255,7 @@ const EmployeeView = () => {
                         borderColor={T.border}
                         transition="all 0.2s"
                         _hover={{ borderColor: T.blue }}
+                        boxShadow="0 1px 3px rgba(0,0,0,0.05)"
                     >
                         <Heading size="sm" color={T.blue} mb={4} textTransform="uppercase" letterSpacing="0.1em">
                             Employment Details
@@ -272,6 +284,7 @@ const EmployeeView = () => {
                     border="1px solid"
                     borderColor={T.border}
                     mb={6}
+                    boxShadow="0 1px 3px rgba(0,0,0,0.05)"
                 >
                     <Heading size="sm" color={T.teal} mb={4} textTransform="uppercase" letterSpacing="0.1em">
                         Linked Modules
@@ -356,7 +369,7 @@ const EmployeeView = () => {
                     </SimpleGrid>
                 </Box>
 
-                {/* Additional Actions (if any) */}
+                {/* Additional Actions */}
                 <Box textAlign="center">
                     <Button
                         variant="ghost"

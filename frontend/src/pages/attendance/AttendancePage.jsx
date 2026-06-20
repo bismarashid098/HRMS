@@ -16,20 +16,20 @@ import {
   FaBook, FaLeaf, FaChevronLeft, FaChevronRight, FaCalendarCheck
 } from "react-icons/fa";
 
-/* ─── DARK THEME (matches Dashboard) ─── */
+/* ─── LIGHT THEME ─── */
 const T = {
-  bg:       "#0D1117",
-  surface:  "#161B22",
-  surface2: "#1C2330",
-  border:   "#30363D",
-  teal:     "#00D4B4",
-  tealDim:  "#00A896",
-  blue:     "#58A6FF",
-  red:      "#FF6B6B",
-  amber:    "#F0A500",
-  green:    "#3FB950",
-  text:     "#E6EDF3",
-  muted:    "#8B949E",
+  bg:       "#F8FAFC",
+  surface:  "#FFFFFF",
+  surface2: "#F1F5F9",
+  border:   "#E2E8F0",
+  teal:     "#0891B2",
+  tealDim:  "#0E7490",
+  blue:     "#1D4ED8",
+  red:      "#DC2626",
+  amber:    "#D97706",
+  green:    "#059669",
+  text:     "#0F172A",
+  muted:    "#64748B",
 };
 
 const fmtTime = (v) => {
@@ -63,10 +63,11 @@ const monthNames = [
   "July","August","September","October","November","December"
 ];
 
-/* ── Stat Card (Dark) ── */
+/* ── Stat Card ── */
 const StatCard = ({ label, value, color, icon }) => (
   <Box bg={T.surface} borderRadius="14px" p={4} border="1px solid" borderColor={T.border}
-    position="relative" overflow="hidden" _hover={{ borderColor: color, transform: "translateY(-2px)" }} transition="all 0.2s">
+    position="relative" overflow="hidden" _hover={{ borderColor: color, transform: "translateY(-2px)" }} transition="all 0.2s"
+    boxShadow="0 1px 3px rgba(0,0,0,0.06)">
     <Box position="absolute" top="0" left="0" right="0" h="2px" bg={`linear-gradient(90deg, ${color}, transparent)`} />
     <Flex align="center" justify="space-between">
       <Box>
@@ -288,7 +289,7 @@ const AttendancePage = () => {
         </Flex>
 
         {/* Date Range & Filters */}
-        <Box bg={T.surface} borderRadius="14px" p={4} mb={4} border="1px solid" borderColor={T.border}>
+        <Box bg={T.surface} borderRadius="14px" p={4} mb={4} border="1px solid" borderColor={T.border} boxShadow="0 1px 3px rgba(0,0,0,0.05)">
           <Flex gap={3} align="flex-end" wrap="wrap">
             <Box>
               <Text fontSize="xs" fontWeight="semibold" color={T.muted} mb={1}>From Date</Text>
@@ -363,7 +364,7 @@ const AttendancePage = () => {
             <Text color={T.muted}>No records found.</Text>
           </Box>
         ) : isRange ? (
-          <Box bg={T.surface} borderRadius="14px" border="1px solid" borderColor={T.border} overflow="hidden">
+          <Box bg={T.surface} borderRadius="14px" border="1px solid" borderColor={T.border} overflow="hidden" boxShadow="0 1px 3px rgba(0,0,0,0.05)">
             <Box overflowX="auto">
               <Table variant="simple" size="sm">
                 <Thead>
@@ -394,11 +395,11 @@ const AttendancePage = () => {
                         </Flex>
                       </Td>
                       <Td borderColor={T.border}><Text fontSize="sm" color={T.muted}>{r.designation || "—"}</Text></Td>
-                      <Td borderColor={T.border} isNumeric><Badge bg={`${T.green}20`} color={T.green} px={2} borderRadius="full">{r.present}</Badge></Td>
-                      <Td borderColor={T.border} isNumeric><Badge bg={`${T.amber}20`} color={T.amber} px={2} borderRadius="full">{r.late}</Badge></Td>
-                      <Td borderColor={T.border} isNumeric><Badge bg={`${T.amber}20`} color={T.amber} px={2} borderRadius="full">{r.halfDay}</Badge></Td>
-                      <Td borderColor={T.border} isNumeric><Badge bg={`${T.red}20`} color={T.red} px={2} borderRadius="full">{r.absent}</Badge></Td>
-                      <Td borderColor={T.border} isNumeric><Badge bg={`${T.teal}20`} color={T.teal} px={2} borderRadius="full">{r.onLeave}</Badge></Td>
+                      <Td borderColor={T.border} isNumeric><Badge bg="#DCFCE7" color={T.green} px={2} borderRadius="full">{r.present}</Badge></Td>
+                      <Td borderColor={T.border} isNumeric><Badge bg="#FEF3C7" color={T.amber} px={2} borderRadius="full">{r.late}</Badge></Td>
+                      <Td borderColor={T.border} isNumeric><Badge bg="#FEF3C7" color={T.amber} px={2} borderRadius="full">{r.halfDay}</Badge></Td>
+                      <Td borderColor={T.border} isNumeric><Badge bg="#FEE2E2" color={T.red} px={2} borderRadius="full">{r.absent}</Badge></Td>
+                      <Td borderColor={T.border} isNumeric><Badge bg="#E0F2FE" color={T.teal} px={2} borderRadius="full">{r.onLeave}</Badge></Td>
                       <Td borderColor={T.border}>
                         <Flex align="center" gap={2}>
                           <Progress value={r.rate} size="xs" w="60px" borderRadius="full" colorScheme={r.rate >= 80 ? "green" : r.rate >= 50 ? "yellow" : "red"} />
@@ -415,7 +416,7 @@ const AttendancePage = () => {
             </Box>
           </Box>
         ) : (
-          <Box bg={T.surface} borderRadius="14px" border="1px solid" borderColor={T.border} overflow="hidden">
+          <Box bg={T.surface} borderRadius="14px" border="1px solid" borderColor={T.border} overflow="hidden" boxShadow="0 1px 3px rgba(0,0,0,0.05)">
             <Box overflowX="auto">
               <Table variant="simple" size="sm">
                 <Thead>
@@ -471,10 +472,10 @@ const AttendancePage = () => {
           </Box>
         )}
 
-        {/* Manual Attendance Modal (Dark) */}
+        {/* Manual Attendance Modal */}
         <Modal isOpen={isManualOpen} onClose={closeManual} isCentered>
-          <ModalOverlay bg="blackAlpha.600" />
-          <ModalContent bg={T.surface} borderRadius="14px">
+          <ModalOverlay bg="rgba(15,23,42,0.4)" />
+          <ModalContent bg={T.surface} borderRadius="14px" border="1px solid" borderColor={T.border}>
             <ModalHeader borderBottom="1px solid" borderColor={T.border} color={T.text}>Manual Attendance</ModalHeader>
             <ModalCloseButton color={T.muted} />
             <ModalBody py={5}>
@@ -500,15 +501,15 @@ const AttendancePage = () => {
             </ModalBody>
             <ModalFooter borderTop="1px solid" borderColor={T.border} gap={2}>
               <Button variant="ghost" color={T.muted} _hover={{ bg: T.surface2 }} onClick={closeManual} borderRadius="10px">Cancel</Button>
-              <Button bg={T.teal} color={T.bg} _hover={{ bg: T.tealDim }} onClick={handleManualSave} borderRadius="10px">Save</Button>
+              <Button bg={T.teal} color="white" _hover={{ bg: T.tealDim }} onClick={handleManualSave} borderRadius="10px">Save</Button>
             </ModalFooter>
           </ModalContent>
         </Modal>
 
-        {/* Ledger Modal (Dark) */}
+        {/* Ledger Modal */}
         <Modal isOpen={isLedgerOpen} onClose={closeLedger} size="3xl" isCentered scrollBehavior="inside">
-          <ModalOverlay bg="blackAlpha.600" />
-          <ModalContent bg={T.surface} borderRadius="14px" maxH="85vh">
+          <ModalOverlay bg="rgba(15,23,42,0.4)" />
+          <ModalContent bg={T.surface} borderRadius="14px" maxH="85vh" border="1px solid" borderColor={T.border}>
             <ModalHeader borderBottom="1px solid" borderColor={T.border}>
               <Flex align="center" gap={3}>
                 <Avatar size="sm" name={ledgerEmp?.name} bg={getAvatarColor(ledgerEmp?.name || "")} />
@@ -531,7 +532,7 @@ const AttendancePage = () => {
                       { label: "Half Day", val: ledgerSummary.halfDay, color: T.amber },
                       { label: "Absent", val: ledgerSummary.absent, color: T.red },
                     ].map(s => (
-                      <Box key={s.label} bg={T.surface2} borderRadius="10px" p={3} textAlign="center">
+                      <Box key={s.label} bg={T.surface2} borderRadius="10px" p={3} textAlign="center" border="1px solid" borderColor={T.border}>
                         <Text fontSize="xl" fontWeight="bold" color={s.color}>{s.val}</Text>
                         <Text fontSize="xs" color={T.muted}>{s.label}</Text>
                       </Box>

@@ -14,9 +14,9 @@ import api from "../../api/axios";
 import * as XLSX from "xlsx";
 
 const T = {
-  bg: "#0D1117", surface: "#161B22", surface2: "#1C2330", border: "#30363D",
-  teal: "#00D4B4", blue: "#58A6FF", red: "#FF6B6B", amber: "#F0A500", green: "#3FB950",
-  text: "#E6EDF3", muted: "#8B949E"
+  bg: "#F8FAFC", surface: "#FFFFFF", surface2: "#F1F5F9", border: "#E2E8F0",
+  teal: "#0891B2", tealDim: "#0E7490", blue: "#1D4ED8", red: "#DC2626",
+  amber: "#D97706", green: "#059669", text: "#0F172A", muted: "#64748B"
 };
 
 const MONTHS = [
@@ -25,7 +25,8 @@ const MONTHS = [
 ];
 
 const StatCard = ({ label, value, color, icon }) => (
-  <Box bg={T.surface} p={4} borderRadius="14px" border={`1px solid ${T.border}`}>
+  <Box bg={T.surface} p={4} borderRadius="14px" border="1px solid" borderColor={T.border}
+    boxShadow="0 1px 3px rgba(0,0,0,0.06)" _hover={{ borderColor: color }}>
     <Flex justify="space-between" mb={1}>
       <Text fontSize="xs" color={T.muted}>{label}</Text>
       <Icon as={icon} color={color} />
@@ -36,6 +37,9 @@ const StatCard = ({ label, value, color, icon }) => (
 
 const statusColor = (s) =>
   s === "Approved" ? T.green : s === "Generated" ? T.blue : T.amber;
+
+const statusBg = (s) =>
+  s === "Approved" ? "#DCFCE7" : s === "Generated" ? "#DBEAFE" : "#FEF3C7";
 
 const Payroll = () => {
   const toast = useToast();
@@ -200,8 +204,8 @@ const Payroll = () => {
             </Button>
             <Button
               size="sm" leftIcon={<FaPlay />}
-              bg={T.teal} color={T.bg}
-              _hover={{ opacity: 0.85 }}
+              bg={T.teal} color="white"
+              _hover={{ bg: T.tealDim }}
               isLoading={genAllLoading}
               isDisabled={notGenerated === 0}
               onClick={handleGenerateAll}
@@ -220,7 +224,8 @@ const Payroll = () => {
         </Grid>
 
         {/* Filters */}
-        <Box bg={T.surface} p={4} borderRadius="14px" mb={4} display="flex" gap={3} flexWrap="wrap" alignItems="center">
+        <Box bg={T.surface} p={4} borderRadius="14px" mb={4} display="flex" gap={3} flexWrap="wrap" alignItems="center"
+          border="1px solid" borderColor={T.border} boxShadow="0 1px 3px rgba(0,0,0,0.05)">
           <InputGroup maxW="280px">
             <InputLeftElement pointerEvents="none">
               <FaSearch color={T.muted} />
@@ -251,7 +256,8 @@ const Payroll = () => {
             <Spinner color={T.teal} size="xl" />
           </Flex>
         ) : (
-          <Box bg={T.surface} borderRadius="14px" overflowX="auto">
+          <Box bg={T.surface} borderRadius="14px" overflowX="auto" border="1px solid" borderColor={T.border}
+            boxShadow="0 1px 3px rgba(0,0,0,0.05)">
             <Table variant="simple">
               <Thead>
                 <Tr bg={T.surface2}>
@@ -299,7 +305,7 @@ const Payroll = () => {
                       <Td borderColor={T.border}>
                         <Badge
                           px={2} py={1} borderRadius="full" fontSize="xs"
-                          bg={`${statusColor(emp.payrollStatus)}22`}
+                          bg={statusBg(emp.payrollStatus)}
                           color={statusColor(emp.payrollStatus)}
                         >
                           {emp.payrollStatus}
@@ -309,8 +315,8 @@ const Payroll = () => {
                         <HStack spacing={1}>
                           {emp.payrollStatus === "Not Generated" && (
                             <Button
-                              size="xs" bg={T.teal} color={T.bg}
-                              _hover={{ opacity: 0.85 }}
+                              size="xs" bg={T.teal} color="white"
+                              _hover={{ bg: T.tealDim }}
                               isLoading={!!generating[emp.employeeId]}
                               onClick={() => handleGenerate(emp)}
                             >
@@ -319,7 +325,7 @@ const Payroll = () => {
                           )}
                           {emp.payrollStatus === "Generated" && (
                             <Button
-                              size="xs" bg={T.green} color={T.bg}
+                              size="xs" bg={T.green} color="white"
                               _hover={{ opacity: 0.85 }}
                               isLoading={!!approving[emp.payrollId]}
                               onClick={() => handleApprove(emp)}
@@ -347,27 +353,28 @@ const Payroll = () => {
 
       {/* Breakdown Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="lg">
-        <ModalOverlay bg="blackAlpha.800" />
-        <ModalContent bg={T.surface} color={T.text} border={`1px solid ${T.border}`}>
-          <ModalHeader borderBottom={`1px solid ${T.border}`} fontSize="md">
+        <ModalOverlay bg="rgba(15,23,42,0.4)" />
+        <ModalContent bg={T.surface} color={T.text} border="1px solid" borderColor={T.border}
+          boxShadow="0 20px 60px rgba(0,0,0,0.12)">
+          <ModalHeader borderBottom="1px solid" borderColor={T.border} fontSize="md" color={T.text}>
             {breakdown
               ? `${breakdown.employeeName} — ${MONTHS[(breakdown.month || 1) - 1]} ${breakdown.year}`
               : "Payroll Breakdown"}
           </ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton color={T.muted} />
           <ModalBody py={5}>
             {breakdownLoading ? (
               <Flex justify="center" p={6}><Spinner color={T.teal} /></Flex>
             ) : breakdown ? (
               <VStack align="stretch" spacing={3}>
                 <Grid templateColumns="1fr 1fr" gap={2} fontSize="sm">
-                  <Text color={T.muted}>Department</Text><Text>{breakdown.department}</Text>
-                  <Text color={T.muted}>Designation</Text><Text>{breakdown.designation}</Text>
-                  <Text color={T.muted}>Working Days</Text><Text>{breakdown.workingDays}</Text>
-                  <Text color={T.muted}>Present Days</Text><Text>{breakdown.presentDays}</Text>
-                  <Text color={T.muted}>Monthly Off Days</Text><Text>{breakdown.monthlyOffDays}</Text>
+                  <Text color={T.muted}>Department</Text><Text color={T.text}>{breakdown.department}</Text>
+                  <Text color={T.muted}>Designation</Text><Text color={T.text}>{breakdown.designation}</Text>
+                  <Text color={T.muted}>Working Days</Text><Text color={T.text}>{breakdown.workingDays}</Text>
+                  <Text color={T.muted}>Present Days</Text><Text color={T.text}>{breakdown.presentDays}</Text>
+                  <Text color={T.muted}>Monthly Off Days</Text><Text color={T.text}>{breakdown.monthlyOffDays}</Text>
                   <Text color={T.muted}>Status</Text>
-                  <Badge w="fit-content" px={2} bg={`${statusColor(breakdown.status)}22`} color={statusColor(breakdown.status)}>
+                  <Badge w="fit-content" px={2} bg={statusBg(breakdown.status)} color={statusColor(breakdown.status)}>
                     {breakdown.status}
                   </Badge>
                 </Grid>
@@ -377,15 +384,15 @@ const Payroll = () => {
                 <VStack align="stretch" spacing={2} fontSize="sm">
                   <Flex justify="space-between">
                     <Text color={T.muted}>Basic Salary</Text>
-                    <Text>Rs {(breakdown.basicSalary || 0).toLocaleString()}</Text>
+                    <Text color={T.text}>Rs {(breakdown.basicSalary || 0).toLocaleString()}</Text>
                   </Flex>
                   <Flex justify="space-between">
                     <Text color={T.muted}>Allowance</Text>
-                    <Text>Rs {(breakdown.allowance || 0).toLocaleString()}</Text>
+                    <Text color={T.text}>Rs {(breakdown.allowance || 0).toLocaleString()}</Text>
                   </Flex>
                   <Flex justify="space-between" fontWeight="medium">
                     <Text color={T.muted}>Gross Salary</Text>
-                    <Text>Rs {(breakdown.grossSalary || 0).toLocaleString()}</Text>
+                    <Text color={T.text}>Rs {(breakdown.grossSalary || 0).toLocaleString()}</Text>
                   </Flex>
                 </VStack>
 
@@ -425,7 +432,7 @@ const Payroll = () => {
                 <Divider borderColor={T.border} />
 
                 <Flex justify="space-between" fontWeight="bold" fontSize="lg">
-                  <Text>Net Salary</Text>
+                  <Text color={T.text}>Net Salary</Text>
                   <Text color={T.green}>
                     Rs {Math.max(0, breakdown.netSalary || 0).toLocaleString()}
                   </Text>

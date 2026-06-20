@@ -4,7 +4,7 @@ import { FaUser, FaEnvelope, FaBriefcase, FaBuilding, FaPhone, FaMapMarkerAlt, F
 import api from "../../api/axios";
 import { AuthContext } from "../../context/AuthContext";
 
-const T = { bg:"#0D1117", surface:"#161B22", surface2:"#1C2330", border:"#30363D", teal:"#00D4B4", text:"#E6EDF3", muted:"#8B949E" };
+const T = { bg:"#F8FAFC", surface:"#FFFFFF", surface2:"#F1F5F9", border:"#E2E8F0", teal:"#0891B2", tealDim:"#0E7490", green:"#059669", text:"#0F172A", muted:"#64748B" };
 
 const Profile = () => {
   const { user, setUser } = useContext(AuthContext);
@@ -45,9 +45,9 @@ const Profile = () => {
           <Flex justify="space-between" align="center" mb={6}>
             <Flex align="center" gap={4}>
               <Avatar size="xl" name={profile?.name} bg={T.teal} color="white" />
-              <Box><Text fontSize="2xl" fontWeight="bold" color={T.text}>{profile?.name}</Text><Badge bg={`${T.teal}20`} color={T.teal} px={2} py={1} borderRadius="full">{user?.role}</Badge></Box>
+              <Box><Text fontSize="2xl" fontWeight="bold" color={T.text}>{profile?.name}</Text><Badge bg="#E0F2FE" color={T.teal} px={2} py={1} borderRadius="full">{user?.role}</Badge></Box>
             </Flex>
-            <Button leftIcon={editing ? <FaSave/> : <FaEdit/>} bg={editing ? T.green : T.teal} color={T.bg} onClick={editing ? handleSave : () => setEditing(true)}>{editing ? "Save" : "Edit"}</Button>
+            <Button leftIcon={editing ? <FaSave/> : <FaEdit/>} bg={editing ? T.green : T.teal} color="white" _hover={{ bg: editing ? "#047857" : T.tealDim }} borderRadius="10px" onClick={editing ? handleSave : () => setEditing(true)}>{editing ? "Save" : "Edit"}</Button>
           </Flex>
           <Divider borderColor={T.border} my={4} />
           <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={5}>
@@ -67,7 +67,7 @@ const Profile = () => {
 const InfoField = ({ label, value, editing, onChange, type = "text" }) => (
   <Box>
     <Text fontSize="xs" color={T.muted} mb={1}>{label}</Text>
-    {editing ? <Input type={type} value={value} onChange={(e)=>onChange(e.target.value)} bg={T.bg} borderColor={T.border} color={T.text} size="sm" /> : <Text color={T.text} fontSize="sm">{value || "—"}</Text>}
+    {editing ? <Input type={type} value={value} onChange={(e)=>onChange(e.target.value)} bg={T.bg} borderColor={T.border} color={T.text} size="sm" borderRadius="8px" _focus={{ borderColor: T.teal }} /> : <Text color={T.text} fontSize="sm">{value || "—"}</Text>}
   </Box>
 );
 export default Profile;

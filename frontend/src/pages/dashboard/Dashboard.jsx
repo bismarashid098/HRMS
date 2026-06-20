@@ -16,20 +16,20 @@ import { AuthContext } from "../../context/AuthContext";
 import Sidebar from "../../components/layout/Sidebar";
 import TopNavbar from "../../components/TopNavbar";
 
-/* ─── Theme (same as before) ─── */
+/* ─── Light Theme ─── */
 const T = {
-  bg:       "#0D1117",
-  surface:  "#161B22",
-  surface2: "#1C2330",
-  border:   "#30363D",
-  teal:     "#00D4B4",
-  tealDim:  "#00A896",
-  blue:     "#58A6FF",
-  red:      "#FF6B6B",
-  amber:    "#F0A500",
-  green:    "#3FB950",
-  text:     "#E6EDF3",
-  muted:    "#8B949E",
+  bg:       "#F8FAFC",
+  surface:  "#FFFFFF",
+  surface2: "#F1F5F9",
+  border:   "#E2E8F0",
+  teal:     "#0891B2",
+  tealDim:  "#0E7490",
+  blue:     "#1D4ED8",
+  red:      "#DC2626",
+  amber:    "#D97706",
+  green:    "#059669",
+  text:     "#0F172A",
+  muted:    "#64748B",
 };
 
 /* ─── Helpers ─── */
@@ -53,10 +53,10 @@ const LiveClock = () => {
 };
 
 /* ─── Custom Tooltip ─── */
-const DarkTooltip = ({ active, payload, label }) => {
+const LightTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <Box bg={T.surface2} border="1px solid" borderColor={T.border} borderRadius="10px" p={3}>
+    <Box bg="white" border="1px solid" borderColor={T.border} borderRadius="10px" p={3} boxShadow="0 4px 12px rgba(0,0,0,0.08)">
       <Text fontSize="xs" color={T.muted} mb={2} fontWeight="600">{label}</Text>
       {payload.map((p, i) => (
         <Flex key={i} align="center" gap={2} mb={1}>
@@ -77,6 +77,7 @@ const KPI = ({ label, value, sub, icon, accent }) => (
     position="relative" overflow="hidden"
     _hover={{ borderColor: accent, transform: "translateY(-2px)" }}
     transition="all 0.2s ease"
+    boxShadow="0 1px 3px rgba(0,0,0,0.06)"
   >
     <Box
       position="absolute" top="0" left="0" right="0" h="2px"
@@ -145,7 +146,7 @@ const Chip = ({ children }) => (
 );
 
 /* ═══════════════════════════════════════════════════════════
-   DASHBOARD HOME COMPONENT (existing content)
+   DASHBOARD HOME COMPONENT
 ═══════════════════════════════════════════════════════════ */
 const DashboardHome = () => {
   const [data, setData] = useState({ summary: {}, attendance: [], leaves: [] });
@@ -205,6 +206,7 @@ const DashboardHome = () => {
           position="relative" overflow="hidden"
           _hover={{ borderColor: T.amber, transform: "translateY(-2px)" }}
           transition="all 0.2s ease"
+          boxShadow="0 1px 3px rgba(0,0,0,0.06)"
         >
           <Box position="absolute" top="0" left="0" right="0" h="2px" bg={`linear-gradient(90deg, ${T.amber}, transparent)`} />
           <Box position="absolute" top="-20px" right="-20px" w="80px" h="80px" borderRadius="full" bg={T.amber} opacity="0.05" />
@@ -226,7 +228,7 @@ const DashboardHome = () => {
       {/* Main Charts Row */}
       <Grid templateColumns={{ base: "1fr", lg: "3fr 2fr" }} gap={4} mb={4}>
         {/* Attendance Bar + Line Chart */}
-        <Box bg={T.surface} p={5} borderRadius="14px" border="1px solid" borderColor={T.border}>
+        <Box bg={T.surface} p={5} borderRadius="14px" border="1px solid" borderColor={T.border} boxShadow="0 1px 3px rgba(0,0,0,0.06)">
           <STitle right={<Chip>Last 7 days</Chip>}>Attendance Trend</STitle>
           <Box h="220px">
             <ResponsiveContainer width="100%" height="100%">
@@ -240,7 +242,7 @@ const DashboardHome = () => {
                 <CartesianGrid stroke={T.border} vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 11, fill: T.muted }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: T.muted }} axisLine={false} tickLine={false} />
-                <Tooltip content={<DarkTooltip />} />
+                <Tooltip content={<LightTooltip />} />
                 <Bar dataKey="Present" fill="url(#barGrad)" radius={[4, 4, 0, 0]} maxBarSize={32} />
                 <Line
                   type="monotone" dataKey="Absent"
@@ -266,7 +268,7 @@ const DashboardHome = () => {
 
         {/* Pie + Summary */}
         <Flex direction="column" gap={4}>
-          <Box bg={T.surface} p={5} borderRadius="14px" border="1px solid" borderColor={T.border} flex="1">
+          <Box bg={T.surface} p={5} borderRadius="14px" border="1px solid" borderColor={T.border} flex="1" boxShadow="0 1px 3px rgba(0,0,0,0.06)">
             <STitle>Today's Distribution</STitle>
             <Flex align="center" gap={4}>
               <Box w="120px" h="120px" flexShrink="0">
@@ -283,7 +285,7 @@ const DashboardHome = () => {
                         <Cell key={i} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip content={<DarkTooltip />} />
+                    <Tooltip content={<LightTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
               </Box>
@@ -305,7 +307,7 @@ const DashboardHome = () => {
             </Flex>
           </Box>
 
-          <Box bg={T.surface} p={5} borderRadius="14px" border="1px solid" borderColor={T.border}>
+          <Box bg={T.surface} p={5} borderRadius="14px" border="1px solid" borderColor={T.border} boxShadow="0 1px 3px rgba(0,0,0,0.06)">
             <STitle right={<Icon as={FaChevronRight} boxSize={3} color={T.muted} />}>
               Leave Overview
             </STitle>
@@ -324,25 +326,25 @@ const DashboardHome = () => {
       </Grid>
 
       {/* Area Chart */}
-      <Box bg={T.surface} p={5} borderRadius="14px" border="1px solid" borderColor={T.border}>
+      <Box bg={T.surface} p={5} borderRadius="14px" border="1px solid" borderColor={T.border} boxShadow="0 1px 3px rgba(0,0,0,0.06)">
         <STitle right={<Chip>Weekly</Chip>}>Attendance Over Time</STitle>
         <Box h="160px">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="areaPresent" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={T.teal} stopOpacity={0.3} />
+                  <stop offset="5%"  stopColor={T.teal} stopOpacity={0.2} />
                   <stop offset="95%" stopColor={T.teal} stopOpacity={0}   />
                 </linearGradient>
                 <linearGradient id="areaAbsent" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={T.red} stopOpacity={0.3} />
+                  <stop offset="5%"  stopColor={T.red} stopOpacity={0.2} />
                   <stop offset="95%" stopColor={T.red} stopOpacity={0}   />
                 </linearGradient>
               </defs>
               <CartesianGrid stroke={T.border} vertical={false} />
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: T.muted }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: T.muted }} axisLine={false} tickLine={false} />
-              <Tooltip content={<DarkTooltip />} />
+              <Tooltip content={<LightTooltip />} />
               <Legend
                 wrapperStyle={{ fontSize: "11px", color: T.muted, paddingTop: "8px" }}
                 iconType="circle" iconSize={7}
@@ -358,7 +360,7 @@ const DashboardHome = () => {
 };
 
 /* ═══════════════════════════════════════════════════════════
-   MAIN DASHBOARD (now with Outlet)
+   MAIN DASHBOARD (with Outlet)
 ═══════════════════════════════════════════════════════════ */
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
@@ -366,14 +368,13 @@ const Dashboard = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const location = useLocation();
 
-  // کیا current route صرف "/dashboard" ہے؟
   const isDashboardHome = location.pathname === "/dashboard";
 
   return (
     <Flex h="100vh" bg={T.bg} overflow="hidden" color={T.text}>
       {/* Sidebar */}
       {!isMobile && (
-        <Box w="240px" flexShrink="0" bg={T.surface} borderRight="1px solid" borderColor={T.border}>
+        <Box w="240px" flexShrink="0" bg="white" borderRight="1px solid" borderColor={T.border}>
           <Sidebar />
         </Box>
       )}
@@ -382,9 +383,10 @@ const Dashboard = () => {
       <Flex direction="column" flex="1" overflow="hidden">
         {/* Topbar */}
         <Flex
-          h="60px" bg={T.surface} align="center"
+          h="60px" bg="white" align="center"
           justify="space-between" px={6} flexShrink="0"
           borderBottom="1px solid" borderColor={T.border}
+          boxShadow="0 1px 3px rgba(0,0,0,0.05)"
         >
           <Box>
             <Text fontSize="15px" fontWeight="800" color={T.text}>
@@ -406,7 +408,7 @@ const Dashboard = () => {
               <Box
                 position="absolute" top="7px" right="7px"
                 w="6px" h="6px" borderRadius="full" bg={T.red}
-                border={`1.5px solid ${T.surface}`}
+                border={`1.5px solid white`}
               />
             </Box>
             {!isMobile && <TopNavbar onMenuOpen={isMobile ? onOpen : undefined} />}
@@ -417,8 +419,8 @@ const Dashboard = () => {
         <Box flex="1" overflowY="auto" p={5}
           sx={{
             "&::-webkit-scrollbar": { width: "4px" },
-            "&::-webkit-scrollbar-track": { bg: T.bg },
-            "&::-webkit-scrollbar-thumb": { bg: T.border, borderRadius: "99px" },
+            "&::-webkit-scrollbar-track": { bg: T.surface2 },
+            "&::-webkit-scrollbar-thumb": { bg: "#CBD5E1", borderRadius: "99px" },
           }}
         >
           <ErrorBoundary routeKey={location.pathname}>
