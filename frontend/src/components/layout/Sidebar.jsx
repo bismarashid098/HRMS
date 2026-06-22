@@ -9,32 +9,27 @@ import {
 } from "react-icons/fa";
 import { AuthContext } from "../../context/AuthContext";
 
-/* ══════════════════════════════════════
-   LIGHT THEME TOKENS
-══════════════════════════════════════ */
+/* ── Dark theme tokens ── */
 const C = {
-  accent:       "#0891B2",
-  accentGlow:   "#E0F2FE",
-  accentBorder: "#BAE6FD",
-  accentDim:    "#E0F2FE",
-  bg:           "#FFFFFF",
-  surface:      "#F1F5F9",
-  surfaceHover: "#E2E8F0",
-  border:       "#E2E8F0",
-  borderHover:  "#CBD5E1",
-  text:         "#0F172A",
-  muted:        "#64748B",
-  mutedHover:   "#334155",
+  accent:       "#10b981",
+  accentGlow:   "rgba(16,185,129,0.14)",
+  accentBorder: "rgba(16,185,129,0.32)",
+  accentDim:    "rgba(16,185,129,0.1)",
+  bg:           "#021024",
+  surface:      "rgba(255,255,255,0.05)",
+  surfaceHover: "rgba(255,255,255,0.09)",
+  border:       "rgba(255,255,255,0.07)",
+  borderHover:  "rgba(255,255,255,0.14)",
+  text:         "#d0dce8",
+  muted:        "#4a6080",
+  mutedHover:   "#8ca5be",
 };
 
 const avatarColors = ["#065f46","#1d4ed8","#7c3aed","#d97706","#dc2626"];
 const getAvatarBg  = (name = "") => avatarColors[name.charCodeAt(0) % avatarColors.length];
-
 const HEX_CLIP = "polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)";
 
-/* ══════════════════════════════════════
-   SECTION LABEL
-══════════════════════════════════════ */
+/* ── Section Label ── */
 const SectionLabel = ({ label }) => (
   <Flex align="center" gap={2} px={4} pt={5} pb={1.5}>
     <Text
@@ -48,9 +43,7 @@ const SectionLabel = ({ label }) => (
   </Flex>
 );
 
-/* ══════════════════════════════════════
-   NAV ITEM
-══════════════════════════════════════ */
+/* ── Nav Item ── */
 const NavItem = ({ to, icon, label, exact = false, isChild = false, onClose }) => {
   const location = useLocation();
   const isActivePath = (p) => location.pathname === p || location.pathname.startsWith(`${p}/`);
@@ -77,18 +70,13 @@ const NavItem = ({ to, icon, label, exact = false, isChild = false, onClose }) =
         overflow="hidden"
       >
         {active && (
-          <Box
-            position="absolute" left={0} top="18%" bottom="18%"
-            w="2px" borderRadius="0 3px 3px 0"
-            bg={C.accent}
-          />
+          <Box position="absolute" left={0} top="18%" bottom="18%"
+            w="2px" borderRadius="0 3px 3px 0" bg={C.accent} />
         )}
         {active && (
-          <Box
-            position="absolute" right={0} top={0} bottom={0} w="50px"
+          <Box position="absolute" right={0} top={0} bottom={0} w="50px"
             bg={`linear-gradient(to left, ${C.accentDim}, transparent)`}
-            pointerEvents="none"
-          />
+            pointerEvents="none" />
         )}
         <Flex
           w={isChild ? "20px" : "26px"} h={isChild ? "20px" : "26px"}
@@ -120,20 +108,14 @@ const NavItem = ({ to, icon, label, exact = false, isChild = false, onClose }) =
           {label}
         </Text>
         {active && (
-          <Box
-            w="5px" h="5px" borderRadius="full"
-            bg={C.accent}
-            flexShrink={0}
-          />
+          <Box w="5px" h="5px" borderRadius="full" bg={C.accent} flexShrink={0} />
         )}
       </Flex>
     </NavLink>
   );
 };
 
-/* ══════════════════════════════════════
-   PARENT ITEM (collapsible)
-══════════════════════════════════════ */
+/* ── Parent Item ── */
 const ParentItem = ({ icon, label, active, isOpen, onToggle }) => (
   <Flex
     align="center"
@@ -153,11 +135,8 @@ const ParentItem = ({ icon, label, active, isOpen, onToggle }) => (
     overflow="hidden"
   >
     {active && (
-      <Box
-        position="absolute" left={0} top="18%" bottom="18%"
-        w="2px" borderRadius="0 3px 3px 0"
-        bg={C.accent}
-      />
+      <Box position="absolute" left={0} top="18%" bottom="18%"
+        w="2px" borderRadius="0 3px 3px 0" bg={C.accent} />
     )}
     <Flex
       w="26px" h="26px" borderRadius="7px"
@@ -196,9 +175,7 @@ const ParentItem = ({ icon, label, active, isOpen, onToggle }) => (
   </Flex>
 );
 
-/* ══════════════════════════════════════
-   MAIN SIDEBAR
-══════════════════════════════════════ */
+/* ── Main Sidebar ── */
 const Sidebar = ({ onClose }) => {
   const location = useLocation();
   const navigate  = useNavigate();
@@ -207,7 +184,6 @@ const Sidebar = ({ onClose }) => {
 
   const isActivePath = (p) => location.pathname === p || location.pathname.startsWith(`${p}/`);
 
-  /* ── Menu config ── */
   const baseMenu = [
     {
       section: "MAIN",
@@ -247,10 +223,10 @@ const Sidebar = ({ onClose }) => {
         {
           key: "payroll", type: "group", label: "Payroll", icon: FaMoneyBillWave,
           children: [
-            { to: "/dashboard/payroll",           label: "Payroll Processing", icon: FaMoneyBillWave     },
-            { to: "/dashboard/advance",           label: "Advance Salary",     icon: FaHandHoldingUsd    },
-            { to: "/dashboard/reports/payroll",   label: "Payroll Report",     icon: FaFileInvoiceDollar },
-            { to: "/dashboard/reports/advances",  label: "Advance Report",     icon: FaFileInvoiceDollar }
+            { to: "/dashboard/payroll",          label: "Payroll Processing", icon: FaMoneyBillWave     },
+            { to: "/dashboard/advance",          label: "Advance Salary",     icon: FaHandHoldingUsd    },
+            { to: "/dashboard/reports/payroll",  label: "Payroll Report",     icon: FaFileInvoiceDollar },
+            { to: "/dashboard/reports/advances", label: "Advance Report",     icon: FaFileInvoiceDollar }
           ]
         }
       ]
@@ -307,7 +283,6 @@ const Sidebar = ({ onClose }) => {
   ];
 
   const menuSections = role === "Manager" ? managerMenu : baseMenu;
-
   const [openGroups, setOpenGroups] = React.useState({});
 
   useEffect(() => {
@@ -321,7 +296,6 @@ const Sidebar = ({ onClose }) => {
   }, [role]);
 
   const toggleGroup = (key) => setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
-
   const handleLogout = () => { logout?.(); navigate("/login"); };
 
   return (
@@ -338,10 +312,12 @@ const Sidebar = ({ onClose }) => {
       overflow="hidden"
     >
       {/* Corner accent lines */}
-      <Box position="absolute" top={0} left={0} w="60px" h="1px" bg={`linear-gradient(to right, ${C.accent}, transparent)`} zIndex={1} opacity={0.4} />
-      <Box position="absolute" top={0} left={0} w="1px" h="60px" bg={`linear-gradient(to bottom, ${C.accent}, transparent)`} zIndex={1} opacity={0.4} />
+      <Box position="absolute" top={0} left={0} w="60px" h="1px"
+        bg={`linear-gradient(to right, ${C.accent}, transparent)`} zIndex={1} opacity={0.5} />
+      <Box position="absolute" top={0} left={0} w="1px" h="60px"
+        bg={`linear-gradient(to bottom, ${C.accent}, transparent)`} zIndex={1} opacity={0.5} />
 
-      {/* ════ LOGO ════ */}
+      {/* ── LOGO ── */}
       <Box px={4} pt={5} pb={3} position="relative" zIndex={1}>
         <Flex
           align="center" gap={3} p={3}
@@ -361,7 +337,7 @@ const Sidebar = ({ onClose }) => {
               position="absolute" inset={0}
               bg={`linear-gradient(135deg, ${C.accent}, #0EA5E9)`}
               style={{ clipPath: HEX_CLIP }}
-              opacity={0.12}
+              opacity={0.18}
             />
             <Box
               position="absolute" inset="1px"
@@ -377,20 +353,16 @@ const Sidebar = ({ onClose }) => {
             </Text>
           </Flex>
           <Box flex={1}>
-            <Text
-              fontSize="14.5px" fontWeight="700" color={C.text}
+            <Text fontSize="14.5px" fontWeight="700" color={C.text}
               letterSpacing="-0.02em" lineHeight="1.1"
-              fontFamily="'DM Sans', system-ui, sans-serif"
-            >
+              fontFamily="'DM Sans', system-ui, sans-serif">
               WorkSphere
             </Text>
             <Flex align="center" gap={1.5} mt="3px">
               <Box w="4px" h="4px" borderRadius="full" bg={C.accent} />
-              <Text
-                fontSize="8.5px" color={C.muted} fontWeight="700"
+              <Text fontSize="8.5px" color={C.muted} fontWeight="700"
                 textTransform="uppercase" letterSpacing="0.18em"
-                fontFamily="'DM Mono', monospace"
-              >
+                fontFamily="'DM Mono', monospace">
                 HRMS Platform
               </Text>
             </Flex>
@@ -410,15 +382,15 @@ const Sidebar = ({ onClose }) => {
         </Flex>
       </Box>
 
-      {/* ════ NAVIGATION ════ */}
+      {/* ── NAVIGATION ── */}
       <VStack
         spacing={0} align="stretch"
         overflowY="auto" flex={1} pb={3}
         position="relative" zIndex={1}
         css={{
           "&::-webkit-scrollbar": { width: "3px" },
-          "&::-webkit-scrollbar-track": { background: "#F1F5F9" },
-          "&::-webkit-scrollbar-thumb": { background: "#CBD5E1", borderRadius: "24px" }
+          "&::-webkit-scrollbar-track": { background: "rgba(255,255,255,0.02)" },
+          "&::-webkit-scrollbar-thumb": { background: "rgba(255,255,255,0.1)", borderRadius: "24px" },
         }}
       >
         {menuSections.map((section, si) => (
@@ -445,9 +417,11 @@ const Sidebar = ({ onClose }) => {
                     onToggle={() => toggleGroup(item.key)}
                   />
                   {isOpen && (
-                    <Box ml={6} mr={3} mb={1} pl={3} borderLeft="1px solid" borderColor={C.accentBorder} opacity={0.9}>
+                    <Box ml={6} mr={3} mb={1} pl={3}
+                      borderLeft="1px solid" borderColor={C.accentBorder} opacity={0.9}>
                       {item.children.map((child) => (
-                        <NavItem key={child.to} to={child.to} icon={child.icon} label={child.label} isChild onClose={onClose} />
+                        <NavItem key={child.to} to={child.to} icon={child.icon}
+                          label={child.label} isChild onClose={onClose} />
                       ))}
                     </Box>
                   )}
@@ -458,7 +432,7 @@ const Sidebar = ({ onClose }) => {
         ))}
       </VStack>
 
-      {/* ════ USER CARD ════ */}
+      {/* ── USER CARD ── */}
       <Box px={3} pb={4} pt={2} position="relative" zIndex={1}>
         <Box h="1px" mb={3} bg={`linear-gradient(to right, transparent, ${C.accentBorder}, transparent)`} />
         <Flex
@@ -474,11 +448,7 @@ const Sidebar = ({ onClose }) => {
           overflow="hidden"
         >
           <Box position="relative">
-            <Avatar
-              size="sm" name={user?.name}
-              bg={getAvatarBg(user?.name || "")}
-              color="white" fontSize="xs"
-            />
+            <Avatar size="sm" name={user?.name} bg={getAvatarBg(user?.name || "")} color="white" fontSize="xs" />
             <Box
               position="absolute" bottom="0" right="0"
               w="8px" h="8px" borderRadius="full"
@@ -486,20 +456,18 @@ const Sidebar = ({ onClose }) => {
             />
           </Box>
           <Box flex={1} minW={0}>
-            <Text
-              fontSize="13px" fontWeight="600" color={C.text}
+            <Text fontSize="13px" fontWeight="600" color={C.text}
               noOfLines={1} lineHeight="1.2"
-              fontFamily="'DM Sans', system-ui, sans-serif"
-            >
+              fontFamily="'DM Sans', system-ui, sans-serif">
               {user?.name || "User"}
             </Text>
             <Badge
               mt="3px" fontSize="7px" px={1.5} py={0.5}
               borderRadius="full"
-              bg={role === "Admin" ? C.accentDim : "#DBEAFE"}
-              color={role === "Admin" ? C.accent : "#1D4ED8"}
+              bg={role === "Admin" ? "rgba(16,185,129,0.15)" : "rgba(59,130,246,0.15)"}
+              color={role === "Admin" ? C.accent : "#60a5fa"}
               border="1px solid"
-              borderColor={role === "Admin" ? C.accentBorder : "#BFDBFE"}
+              borderColor={role === "Admin" ? C.accentBorder : "rgba(59,130,246,0.3)"}
               fontWeight="700" textTransform="uppercase" letterSpacing="0.1em"
               fontFamily="'DM Mono', monospace"
             >
@@ -512,7 +480,7 @@ const Sidebar = ({ onClose }) => {
               align="center" justify="center"
               color={C.muted}
               border="1px solid" borderColor="transparent"
-              _hover={{ color: "#DC2626", bg: "#FEE2E2", borderColor: "#FECACA" }}
+              _hover={{ color: "#f87171", bg: "rgba(239,68,68,0.12)", borderColor: "rgba(239,68,68,0.3)" }}
               transition="all 0.18s" flexShrink={0}
               onClick={(e) => { e.stopPropagation(); handleLogout(); }}
             >

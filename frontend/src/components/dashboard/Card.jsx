@@ -1,43 +1,32 @@
 import React from "react";
 
-export function Card({
-  title,
-  subtitle,
-  right,
-  children,
-  className = "",
-  accent,
-}) {
+export function Card({ title, subtitle, right, children, className = "", accent }) {
   return (
     <section
-      className={[
-        "relative overflow-hidden rounded-2xl bg-white",
-        "border border-slate-100 shadow-[0_2px_4px_rgba(0,0,0,0.04),0_10px_30px_rgba(0,0,0,0.08)]",
-        "transition-shadow duration-200 hover:shadow-[0_6px_18px_rgba(0,0,0,0.08),0_18px_50px_rgba(0,0,0,0.10)]",
-        className,
-      ].join(" ")}
+      className={["relative overflow-hidden rounded-2xl transition-shadow duration-200", className].join(" ")}
+      style={{
+        background:   "#0a1f35",
+        border:       "1px solid rgba(255,255,255,0.08)",
+        boxShadow:    "0 2px 8px rgba(0,0,0,0.4), 0 12px 32px rgba(0,0,0,0.25)",
+      }}
     >
       {accent && (
-        <div
-          className="h-1 w-full"
-          style={{
-            background: `linear-gradient(90deg, ${accent} 0%, ${accent}66 100%)`,
-          }}
-        />
+        <div className="h-[3px] w-full" style={{ background: `linear-gradient(90deg, ${accent} 0%, ${accent}44 100%)` }} />
       )}
 
       {(title || subtitle || right) && (
-        <header className="flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-slate-50">
+        <header
+          className="flex items-start justify-between gap-3 px-5 pt-4 pb-3"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+        >
           <div className="min-w-0">
             {title && (
-              <div className="text-[13px] font-extrabold tracking-[-0.01em] text-slate-800 truncate">
-                {title}
-              </div>
+              <div className="truncate text-[13px] font-extrabold tracking-[-0.01em]"
+                style={{ color: "#e2e8f0" }}>{title}</div>
             )}
             {subtitle && (
-              <div className="mt-0.5 text-[11px] font-medium text-slate-400 truncate">
-                {subtitle}
-              </div>
+              <div className="mt-0.5 truncate text-[11px] font-medium"
+                style={{ color: "#4a6080" }}>{subtitle}</div>
             )}
           </div>
           {right && <div className="shrink-0">{right}</div>}
@@ -48,4 +37,3 @@ export function Card({
     </section>
   );
 }
-
