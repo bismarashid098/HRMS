@@ -3,6 +3,7 @@ const Payroll = require("../models/payroll");
 const Employee = require("../models/Employee");
 const { calculateDeductions } = require("../services/payrollService");
 const Settings = require("../models/Settings");
+const { logAudit } = require("../services/auditService");
 
 exports.getAllPayrolls = asyncHandler(async (req, res) => {
   const { month, year, search, page = 1, limit = 10 } = req.query;
@@ -115,6 +116,15 @@ exports.generatePayroll = asyncHandler(async (req, res) => {
         { $set: { status: "Paid" } }
       );
     }
+
+    logAudit(req, {
+      module: "Payroll",
+      action: "Generate",
+      recordId: payroll._id,
+      recordName: employee.name,
+      description: `${req.user?.name} generated payroll for ${employee.name} — ${month}/${year} (Net: PKR ${netSalary.toLocaleString()})`,
+      newValues: { basicSalary: basic, allowance, netSalary, month, year },
+    });
 
     res.status(201).json(payroll);
   } catch (err) {
@@ -283,7 +293,29 @@ exports.approvePayroll = asyncHandler(async (req, res) => {
   payroll.status = "Approved";
   await payroll.save();
 
+  logAudit(req, {
+    module: "Payroll",
+    action: "Approve",
+    recordId: payroll._id,
+    recordName: String(payroll.employee),
+    description: `${req.user?.name} approved payroll for month ${payroll.month}/${payroll.year}`,
+    oldValues: { status: "Generated" },
+    newValues: { status: "Approved" },
+  });
+
   res.json({ message: "Payroll approved successfully" });
+});
+
+// ===============================
+// Get Single Payroll by ID
+// ===============================
+exports.getPayrollById = asyncHandler(async (req, res) => {
+  const payroll = await Payroll.findById(req.params.id).populate(
+    "employee",
+    "name employeeId department designation"
+  );
+  if (!payroll) return res.status(404).json({ message: "Payroll not found" });
+  res.json(payroll);
 });
 
 // ===============================

@@ -1,5 +1,6 @@
 const Employee = require("../models/Employee");
 const asyncHandler = require("express-async-handler");
+const { logAudit } = require("../services/auditService");
 
 const sanitizeForManager = (employee) => {
   if (!employee) {
@@ -65,16 +66,20 @@ exports.createEmployee = asyncHandler(async (req, res) => {
     monthlyOffDays: monthlyOffDays != null ? Number(monthlyOffDays) : 3
   });
 
+  logAudit(req, {
+    module: "Employee",
+    action: "Create",
+    recordId: employee._id,
+    recordName: employee.name,
+    description: `${req.user?.name} created employee ${employee.name} (${employee.employeeId})`,
+    newValues: { name, department, salary, designation, email, phone, employmentStatus },
+  });
+
   res.status(201).json(employee);
 });
 
 exports.getEmployees = asyncHandler(async (req, res) => {
-  await Employee.deleteMany({
-    name: /^Demo Employee /,
-    biometricId: /^AUTO/
-  });
-
-  const employees = await Employee.find().sort({ createdAt: -1 });
+  const employees = await Employee.find({ isDeleted: { $ne: true } }).sort({ createdAt: -1 });
 
   if (req.user && req.user.role === "Manager") {
     const sanitized = employees.map((e) => sanitizeForManager(e));
@@ -126,6 +131,17 @@ exports.updateEmployee = asyncHandler(async (req, res) => {
     religion,
     monthlyOffDays
   } = req.body;
+
+  const oldValues = {
+    name: employee.name,
+    department: employee.department,
+    salary: employee.salary,
+    email: employee.email,
+    designation: employee.designation,
+    phone: employee.phone,
+    employmentStatus: employee.employmentStatus,
+    monthlyOffDays: employee.monthlyOffDays,
+  };
 
   if (biometricId && biometricId !== employee.biometricId) {
     const exists = await Employee.findOne({ biometricId });
@@ -181,6 +197,25 @@ exports.updateEmployee = asyncHandler(async (req, res) => {
 
   await employee.save();
 
+  logAudit(req, {
+    module: "Employee",
+    action: "Update",
+    recordId: employee._id,
+    recordName: employee.name,
+    description: `${req.user?.name} updated employee ${employee.name}`,
+    oldValues,
+    newValues: {
+      name: employee.name,
+      department: employee.department,
+      salary: employee.salary,
+      email: employee.email,
+      designation: employee.designation,
+      phone: employee.phone,
+      employmentStatus: employee.employmentStatus,
+      monthlyOffDays: employee.monthlyOffDays,
+    },
+  });
+
   res.json(employee);
 });
 
@@ -191,6 +226,15 @@ exports.deleteEmployee = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Employee not found");
   }
+
+  logAudit(req, {
+    module: "Employee",
+    action: "Delete",
+    recordId: employee._id,
+    recordName: employee.name,
+    description: `${req.user?.name} deleted employee ${employee.name} (${employee.employeeId})`,
+    oldValues: { name: employee.name, department: employee.department, designation: employee.designation },
+  });
 
   await employee.deleteOne();
 

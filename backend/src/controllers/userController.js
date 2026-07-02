@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const asyncHandler = require("express-async-handler");
+const { logAudit } = require("../services/auditService");
 
 /**
  * @desc    Get all users
@@ -39,8 +40,19 @@ exports.updateUserRole = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
+  const oldRole = user.role;
   user.role = role;
   await user.save();
+
+  logAudit(req, {
+    module: "User",
+    action: "Update",
+    recordId: user._id,
+    recordName: user.name,
+    description: `${req.user?.name} changed ${user.name}'s role from ${oldRole} to ${role}`,
+    oldValues: { role: oldRole },
+    newValues: { role },
+  });
 
   res.json({ message: "User role updated successfully" });
 });
@@ -57,13 +69,22 @@ exports.toggleUserStatus = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
+  const wasActive = user.isActive;
   user.isActive = !user.isActive;
   await user.save();
 
+  logAudit(req, {
+    module: "User",
+    action: "Update",
+    recordId: user._id,
+    recordName: user.name,
+    description: `${req.user?.name} ${user.isActive ? "activated" : "deactivated"} user ${user.name}`,
+    oldValues: { isActive: wasActive },
+    newValues: { isActive: user.isActive },
+  });
+
   res.json({
-    message: `User ${
-      user.isActive ? "activated" : "deactivated"
-    } successfully`
+    message: `User ${user.isActive ? "activated" : "deactivated"} successfully`
   });
 });
 

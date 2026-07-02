@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const Advance = require("../models/Advance");
 const Employee = require("../models/Employee");
 const Settings = require("../models/Settings");
+const { logAudit } = require("../services/auditService");
 
 // @desc    Request a salary advance
 // @route   POST /api/advances
@@ -90,6 +91,15 @@ exports.requestAdvance = asyncHandler(async (req, res) => {
     month,
     year,
     status: isAdmin ? "Approved" : "Pending"
+  });
+
+  logAudit(req, {
+    module: "Advance",
+    action: "Create",
+    recordId: advance._id,
+    recordName: employee.name,
+    description: `Advance of PKR ${requestedNow.toLocaleString()} requested for ${employee.name} — ${isAdmin ? "auto-approved" : "pending approval"}`,
+    newValues: { amount: requestedNow, reason, month, year, status: advance.status },
   });
 
   res.status(201).json(advance);
@@ -182,8 +192,19 @@ exports.updateAdvanceStatus = asyncHandler(async (req, res) => {
     throw new Error("Advance request not found");
   }
 
+  const oldStatus = advance.status;
   advance.status = status;
   await advance.save();
+
+  logAudit(req, {
+    module: "Advance",
+    action: status === "Approved" ? "Approve" : "Reject",
+    recordId: advance._id,
+    recordName: String(advance.employee),
+    description: `${req.user?.name} ${status.toLowerCase()} advance of PKR ${advance.amount?.toLocaleString()}`,
+    oldValues: { status: oldStatus },
+    newValues: { status },
+  });
 
   res.json(advance);
 });

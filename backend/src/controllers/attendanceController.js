@@ -333,6 +333,4 @@ exports.approveCorrection = asyncHandler(async (req, res) => {
   attendance.correctionRequest.requested = false;
   await attendance.save();
   res.json({ message: "Correction approved" });
-
-  
 });

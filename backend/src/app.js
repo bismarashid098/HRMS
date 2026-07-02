@@ -14,6 +14,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const auditRoutes = require("./routes/auditRoutes");
 const advanceRoutes = require("./routes/advanceRoutes");
 const userRoutes = require("./routes/userRoutes");
+const biometricRoutes = require("./routes/biometricRoutes");
 
 const errorHandler = require("./middleware/errorMiddleware");
 
@@ -46,6 +47,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/audit-logs", auditRoutes);
 app.use("/api/advances", advanceRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/biometric", biometricRoutes);
 
 // 404 handler — catches wrong method or unknown routes instead of hanging
 app.use((req, res) => {

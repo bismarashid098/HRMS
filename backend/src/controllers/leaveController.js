@@ -1,6 +1,8 @@
+const asyncHandler = require("express-async-handler");
 const Leave = require("../models/Leave");
 const LeaveBalance = require("../models/LeaveBalance");
 const Employee = require("../models/Employee");
+const { logAudit } = require("../services/auditService");
 
 // helper
 const calculateDays = (from, to) => {
@@ -13,7 +15,7 @@ const calculateDays = (from, to) => {
  * POST /api/leaves
  * Employee
  */
-exports.applyLeave = async (req, res) => {
+exports.applyLeave = asyncHandler(async (req, res) => {
   const { employeeId, type, fromDate, toDate, reason } = req.body;
 
   const employee = await Employee.findById(employeeId);
@@ -45,15 +47,24 @@ exports.applyLeave = async (req, res) => {
     reason
   });
 
+  logAudit(req, {
+    module: "Leave",
+    action: "Create",
+    recordId: leave._id,
+    recordName: employee.name,
+    description: `Leave applied for ${employee.name} — ${type} (${days} day${days > 1 ? "s" : ""}) from ${fromDate} to ${toDate}`,
+    newValues: { type, fromDate, toDate, totalDays: days, paid, reason },
+  });
+
   res.status(201).json(leave);
-};
+});
 
 /**
  * Approve / Reject Leave
  * PUT /api/leaves/:id
  * Admin, HR
  */
-exports.updateLeaveStatus = async (req, res) => {
+exports.updateLeaveStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
 
   const leave = await Leave.findById(req.params.id);
@@ -67,34 +78,47 @@ exports.updateLeaveStatus = async (req, res) => {
 
   if (status === "Approved" && leave.paid) {
     const balance = await LeaveBalance.findOne({ employee: leave.employee });
-    const key = leave.type.toLowerCase();
-    balance[key] -= leave.totalDays;
-    await balance.save();
+    if (balance) {
+      const key = leave.type.toLowerCase();
+      balance[key] = Math.max(0, (balance[key] || 0) - leave.totalDays);
+      await balance.save();
+    }
   }
 
+  const oldStatus = leave.status;
   leave.status = status;
   await leave.save();
 
+  logAudit(req, {
+    module: "Leave",
+    action: status === "Approved" ? "Approve" : "Reject",
+    recordId: leave._id,
+    recordName: String(leave.employee),
+    description: `${req.user?.name} ${status.toLowerCase()} leave request (${leave.type}, ${leave.totalDays} day${leave.totalDays > 1 ? "s" : ""})`,
+    oldValues: { status: oldStatus },
+    newValues: { status },
+  });
+
   res.json({ message: `Leave ${status}` });
-};
+});
 
 /**
  * Get My Leaves
  * GET /api/leaves/my/:employeeId
  */
-exports.getMyLeaves = async (req, res) => {
+exports.getMyLeaves = asyncHandler(async (req, res) => {
   const leaves = await Leave.find({ employee: req.params.employeeId })
     .sort({ createdAt: -1 });
 
   res.json(leaves);
-};
+});
 
 /**
  * Get All Leaves
  * GET /api/leaves
  * Admin, HR
  */
-exports.getAllLeaves = async (req, res) => {
+exports.getAllLeaves = asyncHandler(async (req, res) => {
   const leaves = await Leave.find()
     .populate({
       path: "employee",
@@ -104,4 +128,4 @@ exports.getAllLeaves = async (req, res) => {
     .sort({ createdAt: -1 });
 
   res.json(leaves);
-};
+});

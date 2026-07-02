@@ -1,10 +1,12 @@
+const asyncHandler = require("express-async-handler");
 const Settings = require("../models/Settings");
+const { logAudit } = require("../services/auditService");
 
 /**
  * Get Settings
  * GET /api/settings
  */
-exports.getSettings = async (req, res) => {
+exports.getSettings = asyncHandler(async (req, res) => {
   let settings = await Settings.findOne();
 
   if (!settings) {
@@ -12,14 +14,15 @@ exports.getSettings = async (req, res) => {
   }
 
   res.json(settings);
-};
+});
 
 /**
  * Update Settings
  * PUT /api/settings
  */
-exports.updateSettings = async (req, res) => {
+exports.updateSettings = asyncHandler(async (req, res) => {
   let settings = await Settings.findOne();
+  const oldValues = settings ? settings.toObject() : {};
 
   if (!settings) {
     settings = await Settings.create(req.body);
@@ -28,5 +31,14 @@ exports.updateSettings = async (req, res) => {
     await settings.save();
   }
 
+  logAudit(req, {
+    module: "Settings",
+    action: "Update",
+    recordName: "System Settings",
+    description: `${req.user?.name} updated system settings`,
+    oldValues,
+    newValues: settings.toObject(),
+  });
+
   res.json({ message: "Settings updated successfully", settings });
-};
+});

@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Employee = require("../models/Employee");
 const generateToken = require("../utils/generateToken");
 const asyncHandler = require("express-async-handler");
+const { logAudit } = require("../services/auditService");
 
 exports.register = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
@@ -33,6 +34,17 @@ exports.login = asyncHandler(async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user || !(await user.matchPassword(password))) {
+        // Log failed login without crashing (user may not exist)
+        if (user) {
+            logAudit(req, {
+                module: "Auth",
+                action: "Failed Login",
+                recordId: user._id,
+                recordName: user.name,
+                description: `Failed login attempt for ${email}`,
+                userOverride: { _id: user._id, name: user.name, role: user.role },
+            });
+        }
         res.status(401);
         throw new Error("Invalid credentials");
     }
@@ -43,6 +55,15 @@ exports.login = asyncHandler(async (req, res) => {
     }
 
     const employee = await Employee.findOne({ user: user._id });
+
+    logAudit(req, {
+        module: "Auth",
+        action: "Login",
+        recordId: user._id,
+        recordName: user.name,
+        description: `${user.name} (${user.role}) logged in`,
+        userOverride: { _id: user._id, name: user.name, role: user.role },
+    });
 
     res.json({
         _id: user._id,
@@ -90,6 +111,14 @@ exports.changePassword = asyncHandler(async (req, res) => {
     user.password = newPassword;
     await user.save();
 
+    logAudit(req, {
+        module: "Auth",
+        action: "Password Change",
+        recordId: user._id,
+        recordName: user.name,
+        description: `${user.name} changed their password`,
+    });
+
     res.json({ message: "Password updated successfully" });
 });
 
@@ -101,6 +130,8 @@ exports.updateProfile = asyncHandler(async (req, res) => {
         res.status(404);
         throw new Error("User not found");
     }
+
+    const oldValues = { name: user.name, email: user.email };
 
     if (email && email !== user.email) {
         const emailExists = await User.findOne({ email });
@@ -116,6 +147,16 @@ exports.updateProfile = asyncHandler(async (req, res) => {
     }
 
     await user.save();
+
+    logAudit(req, {
+        module: "Auth",
+        action: "Profile Update",
+        recordId: user._id,
+        recordName: user.name,
+        description: `${user.name} updated their profile`,
+        oldValues,
+        newValues: { name: user.name, email: user.email },
+    });
 
     res.json({
         _id: user._id,

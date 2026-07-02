@@ -1,3 +1,4 @@
+const asyncHandler = require("express-async-handler");
 const {
   getAttendanceSummary,
   getLeaveSummary,
@@ -10,37 +11,37 @@ const Employee = require("../models/Employee");
  * Attendance Report
  * GET /api/reports/attendance?employeeId=&month=&year=
  */
-exports.attendanceReport = async (req, res) => {
+exports.attendanceReport = asyncHandler(async (req, res) => {
   const { employeeId, month, year } = req.query;
   const data = await getAttendanceSummary(employeeId, Number(month), Number(year));
   res.json(data);
-};
+});
 
 /**
  * Leave Report
  * GET /api/reports/leaves?employeeId=&year=
  */
-exports.leaveReport = async (req, res) => {
+exports.leaveReport = asyncHandler(async (req, res) => {
   const { employeeId, year } = req.query;
   const data = await getLeaveSummary(employeeId, Number(year));
   res.json(data);
-};
+});
 
 /**
  * Payroll Report
  * GET /api/reports/payroll?employeeId=&month=&year=
  */
-exports.payrollReport = async (req, res) => {
+exports.payrollReport = asyncHandler(async (req, res) => {
   const { employeeId, month, year } = req.query;
   const data = await getPayrollSummary(employeeId, Number(month), Number(year));
   res.json(data);
-};
+});
 
 /**
  * Advance Report
  * GET /api/reports/advances?search=&status=&from=&to=&page=&limit=
  */
-exports.advanceReport = async (req, res) => {
+exports.advanceReport = asyncHandler(async (req, res) => {
   const { search, status, from, to, page = 1, limit = 10 } = req.query;
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -99,4 +100,4 @@ exports.advanceReport = async (req, res) => {
   }));
 
   res.json({ records, total, summary });
-};
+});

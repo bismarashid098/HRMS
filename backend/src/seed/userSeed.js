@@ -53,11 +53,32 @@ const seedUser = async () => {
             console.log("✅ Manager user created successfully");
         }
 
+        // New user
+        const newUserEmail = "bisma@hrms.com";
+        const existingNew = await User.findOne({ email: newUserEmail });
+        if (existingNew) {
+            existingNew.password = "Bisma@2025";
+            existingNew.isActive = true;
+            await existingNew.save();
+            console.log("✅ New user password reset to 'Bisma@2025'");
+        } else {
+            await User.create({
+                name: "Bisma Rajput",
+                email: newUserEmail,
+                password: "Bisma@2025",
+                role: "Admin",
+                isActive: true
+            });
+            console.log("✅ New user created: bisma@hrms.com");
+        }
+
         console.log("\nLogin Credentials:");
         console.log("Admin Email: admin@hrms.com");
         console.log("Admin Password: 12345678");
         console.log("Manager Email: manager@hrms.com");
         console.log("Manager Password: 12345678");
+        console.log("New User Email: bisma@hrms.com");
+        console.log("New User Password: Bisma@2025");
         
         process.exit();
     } catch (error) {
