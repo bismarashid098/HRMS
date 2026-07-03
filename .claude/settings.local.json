@@ -54,7 +54,12 @@
       "PowerShell(cd E:\\\\HRMS\\\\frontend; npx tsc --noEmit 2>&1; Write-Host \"TSC Exit: $LASTEXITCODE\")",
       "PowerShell(cd E:\\\\HRMS\\\\frontend; npx eslint src --ext .ts,.tsx 2>&1 | Where-Object { $_ -notmatch \"prettier/prettier\" } | Select-Object -First 50; Write-Host \"ESLint Exit: $LASTEXITCODE\")",
       "PowerShell(cd E:\\\\HRMS\\\\frontend; npx eslint . --report-unused-disable-directives --max-warnings 0; Write-Host \"Exit: $LASTEXITCODE\")",
-      "PowerShell(npm run *)"
+      "PowerShell(npm run *)",
+      "Bash(git rm *)",
+      "Bash(git commit *)",
+      "Bash(Get-ChildItem *)",
+      "Bash(node backend/src/seed/userSeed.js)",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@hrms.com\",\"password\":\"12345678\"}')"
     ]
   }
 }
