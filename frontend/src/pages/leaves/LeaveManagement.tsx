@@ -43,7 +43,7 @@ const LeaveManagement = () => {
   const handleAction = async (id: string, status: 'Approved' | 'Rejected') => {
     setActionLoading(id);
     try {
-      await api.put(`/leaves/${id}/status`, { status });
+      await api.put(`/leaves/${id}`, { status });
       fetchLeaves();
     } catch (e) {
       console.error(e);

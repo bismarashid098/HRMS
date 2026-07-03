@@ -52,21 +52,34 @@ const AdvanceSalary = () => {
   }, []);
 
   const handleSubmit = async () => {
-    await api.post('/advances', {
-      ...form,
-      amount: Number(form.amount),
-      month: new Date().getMonth() + 1,
-      year: new Date().getFullYear(),
-    });
-    setOpen(false);
-    setForm({ employee: '', amount: '', reason: '', date: new Date().toISOString().slice(0, 10) });
-    fetchAdvances();
+    if (!form.employee || !form.amount || !form.reason) return;
+    try {
+      const d = new Date(form.date);
+      await api.post('/advances', {
+        employeeId: form.employee,
+        amount: Number(form.amount),
+        reason: form.reason,
+        date: form.date,
+        month: d.getMonth() + 1,
+        year: d.getFullYear(),
+      });
+      setOpen(false);
+      setForm({
+        employee: '',
+        amount: '',
+        reason: '',
+        date: new Date().toISOString().slice(0, 10),
+      });
+      fetchAdvances();
+    } catch (e: any) {
+      alert(e.response?.data?.message || 'Failed to add advance');
+    }
   };
 
   const handleAction = async (id: string, status: string) => {
     setActionLoading(id);
     try {
-      await api.put(`/advances/${id}/status`, { status });
+      await api.put(`/advances/${id}`, { status });
       fetchAdvances();
     } catch (e) {
       console.error(e);
