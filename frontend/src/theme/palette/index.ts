@@ -243,13 +243,13 @@ const darkText = generatePaletteChannel({
   disabled: '#3a5570',
 });
 const darkBackground = generatePaletteChannel({
-  default:        '#060c1a',   // deepest — main page canvas
-  paper:          '#0b1728',   // cards, sidebar, appbar
-  elevation1:     '#0e1d32',   // slightly raised elements
-  elevation2:     '#11223c',   // modals, dropdowns base
-  elevation3:     '#142742',   // tooltips, popovers
-  elevation4:     '#172c4a',   // highest elevation
-  menu:           '#0e1d32',
+  default: '#060c1a', // deepest — main page canvas
+  paper: '#0b1728', // cards, sidebar, appbar
+  elevation1: '#0e1d32', // slightly raised elements
+  elevation2: '#11223c', // modals, dropdowns base
+  elevation3: '#142742', // tooltips, popovers
+  elevation4: '#172c4a', // highest elevation
+  menu: '#0e1d32',
   menuElevation1: '#11223c',
   menuElevation2: '#142742',
 });

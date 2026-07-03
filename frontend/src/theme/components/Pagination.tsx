@@ -78,7 +78,7 @@ const Pagination: Components<Omit<Theme, 'components'>>['MuiPagination'] = {
 };
 
 export const PaginationItem: Components<Omit<Theme, 'components'>>['MuiPaginationItem'] = {
-  variants: [...paginationCustomVariants],
+  variants: [...(paginationCustomVariants ?? [])],
   defaultProps: {
     slots: {
       next: NextIcon,

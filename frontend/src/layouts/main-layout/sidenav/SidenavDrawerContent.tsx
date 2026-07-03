@@ -36,7 +36,14 @@ const SidenavDrawerContent = ({ variant = 'permanent' }: SidenavDrawerContentPro
 
   return (
     <>
-      <Toolbar variant="appbar" sx={{ display: 'block', px: { xs: 0 } }}>
+      <Toolbar
+        variant="appbar"
+        sx={{
+          display: 'block',
+          px: { xs: 0 },
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+        }}
+      >
         <Box
           sx={[
             {

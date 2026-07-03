@@ -6,7 +6,6 @@ import {
   Chip,
   CircularProgress,
   Divider,
-  LinearProgress,
   Paper,
   Stack,
   Tab,
@@ -17,7 +16,6 @@ import {
   TableRow,
   Tabs,
   TextField,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
@@ -142,7 +140,12 @@ const ImportTab = () => {
           alignItems: 'flex-start',
         }}
       >
-        <Icon icon="material-symbols:info-outline-rounded" width={22} color={theme.palette.info.main} style={{ marginTop: 2, flexShrink: 0 }} />
+        <Icon
+          icon="material-symbols:info-outline-rounded"
+          width={22}
+          color={theme.palette.info.main}
+          style={{ marginTop: 2, flexShrink: 0 }}
+        />
         <Box>
           <Typography variant="subtitle2" fontWeight={700} color="info.main" gutterBottom>
             Biometric Machine Export Format
@@ -150,10 +153,10 @@ const ImportTab = () => {
           <Typography variant="body2" color="text.secondary">
             Export attendance logs from your biometric device (ZKTeco, Suprema, Hikvision, etc.) as{' '}
             <strong>CSV or Excel</strong>. The file must contain columns:{' '}
-            <strong>Employee Code</strong>, <strong>Date</strong>,{' '}
-            <strong>Punch In</strong> (optional), <strong>Punch Out</strong> (optional),{' '}
-            <strong>Status</strong> (optional). Status is auto-calculated from Punch In time if
-            omitted. Download the template below for the exact format.
+            <strong>Employee Code</strong>, <strong>Date</strong>, <strong>Punch In</strong>{' '}
+            (optional), <strong>Punch Out</strong> (optional), <strong>Status</strong> (optional).
+            Status is auto-calculated from Punch In time if omitted. Download the template below for
+            the exact format.
           </Typography>
         </Box>
       </Box>
@@ -172,7 +175,10 @@ const ImportTab = () => {
 
       {/* Drop zone */}
       <Box
-        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         onClick={() => fileRef.current?.click()}
@@ -197,10 +203,16 @@ const ImportTab = () => {
           type="file"
           accept=".csv,.xlsx,.xls"
           style={{ display: 'none' }}
-          onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }}
+          onChange={(e) => {
+            if (e.target.files?.[0]) handleFile(e.target.files[0]);
+          }}
         />
         <Icon
-          icon={file ? 'material-symbols:file-present-outline-rounded' : 'material-symbols:upload-file-outline-rounded'}
+          icon={
+            file
+              ? 'material-symbols:file-present-outline-rounded'
+              : 'material-symbols:upload-file-outline-rounded'
+          }
           width={48}
           color={file ? theme.palette.success.main : theme.palette.text.secondary}
         />
@@ -238,7 +250,13 @@ const ImportTab = () => {
           size="large"
           disabled={!file || loading}
           onClick={handleImport}
-          startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <Icon icon="material-symbols:upload-rounded" />}
+          startIcon={
+            loading ? (
+              <CircularProgress size={18} color="inherit" />
+            ) : (
+              <Icon icon="material-symbols:upload-rounded" />
+            )
+          }
           sx={{ minWidth: 160 }}
         >
           {loading ? 'Importing…' : 'Import Attendance'}
@@ -247,7 +265,11 @@ const ImportTab = () => {
           <Button
             variant="outlined"
             color="inherit"
-            onClick={() => { setFile(null); setResult(null); setError(''); }}
+            onClick={() => {
+              setFile(null);
+              setResult(null);
+              setError('');
+            }}
           >
             Clear
           </Button>
@@ -258,17 +280,43 @@ const ImportTab = () => {
       {result && (
         <Box>
           <Alert
-            severity={result.errorCount > 0 && result.inserted + result.updated === 0 ? 'error' : result.errorCount > 0 ? 'warning' : 'success'}
+            severity={
+              result.errorCount > 0 && result.inserted + result.updated === 0
+                ? 'error'
+                : result.errorCount > 0
+                  ? 'warning'
+                  : 'success'
+            }
             sx={{ mb: 2 }}
           >
             Import complete — {result.total} row{result.total !== 1 ? 's' : ''} processed.
           </Alert>
 
           <Stack direction="row" spacing={1.5} sx={{ mb: 3 }}>
-            <StatBox icon="material-symbols:add-circle-outline-rounded" label="Inserted" value={result.inserted} color={theme.palette.success.main} />
-            <StatBox icon="material-symbols:edit-outline-rounded" label="Updated" value={result.updated} color={theme.palette.info.main} />
-            <StatBox icon="material-symbols:lock-outline-rounded" label="Skipped" value={result.skipped} color={theme.palette.warning.main} />
-            <StatBox icon="material-symbols:error-outline-rounded" label="Errors" value={result.errorCount} color={theme.palette.error.main} />
+            <StatBox
+              icon="material-symbols:add-circle-outline-rounded"
+              label="Inserted"
+              value={result.inserted}
+              color={theme.palette.success.main}
+            />
+            <StatBox
+              icon="material-symbols:edit-outline-rounded"
+              label="Updated"
+              value={result.updated}
+              color={theme.palette.info.main}
+            />
+            <StatBox
+              icon="material-symbols:lock-outline-rounded"
+              label="Skipped"
+              value={result.skipped}
+              color={theme.palette.warning.main}
+            />
+            <StatBox
+              icon="material-symbols:error-outline-rounded"
+              label="Errors"
+              value={result.errorCount}
+              color={theme.palette.error.main}
+            />
           </Stack>
 
           {result.errors.length > 0 && (
@@ -348,7 +396,12 @@ const ExportTab = () => {
           alignItems: 'flex-start',
         }}
       >
-        <Icon icon="material-symbols:info-outline-rounded" width={22} color={theme.palette.success.main} style={{ marginTop: 2, flexShrink: 0 }} />
+        <Icon
+          icon="material-symbols:info-outline-rounded"
+          width={22}
+          color={theme.palette.success.main}
+          style={{ marginTop: 2, flexShrink: 0 }}
+        />
         <Typography variant="body2" color="text.secondary">
           Export all attendance records for a date range as <strong>Excel (.xlsx)</strong> or{' '}
           <strong>CSV</strong>. The exported file includes Employee Code, Biometric ID, Punch In/Out
@@ -358,7 +411,11 @@ const ExportTab = () => {
 
       <Grid container spacing={2} alignItems="flex-end">
         <Grid size={{ xs: 12, sm: 4 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}
+          >
             From Date
           </Typography>
           <TextField
@@ -371,7 +428,11 @@ const ExportTab = () => {
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}
+          >
             To Date
           </Typography>
           <TextField
@@ -384,7 +445,11 @@ const ExportTab = () => {
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}
+          >
             Format
           </Typography>
           <Stack direction="row" spacing={1}>
@@ -395,7 +460,12 @@ const ExportTab = () => {
                 onClick={() => setFormat(f)}
                 color={format === f ? 'primary' : 'default'}
                 variant={format === f ? 'filled' : 'outlined'}
-                icon={<Icon icon={f === 'xlsx' ? 'mdi:microsoft-excel' : 'mdi:file-delimited-outline'} width={16} />}
+                icon={
+                  <Icon
+                    icon={f === 'xlsx' ? 'mdi:microsoft-excel' : 'mdi:file-delimited-outline'}
+                    width={16}
+                  />
+                }
                 sx={{ cursor: 'pointer', fontWeight: 700 }}
               />
             ))}
@@ -412,9 +482,11 @@ const ExportTab = () => {
           disabled={!from || !to || loading}
           onClick={handleExport}
           startIcon={
-            loading
-              ? <CircularProgress size={18} color="inherit" />
-              : <Icon icon="material-symbols:download-rounded" />
+            loading ? (
+              <CircularProgress size={18} color="inherit" />
+            ) : (
+              <Icon icon="material-symbols:download-rounded" />
+            )
           }
           sx={{ minWidth: 200 }}
         >
@@ -428,10 +500,50 @@ const ExportTab = () => {
 const DeviceInfoTab = () => {
   const theme = useTheme();
   const devices = [
-    { name: 'ZKTeco', icon: 'material-symbols:fingerprint-rounded', color: '#3b82f6', steps: ['Open ZKTeco software → Reports → Attendance Logs', 'Select date range and all employees', 'Export → Save as Excel or CSV', 'Upload the file in the Import tab'] },
-    { name: 'Suprema', icon: 'material-symbols:lock-open-right-outline-rounded', color: '#10b981', steps: ['Open BioStar 2 → Reports → Time & Attendance', 'Filter by date range', 'Export to Excel', 'Map "User ID" column to Employee Code and upload'] },
-    { name: 'Hikvision', icon: 'material-symbols:videocam-outline-rounded', color: '#f59e0b', steps: ['Open iVMS-4200 → Access Control → Search', 'Select date range and export attendance records', 'Export as CSV', 'Rename "Card No" or "ID" column to "Employee Code"'] },
-    { name: 'Anviz', icon: 'material-symbols:nfc-rounded', color: '#8b5cf6', steps: ['Open CrossChex → Reports → Attendance', 'Set date range and click Export', 'Save as Excel file', 'Upload directly — "Emp Code" column is recognized automatically'] },
+    {
+      name: 'ZKTeco',
+      icon: 'material-symbols:fingerprint-rounded',
+      color: '#3b82f6',
+      steps: [
+        'Open ZKTeco software → Reports → Attendance Logs',
+        'Select date range and all employees',
+        'Export → Save as Excel or CSV',
+        'Upload the file in the Import tab',
+      ],
+    },
+    {
+      name: 'Suprema',
+      icon: 'material-symbols:lock-open-right-outline-rounded',
+      color: '#10b981',
+      steps: [
+        'Open BioStar 2 → Reports → Time & Attendance',
+        'Filter by date range',
+        'Export to Excel',
+        'Map "User ID" column to Employee Code and upload',
+      ],
+    },
+    {
+      name: 'Hikvision',
+      icon: 'material-symbols:videocam-outline-rounded',
+      color: '#f59e0b',
+      steps: [
+        'Open iVMS-4200 → Access Control → Search',
+        'Select date range and export attendance records',
+        'Export as CSV',
+        'Rename "Card No" or "ID" column to "Employee Code"',
+      ],
+    },
+    {
+      name: 'Anviz',
+      icon: 'material-symbols:nfc-rounded',
+      color: '#8b5cf6',
+      steps: [
+        'Open CrossChex → Reports → Attendance',
+        'Set date range and click Export',
+        'Save as Excel file',
+        'Upload directly — "Emp Code" column is recognized automatically',
+      ],
+    },
   ];
 
   return (
@@ -447,7 +559,12 @@ const DeviceInfoTab = () => {
           alignItems: 'flex-start',
         }}
       >
-        <Icon icon="material-symbols:devices-outline-rounded" width={22} color={theme.palette.warning.main} style={{ marginTop: 2, flexShrink: 0 }} />
+        <Icon
+          icon="material-symbols:devices-outline-rounded"
+          width={22}
+          color={theme.palette.warning.main}
+          style={{ marginTop: 2, flexShrink: 0 }}
+        />
         <Box>
           <Typography variant="subtitle2" fontWeight={700} color="warning.main" gutterBottom>
             How to export from your biometric machine
@@ -528,7 +645,8 @@ const DeviceInfoTab = () => {
           Supported Column Names
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          The importer automatically recognises these column name variants from common machine exports:
+          The importer automatically recognises these column name variants from common machine
+          exports:
         </Typography>
         <Grid container spacing={1}>
           {[
@@ -540,8 +658,22 @@ const DeviceInfoTab = () => {
             ['Status', 'status — Present/Absent/Late/Half Day (auto if omitted)'],
           ].map(([col, aliases]) => (
             <Grid key={col} size={{ xs: 12, sm: 6 }}>
-              <Stack direction="row" spacing={1} sx={{ p: 1.5, bgcolor: alpha(theme.palette.action.selected, 0.5), borderRadius: 1.5 }}>
-                <Chip label={col} size="small" color="primary" variant="outlined" sx={{ fontWeight: 700, fontSize: 11 }} />
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  p: 1.5,
+                  bgcolor: alpha(theme.palette.action.selected, 0.5),
+                  borderRadius: 1.5,
+                }}
+              >
+                <Chip
+                  label={col}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                  sx={{ fontWeight: 700, fontSize: 11 }}
+                />
                 <Typography variant="caption" color="text.secondary" sx={{ alignSelf: 'center' }}>
                   {aliases}
                 </Typography>
@@ -598,11 +730,7 @@ const BiometricImport = () => {
       </Box>
 
       {/* Tabs */}
-      <Paper
-        elevation={0}
-        variant="outlined"
-        sx={{ borderRadius: 3, overflow: 'hidden' }}
-      >
+      <Paper elevation={0} variant="outlined" sx={{ borderRadius: 3, overflow: 'hidden' }}>
         <Tabs
           value={tab}
           onChange={(_, v) => setTab(v)}

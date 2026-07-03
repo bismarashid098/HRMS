@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   Box,
   Button,
   Chip,
@@ -59,7 +58,10 @@ interface Meta {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const ACTION_COLORS: Record<string, 'success' | 'info' | 'error' | 'warning' | 'default' | 'primary' | 'secondary'> = {
+const ACTION_COLORS: Record<
+  string,
+  'success' | 'info' | 'error' | 'warning' | 'default' | 'primary' | 'secondary'
+> = {
   Create: 'success',
   Update: 'info',
   Delete: 'error',
@@ -121,8 +123,12 @@ const DiffView = ({ log }: { log: AuditLog }) => {
           <TableHead>
             <TableRow sx={{ bgcolor: alpha(theme.palette.action.selected, 0.5) }}>
               <TableCell sx={{ fontWeight: 700, width: '25%' }}>Field</TableCell>
-              <TableCell sx={{ fontWeight: 700, width: '37.5%', color: 'error.main' }}>Before</TableCell>
-              <TableCell sx={{ fontWeight: 700, width: '37.5%', color: 'success.main' }}>After</TableCell>
+              <TableCell sx={{ fontWeight: 700, width: '37.5%', color: 'error.main' }}>
+                Before
+              </TableCell>
+              <TableCell sx={{ fontWeight: 700, width: '37.5%', color: 'success.main' }}>
+                After
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -135,7 +141,10 @@ const DiffView = ({ log }: { log: AuditLog }) => {
                   key={key}
                   sx={{
                     bgcolor: changed
-                      ? alpha(theme.palette.warning.main, theme.palette.mode === 'dark' ? 0.07 : 0.04)
+                      ? alpha(
+                          theme.palette.warning.main,
+                          theme.palette.mode === 'dark' ? 0.07 : 0.04,
+                        )
                       : 'transparent',
                     '&:last-child td': { border: 0 },
                   }}
@@ -159,7 +168,9 @@ const DiffView = ({ log }: { log: AuditLog }) => {
                         {String(typeof oldVal === 'object' ? JSON.stringify(oldVal) : oldVal)}
                       </Typography>
                     ) : (
-                      <Typography variant="caption" color="text.disabled">—</Typography>
+                      <Typography variant="caption" color="text.disabled">
+                        —
+                      </Typography>
                     )}
                   </TableCell>
                   <TableCell>
@@ -176,7 +187,9 @@ const DiffView = ({ log }: { log: AuditLog }) => {
                         {String(typeof newVal === 'object' ? JSON.stringify(newVal) : newVal)}
                       </Typography>
                     ) : (
-                      <Typography variant="caption" color="text.disabled">—</Typography>
+                      <Typography variant="caption" color="text.disabled">
+                        —
+                      </Typography>
                     )}
                   </TableCell>
                 </TableRow>
@@ -203,13 +216,22 @@ const DetailModal = ({ log, onClose }: { log: AuditLog | null; onClose: () => vo
       <DialogTitle sx={{ pb: 1 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Stack direction="row" alignItems="center" spacing={1.5}>
-            <Icon icon={ACTION_ICONS[log.action] || 'material-symbols:info-outline-rounded'} width={22} />
+            <Icon
+              icon={ACTION_ICONS[log.action] || 'material-symbols:info-outline-rounded'}
+              width={22}
+            />
             <Box>
-              <Typography variant="h6" fontWeight={700}>Audit Log Detail</Typography>
+              <Typography variant="h6" fontWeight={700}>
+                Audit Log Detail
+              </Typography>
               <Typography variant="caption" color="text.secondary">
                 {new Date(log.createdAt).toLocaleString('en-PK', {
-                  day: 'numeric', month: 'long', year: 'numeric',
-                  hour: '2-digit', minute: '2-digit', second: '2-digit',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
                 })}
               </Typography>
             </Box>
@@ -227,37 +249,88 @@ const DetailModal = ({ log, onClose }: { log: AuditLog | null; onClose: () => vo
             sx={{
               p: 2,
               borderRadius: 2,
-              bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.1 : 0.05),
+              bgcolor: alpha(
+                theme.palette.primary.main,
+                theme.palette.mode === 'dark' ? 0.1 : 0.05,
+              ),
               border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
             }}
           >
-            <Typography variant="body1" fontWeight={600}>{log.description}</Typography>
+            <Typography variant="body1" fontWeight={600}>
+              {log.description}
+            </Typography>
           </Box>
 
           {/* Meta grid */}
           <Grid container spacing={2}>
             {[
-              { label: 'User', value: log.userName, icon: 'material-symbols:person-outline-rounded' },
-              { label: 'Role', value: log.userRole, icon: 'material-symbols:shield-outline-rounded' },
-              { label: 'Module', value: log.module, icon: MODULE_ICONS[log.module] || 'material-symbols:widgets-outline-rounded' },
-              { label: 'Action', value: log.action, icon: ACTION_ICONS[log.action] || 'material-symbols:bolt-rounded' },
-              { label: 'Record', value: log.recordName || log.recordId || '—', icon: 'material-symbols:article-outline-rounded' },
-              { label: 'IP Address', value: log.ip || '—', icon: 'material-symbols:router-outline-rounded' },
-              { label: 'Browser', value: log.browser || '—', icon: 'material-symbols:public-rounded' },
-              { label: 'OS', value: log.os || '—', icon: 'material-symbols:computer-outline-rounded' },
-              { label: 'Device', value: log.device || '—', icon: 'material-symbols:devices-outline-rounded' },
+              {
+                label: 'User',
+                value: log.userName,
+                icon: 'material-symbols:person-outline-rounded',
+              },
+              {
+                label: 'Role',
+                value: log.userRole,
+                icon: 'material-symbols:shield-outline-rounded',
+              },
+              {
+                label: 'Module',
+                value: log.module,
+                icon: MODULE_ICONS[log.module] || 'material-symbols:widgets-outline-rounded',
+              },
+              {
+                label: 'Action',
+                value: log.action,
+                icon: ACTION_ICONS[log.action] || 'material-symbols:bolt-rounded',
+              },
+              {
+                label: 'Record',
+                value: log.recordName || log.recordId || '—',
+                icon: 'material-symbols:article-outline-rounded',
+              },
+              {
+                label: 'IP Address',
+                value: log.ip || '—',
+                icon: 'material-symbols:router-outline-rounded',
+              },
+              {
+                label: 'Browser',
+                value: log.browser || '—',
+                icon: 'material-symbols:public-rounded',
+              },
+              {
+                label: 'OS',
+                value: log.os || '—',
+                icon: 'material-symbols:computer-outline-rounded',
+              },
+              {
+                label: 'Device',
+                value: log.device || '—',
+                icon: 'material-symbols:devices-outline-rounded',
+              },
             ].map(({ label, value, icon }) => (
               <Grid key={label} size={{ xs: 6, sm: 4 }}>
                 <Stack direction="row" spacing={1} alignItems="flex-start">
-                  <Icon icon={icon} width={16} style={{ marginTop: 3, opacity: 0.6, flexShrink: 0 }} />
+                  <Icon
+                    icon={icon}
+                    width={16}
+                    style={{ marginTop: 3, opacity: 0.6, flexShrink: 0 }}
+                  />
                   <Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: 'block', fontWeight: 600 }}
+                    >
                       {label}
                     </Typography>
                     <Typography variant="body2" fontWeight={500}>
                       {label === 'Action' ? (
                         <Chip label={value} size="small" color={actionColor} />
-                      ) : value}
+                      ) : (
+                        value
+                      )}
                     </Typography>
                   </Box>
                 </Stack>
@@ -275,7 +348,15 @@ const DetailModal = ({ log, onClose }: { log: AuditLog | null; onClose: () => vo
                 size="small"
                 variant="outlined"
                 color="inherit"
-                startIcon={<Icon icon={showRaw ? 'material-symbols:expand-less-rounded' : 'material-symbols:code-rounded'} />}
+                startIcon={
+                  <Icon
+                    icon={
+                      showRaw
+                        ? 'material-symbols:expand-less-rounded'
+                        : 'material-symbols:code-rounded'
+                    }
+                  />
+                }
                 onClick={() => setShowRaw((p) => !p)}
               >
                 {showRaw ? 'Hide' : 'Show'} Raw JSON
@@ -286,7 +367,8 @@ const DetailModal = ({ log, onClose }: { log: AuditLog | null; onClose: () => vo
                     mt: 1.5,
                     p: 2,
                     borderRadius: 2,
-                    bgcolor: theme.palette.mode === 'dark' ? alpha('#000', 0.4) : alpha('#000', 0.04),
+                    bgcolor:
+                      theme.palette.mode === 'dark' ? alpha('#000', 0.4) : alpha('#000', 0.04),
                     border: `1px solid ${theme.palette.divider}`,
                     fontFamily: 'monospace',
                     fontSize: 12,
@@ -335,33 +417,42 @@ const AuditLogs = () => {
 
   const activeFilterCount = [from, to, module, action, role, search].filter(Boolean).length - 2; // from/to are always set
 
-  const buildParams = useCallback((pg = page) => {
-    const p: Record<string, string> = { page: String(pg), limit: '25' };
-    if (from) p.from = from;
-    if (to) p.to = to;
-    if (module) p.module = module;
-    if (action) p.action = action;
-    if (role) p.role = role;
-    if (search) p.search = search;
-    return new URLSearchParams(p).toString();
-  }, [page, from, to, module, action, role, search]);
+  const buildParams = useCallback(
+    (pg = page) => {
+      const p: Record<string, string> = { page: String(pg), limit: '25' };
+      if (from) p.from = from;
+      if (to) p.to = to;
+      if (module) p.module = module;
+      if (action) p.action = action;
+      if (role) p.role = role;
+      if (search) p.search = search;
+      return new URLSearchParams(p).toString();
+    },
+    [page, from, to, module, action, role, search],
+  );
 
-  const fetchLogs = useCallback(async (pg = page) => {
-    setLoading(true);
-    try {
-      const res = await api.get(`/audit-logs?${buildParams(pg)}`);
-      setLogs(res.data.logs || []);
-      setTotal(res.data.total || 0);
-      setPages(res.data.pages || 1);
-    } catch {
-      setLogs([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [buildParams, page]);
+  const fetchLogs = useCallback(
+    async (pg = page) => {
+      setLoading(true);
+      try {
+        const res = await api.get(`/audit-logs?${buildParams(pg)}`);
+        setLogs(res.data.logs || []);
+        setTotal(res.data.total || 0);
+        setPages(res.data.pages || 1);
+      } catch {
+        setLogs([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [buildParams, page],
+  );
 
   useEffect(() => {
-    api.get('/audit-logs/meta').then((r) => setMeta(r.data)).catch(() => {});
+    api
+      .get('/audit-logs/meta')
+      .then((r) => setMeta(r.data))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -371,17 +462,26 @@ const AuditLogs = () => {
 
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => { fetchLogs(1); setPage(1); }, 400);
-    return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
+    searchTimer.current = setTimeout(() => {
+      fetchLogs(1);
+      setPage(1);
+    }, 400);
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
   }, [search]);
 
-  useEffect(() => { fetchLogs(page); }, [page]);
+  useEffect(() => {
+    fetchLogs(page);
+  }, [page]);
 
   const handleExport = async (fmt: 'xlsx' | 'csv') => {
     setExporting(fmt);
     try {
       const params = buildParams();
-      const res = await api.get(`/audit-logs/export?${params}&format=${fmt}`, { responseType: 'blob' });
+      const res = await api.get(`/audit-logs/export?${params}&format=${fmt}`, {
+        responseType: 'blob',
+      });
       const url = URL.createObjectURL(res.data);
       const a = document.createElement('a');
       a.href = url;
@@ -405,14 +505,27 @@ const AuditLogs = () => {
   return (
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
       {/* Page header */}
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} spacing={2} sx={{ mb: 3 }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ sm: 'center' }}
+        spacing={2}
+        sx={{ mb: 3 }}
+      >
         <Box>
           <Stack direction="row" alignItems="center" spacing={1.5}>
-            <Icon icon="material-symbols:history-rounded" width={28} color={theme.palette.primary.main} />
-            <Typography variant="h5" fontWeight={800}>Audit Logs</Typography>
+            <Icon
+              icon="material-symbols:history-rounded"
+              width={28}
+              color={theme.palette.primary.main}
+            />
+            <Typography variant="h5" fontWeight={800}>
+              Audit Logs
+            </Typography>
           </Stack>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Immutable record of all system activity — {total.toLocaleString()} log{total !== 1 ? 's' : ''}
+            Immutable record of all system activity — {total.toLocaleString()} log
+            {total !== 1 ? 's' : ''}
           </Typography>
         </Box>
         <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -423,9 +536,14 @@ const AuditLogs = () => {
             startIcon={<Icon icon="material-symbols:filter-list-rounded" />}
             onClick={() => setFiltersOpen((p) => !p)}
             endIcon={
-              activeFilterCount > 0
-                ? <Chip label={activeFilterCount} size="small" color="primary" sx={{ height: 18, fontSize: 11 }} />
-                : undefined
+              activeFilterCount > 0 ? (
+                <Chip
+                  label={activeFilterCount}
+                  size="small"
+                  color="primary"
+                  sx={{ height: 18, fontSize: 11 }}
+                />
+              ) : undefined
             }
           >
             Filters
@@ -435,7 +553,13 @@ const AuditLogs = () => {
             size="small"
             disabled={exporting === 'xlsx'}
             onClick={() => handleExport('xlsx')}
-            startIcon={exporting === 'xlsx' ? <CircularProgress size={14} /> : <Icon icon="mdi:microsoft-excel" />}
+            startIcon={
+              exporting === 'xlsx' ? (
+                <CircularProgress size={14} />
+              ) : (
+                <Icon icon="mdi:microsoft-excel" />
+              )
+            }
           >
             Excel
           </Button>
@@ -444,7 +568,13 @@ const AuditLogs = () => {
             size="small"
             disabled={exporting === 'csv'}
             onClick={() => handleExport('csv')}
-            startIcon={exporting === 'csv' ? <CircularProgress size={14} /> : <Icon icon="mdi:file-delimited-outline" />}
+            startIcon={
+              exporting === 'csv' ? (
+                <CircularProgress size={14} />
+              ) : (
+                <Icon icon="mdi:file-delimited-outline" />
+              )
+            }
           >
             CSV
           </Button>
@@ -464,49 +594,147 @@ const AuditLogs = () => {
         >
           <Grid container spacing={2} alignItems="flex-end">
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-              <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>From</Typography>
-              <TextField type="date" size="small" fullWidth value={from} onChange={(e) => setFrom(e.target.value)} />
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                color="text.secondary"
+                sx={{ display: 'block', mb: 0.5 }}
+              >
+                From
+              </Typography>
+              <TextField
+                type="date"
+                size="small"
+                fullWidth
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-              <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>To</Typography>
-              <TextField type="date" size="small" fullWidth value={to} onChange={(e) => setTo(e.target.value)} />
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                color="text.secondary"
+                sx={{ display: 'block', mb: 0.5 }}
+              >
+                To
+              </Typography>
+              <TextField
+                type="date"
+                size="small"
+                fullWidth
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-              <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>Module</Typography>
-              <Select size="small" fullWidth displayEmpty value={module} onChange={(e) => setModule(e.target.value)}>
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                color="text.secondary"
+                sx={{ display: 'block', mb: 0.5 }}
+              >
+                Module
+              </Typography>
+              <Select
+                size="small"
+                fullWidth
+                displayEmpty
+                value={module}
+                onChange={(e) => setModule(e.target.value)}
+              >
                 <MenuItem value="">All Modules</MenuItem>
-                {meta.modules.map((m) => <MenuItem key={m} value={m}>{m}</MenuItem>)}
+                {meta.modules.map((m) => (
+                  <MenuItem key={m} value={m}>
+                    {m}
+                  </MenuItem>
+                ))}
               </Select>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-              <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>Action</Typography>
-              <Select size="small" fullWidth displayEmpty value={action} onChange={(e) => setAction(e.target.value)}>
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                color="text.secondary"
+                sx={{ display: 'block', mb: 0.5 }}
+              >
+                Action
+              </Typography>
+              <Select
+                size="small"
+                fullWidth
+                displayEmpty
+                value={action}
+                onChange={(e) => setAction(e.target.value)}
+              >
                 <MenuItem value="">All Actions</MenuItem>
-                {meta.actions.map((a) => <MenuItem key={a} value={a}>{a}</MenuItem>)}
+                {meta.actions.map((a) => (
+                  <MenuItem key={a} value={a}>
+                    {a}
+                  </MenuItem>
+                ))}
               </Select>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-              <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>Role</Typography>
-              <Select size="small" fullWidth displayEmpty value={role} onChange={(e) => setRole(e.target.value)}>
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                color="text.secondary"
+                sx={{ display: 'block', mb: 0.5 }}
+              >
+                Role
+              </Typography>
+              <Select
+                size="small"
+                fullWidth
+                displayEmpty
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              >
                 <MenuItem value="">All Roles</MenuItem>
-                {meta.roles.map((r) => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+                {meta.roles.map((r) => (
+                  <MenuItem key={r} value={r}>
+                    {r}
+                  </MenuItem>
+                ))}
               </Select>
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-              <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>Search</Typography>
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                color="text.secondary"
+                sx={{ display: 'block', mb: 0.5 }}
+              >
+                Search
+              </Typography>
               <TextField
                 size="small"
                 fullWidth
                 placeholder="Description, name…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                slotProps={{ input: { startAdornment: <Icon icon="material-symbols:search-rounded" width={18} style={{ marginRight: 6, opacity: 0.5 }} /> } }}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <Icon
+                        icon="material-symbols:search-rounded"
+                        width={18}
+                        style={{ marginRight: 6, opacity: 0.5 }}
+                      />
+                    ),
+                  },
+                }}
               />
             </Grid>
           </Grid>
           <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
-            <Button size="small" color="inherit" onClick={clearFilters}
-              startIcon={<Icon icon="material-symbols:clear-all-rounded" />}>
+            <Button
+              size="small"
+              color="inherit"
+              onClick={clearFilters}
+              startIcon={<Icon icon="material-symbols:clear-all-rounded" />}
+            >
               Clear Filters
             </Button>
           </Stack>
@@ -516,23 +744,51 @@ const AuditLogs = () => {
       {/* Table */}
       <Paper variant="outlined" sx={{ borderRadius: 2.5, overflow: 'hidden' }}>
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 240 }}>
+          <Box
+            sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 240 }}
+          >
             <CircularProgress />
           </Box>
         ) : logs.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Icon icon="material-symbols:search-off-rounded" width={48} color={theme.palette.text.disabled} />
-            <Typography variant="h6" color="text.disabled" sx={{ mt: 1 }}>No audit logs found</Typography>
-            <Typography variant="body2" color="text.disabled">Try adjusting your filters</Typography>
+            <Icon
+              icon="material-symbols:search-off-rounded"
+              width={48}
+              color={theme.palette.text.disabled}
+            />
+            <Typography variant="h6" color="text.disabled" sx={{ mt: 1 }}>
+              No audit logs found
+            </Typography>
+            <Typography variant="body2" color="text.disabled">
+              Try adjusting your filters
+            </Typography>
           </Box>
         ) : (
           <>
             <Box sx={{ overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.08 : 0.04) }}>
-                    {['Date & Time', 'User', 'Role', 'Module', 'Action', 'Description', 'IP / Device', ''].map((h) => (
-                      <TableCell key={h} sx={{ fontWeight: 700, whiteSpace: 'nowrap', py: 1.5 }}>{h}</TableCell>
+                  <TableRow
+                    sx={{
+                      bgcolor: alpha(
+                        theme.palette.primary.main,
+                        theme.palette.mode === 'dark' ? 0.08 : 0.04,
+                      ),
+                    }}
+                  >
+                    {[
+                      'Date & Time',
+                      'User',
+                      'Role',
+                      'Module',
+                      'Action',
+                      'Description',
+                      'IP / Device',
+                      '',
+                    ].map((h) => (
+                      <TableCell key={h} sx={{ fontWeight: 700, whiteSpace: 'nowrap', py: 1.5 }}>
+                        {h}
+                      </TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
@@ -545,14 +801,21 @@ const AuditLogs = () => {
                         '&:hover': { bgcolor: alpha(theme.palette.action.hover, 0.5) },
                       }}
                     >
-                      <TableCell sx={{ whiteSpace: 'nowrap', color: 'text.secondary', fontSize: 12 }}>
+                      <TableCell
+                        sx={{ whiteSpace: 'nowrap', color: 'text.secondary', fontSize: 12 }}
+                      >
                         {new Date(log.createdAt).toLocaleString('en-PK', {
-                          day: '2-digit', month: 'short', year: 'numeric',
-                          hour: '2-digit', minute: '2-digit',
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
                         })}
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" fontWeight={600}>{log.userName || '—'}</Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {log.userName || '—'}
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         <Chip
@@ -564,7 +827,13 @@ const AuditLogs = () => {
                       </TableCell>
                       <TableCell>
                         <Stack direction="row" alignItems="center" spacing={0.75}>
-                          <Icon icon={MODULE_ICONS[log.module] || 'material-symbols:widgets-outline-rounded'} width={15} style={{ opacity: 0.6 }} />
+                          <Icon
+                            icon={
+                              MODULE_ICONS[log.module] || 'material-symbols:widgets-outline-rounded'
+                            }
+                            width={15}
+                            style={{ opacity: 0.6 }}
+                          />
                           <Typography variant="body2">{log.module}</Typography>
                         </Stack>
                       </TableCell>
@@ -573,7 +842,12 @@ const AuditLogs = () => {
                           label={log.action}
                           size="small"
                           color={ACTION_COLORS[log.action] || 'default'}
-                          icon={<Icon icon={ACTION_ICONS[log.action] || 'material-symbols:bolt-rounded'} width={13} />}
+                          icon={
+                            <Icon
+                              icon={ACTION_ICONS[log.action] || 'material-symbols:bolt-rounded'}
+                              width={13}
+                            />
+                          }
                           sx={{ fontWeight: 700, fontSize: 11 }}
                         />
                       </TableCell>
@@ -593,7 +867,11 @@ const AuditLogs = () => {
                       </TableCell>
                       <TableCell sx={{ whiteSpace: 'nowrap' }}>
                         <Stack spacing={0.25}>
-                          <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ fontFamily: 'monospace' }}
+                          >
                             {log.ip || '—'}
                           </Typography>
                           <Typography variant="caption" color="text.disabled">
@@ -623,7 +901,8 @@ const AuditLogs = () => {
               sx={{ px: 2.5, py: 1.5 }}
             >
               <Typography variant="caption" color="text.secondary">
-                Showing {((page - 1) * 25) + 1}–{Math.min(page * 25, total)} of {total.toLocaleString()} records
+                Showing {(page - 1) * 25 + 1}–{Math.min(page * 25, total)} of{' '}
+                {total.toLocaleString()} records
               </Typography>
               <Pagination
                 count={pages}

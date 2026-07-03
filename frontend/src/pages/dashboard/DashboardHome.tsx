@@ -57,7 +57,16 @@ interface KpiCardProps {
   ringValue?: number;
 }
 
-const KpiCard = ({ title, value, subtitle, icon, color, badge, badgeColor, ringValue }: KpiCardProps) => {
+const KpiCard = ({
+  title,
+  value,
+  subtitle,
+  icon,
+  color,
+  badge,
+  badgeColor,
+  ringValue,
+}: KpiCardProps) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const hasRing = ringValue !== undefined;
@@ -75,10 +84,25 @@ const KpiCard = ({ title, value, subtitle, icon, color, badge, badgeColor, ringV
       }}
     >
       {/* Top accent line */}
-      <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, bgcolor: color, opacity: 0.85 }} />
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 3,
+          bgcolor: color,
+          opacity: 0.85,
+        }}
+      />
 
       <CardContent sx={{ pt: 3, pb: '20px !important', px: 2.5 }}>
-        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 2 }}>
+        <Stack
+          direction="row"
+          alignItems="flex-start"
+          justifyContent="space-between"
+          sx={{ mb: 2 }}
+        >
           <Typography
             variant="overline"
             color="text.secondary"
@@ -218,7 +242,12 @@ const RingGauge = ({
           <Icon icon={icon} width={13} color={color} style={{ opacity: 0.7 }} />
         </Box>
       </Box>
-      <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mt: 0.75 }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        fontWeight={600}
+        sx={{ display: 'block', mt: 0.75 }}
+      >
         {label}
       </Typography>
       <Typography variant="caption" sx={{ display: 'block', color: color, fontWeight: 700 }}>
@@ -347,7 +376,10 @@ const DashboardHome = () => {
   /* ── Chart shared styles ── */
   const axLbl = { color: theme.palette.text.secondary as string, fontSize: 11 };
   const splitLn = {
-    lineStyle: { color: isDark ? alpha('#fff', 0.05) : alpha('#000', 0.06), type: 'dashed' as const },
+    lineStyle: {
+      color: isDark ? alpha('#fff', 0.05) : alpha('#000', 0.06),
+      type: 'dashed' as const,
+    },
   };
   const tooltipStyle = {
     backgroundColor: isDark ? '#1e2328' : '#fff',
@@ -368,7 +400,10 @@ const DashboardHome = () => {
     tooltip: {
       trigger: 'axis',
       ...tooltipStyle,
-      axisPointer: { type: 'shadow', shadowStyle: { color: alpha(isDark ? '#fff' : '#000', 0.04) } },
+      axisPointer: {
+        type: 'shadow',
+        shadowStyle: { color: alpha(isDark ? '#fff' : '#000', 0.04) },
+      },
     },
     legend: { show: false },
     grid: { left: 4, right: 4, top: 12, bottom: 4, containLabel: true },
@@ -409,7 +444,11 @@ const DashboardHome = () => {
         itemStyle: {
           borderRadius: [4, 4, 0, 0],
           color: {
-            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
             colorStops: [
               { offset: 0, color: P.blue },
               { offset: 1, color: alpha(P.blue, 0.5) },
@@ -425,7 +464,11 @@ const DashboardHome = () => {
         itemStyle: {
           borderRadius: [4, 4, 0, 0],
           color: {
-            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
             colorStops: [
               { offset: 0, color: P.red },
               { offset: 1, color: alpha(P.red, 0.4) },
@@ -445,7 +488,11 @@ const DashboardHome = () => {
         itemStyle: { color: P.green, borderWidth: 2.5, borderColor: isDark ? '#1e2328' : '#fff' },
         areaStyle: {
           color: {
-            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
             colorStops: [
               { offset: 0, color: alpha(P.green, 0.2) },
               { offset: 1, color: alpha(P.green, 0) },
@@ -533,7 +580,11 @@ const DashboardHome = () => {
         itemStyle: { color: P.purple, borderWidth: 3, borderColor: isDark ? '#1e2328' : '#fff' },
         areaStyle: {
           color: {
-            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
             colorStops: [
               { offset: 0, color: alpha(P.purple, 0.3) },
               { offset: 1, color: alpha(P.purple, 0) },
@@ -575,7 +626,6 @@ const DashboardHome = () => {
   /* ── Render ── */
   return (
     <Box sx={{ p: { xs: 2, sm: 3 }, pb: { xs: 4, sm: 4 } }}>
-
       {/* ══ Greeting Banner ══ */}
       <Box
         sx={{
@@ -610,7 +660,11 @@ const DashboardHome = () => {
             <Icon icon={greetIcon} width={24} color={P.blue} />
           </Box>
           <Box>
-            <Typography variant="h5" fontWeight={800} sx={{ lineHeight: 1.25, letterSpacing: '-0.3px' }}>
+            <Typography
+              variant="h5"
+              fontWeight={800}
+              sx={{ lineHeight: 1.25, letterSpacing: '-0.3px' }}
+            >
               {greeting}, {user?.name?.split(' ')[0]}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -635,7 +689,11 @@ const DashboardHome = () => {
             icon={
               <Box sx={{ display: 'flex', pl: 0.5 }}>
                 <Icon
-                  icon={loading ? 'material-symbols:hourglass-empty-rounded' : 'material-symbols:radio-button-checked'}
+                  icon={
+                    loading
+                      ? 'material-symbols:hourglass-empty-rounded'
+                      : 'material-symbols:radio-button-checked'
+                  }
                   width={10}
                   color={loading ? P.amber : P.green}
                 />
@@ -695,7 +753,9 @@ const DashboardHome = () => {
               title="Pending Leaves"
               value={summary?.pendingLeaves ?? 0}
               subtitle={
-                (summary?.pendingLeaves ?? 0) > 0 ? 'Awaiting your decision' : 'All leaves processed'
+                (summary?.pendingLeaves ?? 0) > 0
+                  ? 'Awaiting your decision'
+                  : 'All leaves processed'
               }
               icon="material-symbols:event-busy-outline-rounded"
               color={P.amber}
@@ -730,7 +790,6 @@ const DashboardHome = () => {
 
       {/* ══ Charts Row ══ */}
       <Grid container spacing={2.5} sx={{ mb: 2.5 }}>
-
         {/* Attendance Trend */}
         <Grid size={{ xs: 12, lg: 8 }}>
           <Card sx={{ height: '100%' }}>
@@ -774,7 +833,12 @@ const DashboardHome = () => {
             ) : leaveStats.length > 0 ? (
               <>
                 {/* Status summary pills */}
-                <Stack direction="row" spacing={1} sx={{ px: 2.5, pt: 2, pb: 1 }} justifyContent="center">
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{ px: 2.5, pt: 2, pb: 1 }}
+                  justifyContent="center"
+                >
                   {[
                     { label: 'Approved', count: totalApproved, color: P.green },
                     { label: 'Pending', count: totalPending, color: P.amber },
@@ -793,7 +857,11 @@ const DashboardHome = () => {
                       <Typography variant="subtitle2" fontWeight={800} color={s.color}>
                         {s.count}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.2 }}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: 'block', lineHeight: 1.2 }}
+                      >
                         {s.label}
                       </Typography>
                     </Box>
@@ -824,7 +892,7 @@ const DashboardHome = () => {
                 </Box>
 
                 {/* Per-type rows */}
-                <Stack spacing={1.25} sx={{ px: 2.5, pb: 2.5, mt: 0.5 }}>
+                <Stack direction="column" spacing={1.25} sx={{ px: 2.5, pb: 2.5, mt: 0.5 }}>
                   {leaveStats.map((l, i) => (
                     <Stack
                       key={l._id}
@@ -884,7 +952,6 @@ const DashboardHome = () => {
 
       {/* ══ Bottom Row ══ */}
       <Grid container spacing={2.5}>
-
         {/* Payroll Trend — Admin only */}
         {isAdmin && (
           <Grid size={{ xs: 12, lg: 7 }}>
@@ -936,7 +1003,12 @@ const DashboardHome = () => {
                 <Stack direction="row" justifyContent="space-around">
                   {[1, 2, 3].map((i) => (
                     <Box key={i} sx={{ textAlign: 'center' }}>
-                      <Skeleton variant="circular" width={82} height={82} sx={{ mx: 'auto', mb: 1 }} />
+                      <Skeleton
+                        variant="circular"
+                        width={82}
+                        height={82}
+                        sx={{ mx: 'auto', mb: 1 }}
+                      />
                       <Skeleton width={60} height={14} sx={{ mx: 'auto' }} />
                     </Box>
                   ))}
@@ -979,15 +1051,33 @@ const DashboardHome = () => {
                         mx: 'auto',
                       }}
                     >
-                      <Typography variant="subtitle1" fontWeight={800} color={P.amber} sx={{ lineHeight: 1 }}>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={800}
+                        color={P.amber}
+                        sx={{ lineHeight: 1 }}
+                      >
                         {summary?.pendingLeaves ?? 0}
                       </Typography>
-                      <Icon icon="material-symbols:pending-actions-outline-rounded" width={13} color={P.amber} style={{ opacity: 0.7 }} />
+                      <Icon
+                        icon="material-symbols:pending-actions-outline-rounded"
+                        width={13}
+                        color={P.amber}
+                        style={{ opacity: 0.7 }}
+                      />
                     </Box>
-                    <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mt: 0.75 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={600}
+                      sx={{ display: 'block', mt: 0.75 }}
+                    >
                       Pending
                     </Typography>
-                    <Typography variant="caption" sx={{ display: 'block', color: P.amber, fontWeight: 700 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: 'block', color: P.amber, fontWeight: 700 }}
+                    >
                       Leaves
                     </Typography>
                   </Box>
@@ -1001,7 +1091,13 @@ const DashboardHome = () => {
                   <Typography
                     variant="overline"
                     color="text.secondary"
-                    sx={{ letterSpacing: 1, fontWeight: 600, fontSize: '0.65rem', display: 'block', mb: 1.5 }}
+                    sx={{
+                      letterSpacing: 1,
+                      fontWeight: 600,
+                      fontSize: '0.65rem',
+                      display: 'block',
+                      mb: 1.5,
+                    }}
                   >
                     Approved Leaves by Type
                   </Typography>
@@ -1031,7 +1127,12 @@ const DashboardHome = () => {
                           <Typography
                             variant="caption"
                             color="text.secondary"
-                            sx={{ display: 'block', fontWeight: 600, mt: 0.25, fontSize: '0.65rem' }}
+                            sx={{
+                              display: 'block',
+                              fontWeight: 600,
+                              mt: 0.25,
+                              fontSize: '0.65rem',
+                            }}
                           >
                             {l._id}
                           </Typography>
@@ -1047,8 +1148,14 @@ const DashboardHome = () => {
                   <Divider sx={{ my: 2 }} />
                   <Stack direction="row" alignItems="center" justifyContent="space-between">
                     <Stack direction="row" alignItems="center" spacing={1}>
-                      <Icon icon="material-symbols:group-outline-rounded" width={18} color={theme.palette.text.secondary} />
-                      <Typography variant="body2" color="text.secondary">Total Workforce</Typography>
+                      <Icon
+                        icon="material-symbols:group-outline-rounded"
+                        width={18}
+                        color={theme.palette.text.secondary}
+                      />
+                      <Typography variant="body2" color="text.secondary">
+                        Total Workforce
+                      </Typography>
                     </Stack>
                     <Typography variant="subtitle1" fontWeight={800}>
                       {summary?.totalEmployees ?? 0}

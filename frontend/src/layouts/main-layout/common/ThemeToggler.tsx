@@ -9,9 +9,19 @@ const ThemeToggler = () => {
   };
 
   return (
-    <Button color="neutral" variant="soft" shape="circle" onClick={toggleMode} title={mode === 'dark' ? 'Switch to Light' : 'Switch to Dark'}>
+    <Button
+      color="neutral"
+      variant="soft"
+      shape="circle"
+      onClick={toggleMode}
+      title={mode === 'dark' ? 'Switch to Light' : 'Switch to Dark'}
+    >
       <IconifyIcon
-        icon={mode === 'dark' ? 'material-symbols:light-mode-outline-rounded' : 'material-symbols:dark-mode-outline-rounded'}
+        icon={
+          mode === 'dark'
+            ? 'material-symbols:light-mode-outline-rounded'
+            : 'material-symbols:dark-mode-outline-rounded'
+        }
         sx={{ fontSize: 22 }}
       />
     </Button>

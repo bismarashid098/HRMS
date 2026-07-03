@@ -20,11 +20,7 @@ const FilterSection = ({ apiRef, handleToggleFilterPanel }: FilterSectionProps) 
   const upSm = up('sm');
 
   const handleFilter = useCallback(
-    (
-      field?: 'department' | 'status' | 'role',
-      value?: string | number,
-      defaultOperator: string = 'contains',
-    ) => {
+    (field?: string, value?: string | number | Date, defaultOperator: string = 'contains') => {
       if (!field) {
         apiRef.current?.setFilterModel({ items: [] });
       } else {

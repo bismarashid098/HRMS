@@ -22,7 +22,7 @@ interface NavContextInterface {
 const NavContext = createContext({} as NavContextInterface);
 
 const NavProvider = ({ children }: PropsWithChildren) => {
-  const [openItems, setOpenItems] = useState([]);
+  const [openItems, setOpenItems] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [responsievSidenavCollapsed, setResponsiveSidenavCollapsed] = useState(false);
   const { pathname } = useLocation();

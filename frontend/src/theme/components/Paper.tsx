@@ -13,11 +13,11 @@ declare module '@mui/material' {
 }
 
 const backgrounds: { [key: number]: { [key: string]: string } } = {
-  1: { light: grey[50],  dark: '#0e1d32' },
+  1: { light: grey[50], dark: '#0e1d32' },
   2: { light: grey[100], dark: '#11223c' },
   3: { light: grey[200], dark: '#142742' },
   4: { light: grey[300], dark: '#172c4a' },
-  5: { light: blue[50],  dark: '#0b2040' },
+  5: { light: blue[50], dark: '#0b2040' },
 };
 
 const backgroundVariants = Object.keys(backgrounds).map((background) => ({

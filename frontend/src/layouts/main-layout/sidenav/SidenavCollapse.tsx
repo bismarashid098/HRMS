@@ -90,8 +90,10 @@ const SidenavCollapse = () => {
           strokeLinejoin="round"
           sx={{
             width: 24,
-            stroke: (theme) => theme.vars.palette.background.elevation4,
+            stroke: 'rgba(255,255,255,0.25)',
             height: 24,
+            transition: 'stroke .2s',
+            '&:hover': { stroke: 'rgba(255,255,255,0.7)' },
           }}
         >
           <path ref={pathRef} d={paths.vertical} />

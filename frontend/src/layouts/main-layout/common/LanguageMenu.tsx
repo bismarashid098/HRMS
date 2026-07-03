@@ -1,4 +1,4 @@
-import { SyntheticEvent, useState } from 'react';
+import { SyntheticEvent, useState, type ChangeEvent } from 'react';
 import {
   Button,
   ListItemIcon,
@@ -19,7 +19,10 @@ const LanguageMenu = () => {
   const menuOpen = Boolean(anchorEl);
 
   const handleOpen = () => setOpen(true);
-  const handleClose = (_event: SyntheticEvent, reason?: SnackbarCloseReason) => {
+  const handleClose = (
+    _event: Event | SyntheticEvent | ChangeEvent,
+    reason?: SnackbarCloseReason,
+  ) => {
     if (reason === 'clickaway') return;
     setOpen(false);
   };

@@ -1,4 +1,4 @@
-import { SyntheticEvent, useState } from 'react';
+import { SyntheticEvent, useState, type ChangeEvent } from 'react';
 import { TabContext } from '@mui/lab';
 import { Container, Drawer, Paper, SnackbarCloseReason, Stack } from '@mui/material';
 import { accountTabs } from 'data/account/account-tabs';
@@ -24,7 +24,10 @@ const Account = () => {
     setActiveTab(newValue);
   };
 
-  const handleClose = (_event: SyntheticEvent, reason?: SnackbarCloseReason) => {
+  const handleClose = (
+    _event: Event | SyntheticEvent | ChangeEvent,
+    reason?: SnackbarCloseReason,
+  ) => {
     if (reason === 'clickaway') return;
     setOpen(false);
   };

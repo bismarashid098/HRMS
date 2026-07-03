@@ -117,8 +117,12 @@ const PayrollPage = () => {
                   payrolls.map((p: any) => (
                     <TableRow key={p._id}>
                       <TableCell>
-                        <Typography variant="body2" fontWeight={500}>{p.employeeName || '—'}</Typography>
-                        <Typography variant="caption" color="text.secondary">{p.employeeCode}</Typography>
+                        <Typography variant="body2" fontWeight={500}>
+                          {p.employeeName || '—'}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {p.employeeCode}
+                        </Typography>
                       </TableCell>
                       <TableCell>PKR {(p.basicSalary || 0).toLocaleString()}</TableCell>
                       <TableCell>PKR {(p.allowance || 0).toLocaleString()}</TableCell>

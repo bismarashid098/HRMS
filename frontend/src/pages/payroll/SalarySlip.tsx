@@ -1,22 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import {
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Chip, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { alpha, useTheme } from '@mui/material/styles';
 import { Icon } from '@iconify/react';
 import api from 'api/axios';
 
 const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 interface Payroll {
@@ -56,12 +58,7 @@ const Row = ({
   bold?: boolean;
   color?: string;
 }) => (
-  <Stack
-    direction="row"
-    justifyContent="space-between"
-    alignItems="center"
-    sx={{ py: 0.9 }}
-  >
+  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ py: 0.9 }}>
     <Typography
       variant={bold ? 'subtitle1' : 'body2'}
       fontWeight={bold ? 700 : 400}
@@ -106,9 +103,17 @@ const SalarySlip = () => {
   if (!payroll)
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
-        <Icon icon="material-symbols:error-outline-rounded" width={48} color={theme.palette.error.main} />
-        <Typography variant="h6" sx={{ mt: 1 }}>Payroll record not found</Typography>
-        <Button sx={{ mt: 2 }} onClick={() => navigate('/payroll')}>Go back</Button>
+        <Icon
+          icon="material-symbols:error-outline-rounded"
+          width={48}
+          color={theme.palette.error.main}
+        />
+        <Typography variant="h6" sx={{ mt: 1 }}>
+          Payroll record not found
+        </Typography>
+        <Button sx={{ mt: 2 }} onClick={() => navigate('/payroll')}>
+          Go back
+        </Button>
       </Box>
     );
 
@@ -136,7 +141,6 @@ const SalarySlip = () => {
       `}</style>
 
       <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 780, mx: 'auto' }}>
-
         {/* ── Action buttons ── */}
         <Stack direction="row" spacing={1.5} sx={{ mb: 3 }} className="no-print">
           <Button
@@ -194,9 +198,8 @@ const SalarySlip = () => {
             <Chip
               label={payroll.status}
               sx={{
-                bgcolor: payroll.status === 'Approved'
-                  ? alpha('#10b981', 0.25)
-                  : alpha('#fff', 0.18),
+                bgcolor:
+                  payroll.status === 'Approved' ? alpha('#10b981', 0.25) : alpha('#fff', 0.18),
                 color: '#fff',
                 fontWeight: 700,
                 border: '1px solid rgba(255,255,255,0.3)',
@@ -205,7 +208,6 @@ const SalarySlip = () => {
           </Box>
 
           <Box sx={{ px: { xs: 2.5, sm: 4 }, py: 3 }}>
-
             {/* ── Employee Info ── */}
             <Box
               sx={{
@@ -255,9 +257,21 @@ const SalarySlip = () => {
               </Typography>
               <Grid container spacing={1.5}>
                 {[
-                  { label: 'Working Days', value: payroll.workingDays ?? 0, color: theme.palette.primary.main },
-                  { label: 'Present Days', value: payroll.presentDays ?? 0, color: theme.palette.success.main },
-                  { label: 'Extra Off Days', value: payroll.extraOffDays ?? 0, color: theme.palette.error.main },
+                  {
+                    label: 'Working Days',
+                    value: payroll.workingDays ?? 0,
+                    color: theme.palette.primary.main,
+                  },
+                  {
+                    label: 'Present Days',
+                    value: payroll.presentDays ?? 0,
+                    color: theme.palette.success.main,
+                  },
+                  {
+                    label: 'Extra Off Days',
+                    value: payroll.extraOffDays ?? 0,
+                    color: theme.palette.error.main,
+                  },
                 ].map(({ label, value, color }) => (
                   <Grid key={label} size={{ xs: 4 }}>
                     <Box
@@ -270,10 +284,19 @@ const SalarySlip = () => {
                         border: `1px solid ${alpha(color, 0.2)}`,
                       }}
                     >
-                      <Typography variant="h5" fontWeight={800} color={color} sx={{ lineHeight: 1.1 }}>
+                      <Typography
+                        variant="h5"
+                        fontWeight={800}
+                        color={color}
+                        sx={{ lineHeight: 1.1 }}
+                      >
                         {value}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: 'block', mt: 0.25 }}
+                      >
                         {label}
                       </Typography>
                     </Box>
@@ -284,7 +307,6 @@ const SalarySlip = () => {
 
             {/* ── Earnings & Deductions ── */}
             <Grid container spacing={3}>
-
               {/* Earnings */}
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Box
@@ -297,8 +319,17 @@ const SalarySlip = () => {
                   }}
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-                    <Icon icon="material-symbols:add-circle-outline-rounded" width={18} color={theme.palette.success.main} />
-                    <Typography variant="overline" fontWeight={700} letterSpacing={1} color="success.main">
+                    <Icon
+                      icon="material-symbols:add-circle-outline-rounded"
+                      width={18}
+                      color={theme.palette.success.main}
+                    />
+                    <Typography
+                      variant="overline"
+                      fontWeight={700}
+                      letterSpacing={1}
+                      color="success.main"
+                    >
                       Earnings
                     </Typography>
                   </Stack>
@@ -323,8 +354,17 @@ const SalarySlip = () => {
                   }}
                 >
                   <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-                    <Icon icon="material-symbols:remove-circle-outline-rounded" width={18} color={theme.palette.error.main} />
-                    <Typography variant="overline" fontWeight={700} letterSpacing={1} color="error.main">
+                    <Icon
+                      icon="material-symbols:remove-circle-outline-rounded"
+                      width={18}
+                      color={theme.palette.error.main}
+                    />
+                    <Typography
+                      variant="overline"
+                      fontWeight={700}
+                      letterSpacing={1}
+                      color="error.main"
+                    >
                       Deductions
                     </Typography>
                   </Stack>
@@ -332,16 +372,28 @@ const SalarySlip = () => {
                     <Row label="Unpaid Leave" value={payroll.leaveDeduction || 0} isDeduction />
                   )}
                   {(payroll.extraOffDeduction || 0) > 0 && (
-                    <Row label={`Extra Off (${payroll.extraOffDays ?? 0} days)`} value={payroll.extraOffDeduction || 0} isDeduction />
+                    <Row
+                      label={`Extra Off (${payroll.extraOffDays ?? 0} days)`}
+                      value={payroll.extraOffDeduction || 0}
+                      isDeduction
+                    />
                   )}
                   {(payroll.advanceDeduction || 0) > 0 && (
-                    <Row label="Advance Recovery" value={payroll.advanceDeduction || 0} isDeduction />
+                    <Row
+                      label="Advance Recovery"
+                      value={payroll.advanceDeduction || 0}
+                      isDeduction
+                    />
                   )}
                   {(payroll.taxDeduction || 0) > 0 && (
                     <Row label="Income Tax" value={payroll.taxDeduction || 0} isDeduction />
                   )}
                   {totalDeductions === 0 && (
-                    <Typography variant="body2" color="text.secondary" sx={{ py: 1, fontStyle: 'italic' }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ py: 1, fontStyle: 'italic' }}
+                    >
                       No deductions this month
                     </Typography>
                   )}
@@ -371,10 +423,15 @@ const SalarySlip = () => {
                   Net Take-Home Salary
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
-                  Gross PKR {grossSalary.toLocaleString()} − Deductions PKR {totalDeductions.toLocaleString()}
+                  Gross PKR {grossSalary.toLocaleString()} − Deductions PKR{' '}
+                  {totalDeductions.toLocaleString()}
                 </Typography>
               </Box>
-              <Typography variant="h4" fontWeight={800} sx={{ color: '#fff', letterSpacing: '-0.5px' }}>
+              <Typography
+                variant="h4"
+                fontWeight={800}
+                sx={{ color: '#fff', letterSpacing: '-0.5px' }}
+              >
                 PKR {net.toLocaleString('en-PK')}
               </Typography>
             </Box>
@@ -388,7 +445,12 @@ const SalarySlip = () => {
               gap={1}
             >
               <Typography variant="caption" color="text.disabled">
-                Generated on {new Date().toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' })}
+                Generated on{' '}
+                {new Date().toLocaleDateString('en-PK', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
               </Typography>
               <Typography variant="caption" color="text.disabled">
                 This is a computer-generated slip and requires no signature.

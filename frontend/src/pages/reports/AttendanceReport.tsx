@@ -59,8 +59,7 @@ const AttendanceReport = () => {
     fetchReport();
   }, [month, year]);
 
-  const rateColor = (rate: number) =>
-    rate >= 80 ? '#10b981' : rate >= 60 ? '#f59e0b' : '#ef4444';
+  const rateColor = (rate: number) => (rate >= 80 ? '#10b981' : rate >= 60 ? '#f59e0b' : '#ef4444');
 
   return (
     <Box sx={{ p: 3 }}>
@@ -82,7 +81,9 @@ const AttendanceReport = () => {
               sx={{ minWidth: 110 }}
             >
               {MONTHS.map((m, i) => (
-                <MenuItem key={i} value={i + 1}>{m}</MenuItem>
+                <MenuItem key={i} value={i + 1}>
+                  {m}
+                </MenuItem>
               ))}
             </Select>
             <TextField
@@ -117,12 +118,24 @@ const AttendanceReport = () => {
                 <TableRow>
                   <TableCell sx={{ fontWeight: 600 }}>Employee</TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>Department</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>Working Days</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>Present</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>Late</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>Half Day</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>Absent</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>On Leave</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 600 }}>
+                    Working Days
+                  </TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 600 }}>
+                    Present
+                  </TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 600 }}>
+                    Late
+                  </TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 600 }}>
+                    Half Day
+                  </TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 600 }}>
+                    Absent
+                  </TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 600 }}>
+                    On Leave
+                  </TableCell>
                   <TableCell sx={{ fontWeight: 600, minWidth: 130 }}>Attendance Rate</TableCell>
                 </TableRow>
               </TableHead>
@@ -130,15 +143,21 @@ const AttendanceReport = () => {
                 {records.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
-                      <Typography color="text.secondary">No records found for this period</Typography>
+                      <Typography color="text.secondary">
+                        No records found for this period
+                      </Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
                   records.map((r) => (
                     <TableRow key={r.employee} hover>
                       <TableCell>
-                        <Typography variant="body2" fontWeight={500}>{r.name || '—'}</Typography>
-                        <Typography variant="caption" color="text.secondary">{r.employeeCode}</Typography>
+                        <Typography variant="body2" fontWeight={500}>
+                          {r.name || '—'}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {r.employeeCode}
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">{r.department || '—'}</Typography>
@@ -160,7 +179,11 @@ const AttendanceReport = () => {
                       <TableCell>
                         <Stack spacing={0.5}>
                           <Stack direction="row" alignItems="center" justifyContent="space-between">
-                            <Typography variant="caption" fontWeight={600} color={rateColor(r.rate)}>
+                            <Typography
+                              variant="caption"
+                              fontWeight={600}
+                              color={rateColor(r.rate)}
+                            >
                               {r.rate}%
                             </Typography>
                           </Stack>
@@ -171,7 +194,10 @@ const AttendanceReport = () => {
                               height: 5,
                               borderRadius: 3,
                               bgcolor: alpha(rateColor(r.rate), 0.12),
-                              '& .MuiLinearProgress-bar': { bgcolor: rateColor(r.rate), borderRadius: 3 },
+                              '& .MuiLinearProgress-bar': {
+                                bgcolor: rateColor(r.rate),
+                                borderRadius: 3,
+                              },
                             }}
                           />
                         </Stack>

@@ -42,7 +42,17 @@
       "Bash(node -e \"require\\('./src/app'\\)\")",
       "Bash(xargs cat *)",
       "PowerShell(Copy-Item *)",
-      "Bash(findstr /i \"image\\\\|png\\\\|jpg\\\\|screenshot\")"
+      "Bash(findstr /i \"image\\\\|png\\\\|jpg\\\\|screenshot\")",
+      "Bash(npx eslint *)",
+      "Bash(node -e \"const pkg = require\\('./package.json'\\); console.log\\(JSON.stringify\\(pkg.dependencies, null, 2\\)\\)\")",
+      "Bash(node --check src/app.js)",
+      "Bash(node --check server.js)",
+      "Bash(node -e \"const r=['bcryptjs','cors','dotenv','express','express-async-handler','express-validator','jsonwebtoken','mongoose','morgan','multer','compression','xlsx']; const pkg=require\\('./package.json'\\); const deps=Object.keys\\({...pkg.dependencies,...\\(pkg.devDependencies||{}\\)}\\); r.forEach\\(m=>{if\\(!deps.includes\\(m\\)\\) console.log\\('MISSING:',m\\);}\\); console.log\\('Check done'\\);\")",
+      "PowerShell(cd E:\\\\HRMS\\\\frontend; npx eslint src --ext .ts,.tsx --rule \"{\\\\\"prettier/prettier\\\\\": \\\\\"off\\\\\"}\" 2>&1 | Where-Object { $_ -match \"ERROR|error\" } | Select-Object -First 60)",
+      "PowerShell(cd E:\\\\HRMS\\\\frontend; npx eslint src --ext .ts,.tsx 2>&1 | Where-Object { $_ -notmatch \"prettier/prettier\" } | Select-Object -First 80)",
+      "PowerShell(cd E:\\\\HRMS\\\\frontend; npx eslint src/layouts/main-layout/common/LanguageMenu.tsx src/pages/others/Account.tsx 2>&1 | Where-Object { $_ -notmatch \"prettier/prettier\" })",
+      "PowerShell(cd E:\\\\HRMS\\\\frontend; npx tsc --noEmit 2>&1; Write-Host \"TSC Exit: $LASTEXITCODE\")",
+      "PowerShell(cd E:\\\\HRMS\\\\frontend; npx eslint src --ext .ts,.tsx 2>&1 | Where-Object { $_ -notmatch \"prettier/prettier\" } | Select-Object -First 50; Write-Host \"ESLint Exit: $LASTEXITCODE\")"
     ]
   }
 }

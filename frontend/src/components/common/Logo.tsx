@@ -8,7 +8,11 @@ interface LogoProps {
 
 const Logo = ({ showName = true }: LogoProps) => {
   return (
-    <Link href={rootPaths.root} underline="none" sx={{ display: 'inline-flex', alignItems: 'center' }}>
+    <Link
+      href={rootPaths.root}
+      underline="none"
+      sx={{ display: 'inline-flex', alignItems: 'center' }}
+    >
       <Box
         sx={{
           display: 'inline-flex',
