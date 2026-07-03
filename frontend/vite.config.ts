@@ -15,16 +15,20 @@ export default ({ mode }) => {
     plugins: [
       tsconfigPaths(),
       react(),
-      checker({
-        typescript: true,
-        eslint: {
-          useFlatConfig: true,
-          lintCommand: 'eslint "./src/**/*.{ts,tsx}"',
-        },
-        overlay: {
-          initialIsOpen: false,
-        },
-      }),
+      ...(mode !== 'production'
+        ? [
+            checker({
+              typescript: true,
+              eslint: {
+                useFlatConfig: true,
+                lintCommand: 'eslint "./src/**/*.{ts,tsx}"',
+              },
+              overlay: {
+                initialIsOpen: false,
+              },
+            }),
+          ]
+        : []),
     ],
     preview: {
       port: Number(process.env.VITE_APP_PORT || 5005),
