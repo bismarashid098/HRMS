@@ -211,7 +211,7 @@ exports.getAttendanceRange = asyncHandler(async (req, res) => {
   const end = new Date(to); end.setHours(23,59,59,999);
   const totalDays = Math.round((end - start) / (1000*60*60*24)) + 1;
 
-  const employees = await Employee.find({ isDeleted: false, employmentStatus: "Active" }).populate("user", "name").lean();
+  const employees = await Employee.find({ isDeleted: { $ne: true }, employmentStatus: "Active" }).populate("user", "name").lean();
   const attendanceRecords = await Attendance.find({ date: { $gte: start, $lte: end } }).lean();
   const leaveRecords = await Leave.find({ status: "Approved", fromDate: { $lte: end }, toDate: { $gte: start } }).lean();
 

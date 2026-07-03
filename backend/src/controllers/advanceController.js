@@ -185,6 +185,13 @@ exports.getEmployeeLedger = asyncHandler(async (req, res) => {
 // @access  Private (HR/Admin)
 exports.updateAdvanceStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
+
+  const validStatuses = ["Approved", "Rejected", "Paid"];
+  if (!validStatuses.includes(status)) {
+    res.status(400);
+    throw new Error(`Invalid status. Must be one of: ${validStatuses.join(", ")}`);
+  }
+
   const advance = await Advance.findById(req.params.id);
 
   if (!advance) {

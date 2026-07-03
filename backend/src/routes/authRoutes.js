@@ -8,6 +8,7 @@ const {
     updateProfile
 } = require("../controllers/authController");
 const protect = require("../middleware/authMiddleware");
+const authorize = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
@@ -21,6 +22,8 @@ const validateRequest = (req, res, next) => {
 
 router.post(
     "/register",
+    protect,
+    authorize("Admin"),
     body("name").trim().notEmpty().withMessage("Name is required"),
     body("email").isEmail().withMessage("Valid email is required"),
     body("password")

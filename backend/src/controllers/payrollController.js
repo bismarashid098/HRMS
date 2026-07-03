@@ -145,7 +145,7 @@ exports.getPayrollOverview = asyncHandler(async (req, res) => {
 
   const employees = await Employee.find({
     employmentStatus: "Active",
-    isDeleted: false
+    isDeleted: { $ne: true }
   }).populate("user", "name email");
 
   const settings = await Settings.findOne();

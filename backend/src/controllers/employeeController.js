@@ -91,7 +91,7 @@ exports.getEmployees = asyncHandler(async (req, res) => {
 });
 
 exports.getEmployeeById = asyncHandler(async (req, res) => {
-  const employee = await Employee.findById(req.params.id);
+  const employee = await Employee.findOne({ _id: req.params.id, isDeleted: { $ne: true } });
 
   if (!employee) {
     res.status(404);
@@ -236,7 +236,8 @@ exports.deleteEmployee = asyncHandler(async (req, res) => {
     oldValues: { name: employee.name, department: employee.department, designation: employee.designation },
   });
 
-  await employee.deleteOne();
+  employee.isDeleted = true;
+  await employee.save();
 
   res.json({ message: "Employee deleted successfully" });
 });

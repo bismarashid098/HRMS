@@ -71,13 +71,15 @@ exports.getDashboardSummary = asyncHandler(async (req, res) => {
     const monthlyPayroll =
       payrollAgg?.[0]?.totalSalary || 0;
 
+    const isAdmin = req.user?.role === "Admin";
+
     return res.status(200).json({
       success: true,
 
       totalEmployees,
       attendanceToday,
       pendingLeaves,
-      monthlyPayroll,
+      ...(isAdmin && { monthlyPayroll }),
 
       attendanceRate:
         totalEmployees > 0

@@ -18,6 +18,18 @@ const calculateDays = (from, to) => {
 exports.applyLeave = asyncHandler(async (req, res) => {
   const { employeeId, type, fromDate, toDate, reason } = req.body;
 
+  const validTypes = ["Casual", "Sick", "Annual"];
+  if (!validTypes.includes(type)) {
+    return res.status(400).json({ message: `Invalid leave type. Must be one of: ${validTypes.join(", ")}` });
+  }
+
+  if (!fromDate || !toDate) {
+    return res.status(400).json({ message: "fromDate and toDate are required" });
+  }
+  if (new Date(fromDate) > new Date(toDate)) {
+    return res.status(400).json({ message: "fromDate must not be after toDate" });
+  }
+
   const employee = await Employee.findById(employeeId);
   if (!employee) {
     return res.status(404).json({ message: "Employee not found" });
@@ -67,6 +79,11 @@ exports.applyLeave = asyncHandler(async (req, res) => {
 exports.updateLeaveStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
 
+  const validStatuses = ["Approved", "Rejected"];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ message: `Invalid status. Must be one of: ${validStatuses.join(", ")}` });
+  }
+
   const leave = await Leave.findById(req.params.id);
   if (!leave) {
     return res.status(404).json({ message: "Leave not found" });
@@ -80,8 +97,13 @@ exports.updateLeaveStatus = asyncHandler(async (req, res) => {
     const balance = await LeaveBalance.findOne({ employee: leave.employee });
     if (balance) {
       const key = leave.type.toLowerCase();
-      balance[key] = Math.max(0, (balance[key] || 0) - leave.totalDays);
-      await balance.save();
+      const currentBalance = balance[key] || 0;
+      if (currentBalance < leave.totalDays) {
+        leave.paid = false;
+      } else {
+        balance[key] = currentBalance - leave.totalDays;
+        await balance.save();
+      }
     }
   }
 
