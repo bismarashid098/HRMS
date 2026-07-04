@@ -22,13 +22,31 @@ const paths = {
   auditLogs: '/audit',
   biometric: '/biometric',
   profile: '/profile',
+  // Organization Structure
+  departments: '/org/departments',
+  designations: '/org/designations',
+  branches: '/org/branches',
+  shifts: '/org/shifts',
+  holidays: '/org/holidays',
+  // Recruitment
+  recruitmentJobs: '/recruitment/jobs',
+  recruitmentCandidates: '/recruitment/candidates',
+  // People Management
+  performance: '/performance',
+  training: '/training',
+  // Operations
+  assets: '/assets',
+  expenses: '/expenses',
+  documents: '/documents',
+  notifications: '/notifications',
+  // Auth
   login: '/auth/login',
-  // legacy aurora paths (kept for backward compatibility)
+  forgotPassword: '/auth/forgot-password',
+  // legacy
   signup: '/auth/sign-up',
   account: '/account',
   starter: '/starter',
   documentation: 'https://github.com',
-  notifications: '/notifications',
   404: '/404',
 };
 

@@ -2,6 +2,7 @@ const express = require("express");
 const {
   generatePayroll,
   approvePayroll,
+  deletePayroll,
   getPayrollHistory,
   getAllPayrolls,
   getPayrollOverview,
@@ -23,5 +24,6 @@ router.get("/", authorize("Admin"), getAllPayrolls);
 router.get("/:id/breakdown", authorize("Admin"), getPayrollBreakdown);
 router.get("/:id", authorize("Admin"), getPayrollById);
 router.put("/:id/approve", authorize("Admin"), approvePayroll);
+router.delete("/:id", authorize("Admin"), deletePayroll);
 
 module.exports = router;

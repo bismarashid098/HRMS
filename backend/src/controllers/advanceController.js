@@ -4,71 +4,47 @@ const Employee = require("../models/Employee");
 const Settings = require("../models/Settings");
 const { logAudit } = require("../services/auditService");
 
-// @desc    Request a salary advance
-// @route   POST /api/advances
-// @access  Private (Employee/HR)
 exports.requestAdvance = asyncHandler(async (req, res) => {
   const { employeeId, amount, reason, date } = req.body;
 
-  if (!amount || Number(amount) <= 0) {
-    res.status(400);
-    throw new Error("Amount must be greater than 0");
-  }
-  if (!reason) {
-    res.status(400);
-    throw new Error("Reason is required");
-  }
+  if (!amount || Number(amount) <= 0) { res.status(400); throw new Error("Amount must be greater than 0"); }
+  if (!reason) { res.status(400); throw new Error("Reason is required"); }
 
-  // Employees can only request for themselves
   let targetEmployeeId = employeeId;
   if (req.user && req.user.role === "Employee") {
     const selfEmp = await Employee.findOne({ user: req.user._id });
-    if (!selfEmp) {
-      res.status(404);
-      throw new Error("Employee profile not found");
-    }
+    if (!selfEmp) { res.status(404); throw new Error("Employee profile not found"); }
     targetEmployeeId = selfEmp._id;
   }
 
-  if (!targetEmployeeId) {
-    res.status(400);
-    throw new Error("Employee is required");
-  }
+  if (!targetEmployeeId) { res.status(400); throw new Error("Employee is required"); }
 
   const employee = await Employee.findById(targetEmployeeId);
-  if (!employee) {
-    res.status(404);
-    throw new Error("Employee not found");
-  }
+  if (!employee) { res.status(404); throw new Error("Employee not found"); }
 
   const advanceDate = date ? new Date(date) : new Date();
-  if (Number.isNaN(advanceDate.getTime())) {
-    res.status(400);
-    throw new Error("Invalid date");
-  }
+  if (Number.isNaN(advanceDate.getTime())) { res.status(400); throw new Error("Invalid date"); }
+
   const month = advanceDate.getMonth() + 1;
   const year = advanceDate.getFullYear();
 
-  // Admin-added advances are auto-approved; employee requests stay Pending
   const isAdmin = req.user && req.user.role === "Admin";
 
-  // Enforce advance limit from system settings
   const settings = await Settings.findOne();
   const limitType = settings?.advances?.limitType || "PERCENTAGE";
   const limitValue = Number(settings?.advances?.limitValue ?? 30);
 
   const rawSalary = employee.salary;
-  const basicSalary =
-    typeof rawSalary === "number"
-      ? rawSalary
-      : rawSalary && typeof rawSalary.basic === "number"
-      ? rawSalary.basic
-      : 0;
+  const basicSalary = typeof rawSalary === "number" ? rawSalary : rawSalary?.basic ?? 0;
 
-  const maxAllowed =
-    limitType === "FIXED" ? Math.max(0, limitValue) : Math.max(0, (basicSalary * limitValue) / 100);
+  // limitValue = 0 means advances are disabled
+  if (limitValue === 0) {
+    res.status(400);
+    throw new Error("Advance salary is disabled in system settings");
+  }
 
-  // Total requested this month (excluding rejected)
+  const maxAllowed = limitType === "FIXED" ? limitValue : Math.max(0, (basicSalary * limitValue) / 100);
+
   const existing = await Advance.find({
     employee: targetEmployeeId,
     month,
@@ -78,9 +54,9 @@ exports.requestAdvance = asyncHandler(async (req, res) => {
   const already = existing.reduce((s, a) => s + (a.amount || 0), 0);
   const requestedNow = Number(amount);
 
-  if (maxAllowed > 0 && already + requestedNow > maxAllowed) {
+  if (already + requestedNow > maxAllowed) {
     res.status(400);
-    throw new Error(`Advance limit exceeded. Max allowed is ${maxAllowed}`);
+    throw new Error(`Advance limit exceeded. Max allowed: PKR ${maxAllowed.toLocaleString()}. Already requested: PKR ${already.toLocaleString()}`);
   }
 
   const advance = await Advance.create({
@@ -99,15 +75,12 @@ exports.requestAdvance = asyncHandler(async (req, res) => {
     recordId: advance._id,
     recordName: employee.name,
     description: `Advance of PKR ${requestedNow.toLocaleString()} requested for ${employee.name} — ${isAdmin ? "auto-approved" : "pending approval"}`,
-    newValues: { amount: requestedNow, reason, month, year, status: advance.status },
+    newValues: { amount: requestedNow, reason, month, year, status: advance.status }
   });
 
   res.status(201).json(advance);
 });
 
-// @desc    Get all advances (with filters)
-// @route   GET /api/advances
-// @access  Private
 exports.getAdvances = asyncHandler(async (req, res) => {
   const { month, year, employeeId, fromDate, toDate } = req.query;
   const query = {};
@@ -115,36 +88,20 @@ exports.getAdvances = asyncHandler(async (req, res) => {
   if (fromDate || toDate) {
     query.date = {};
     if (fromDate) query.date.$gte = new Date(fromDate);
-    if (toDate)   { const e = new Date(toDate); e.setHours(23,59,59,999); query.date.$lte = e; }
+    if (toDate) { const e = new Date(toDate); e.setHours(23, 59, 59, 999); query.date.$lte = e; }
   } else {
     if (month) query.month = Number(month);
-    if (year)  query.year  = Number(year);
+    if (year) query.year = Number(year);
   }
   if (employeeId) query.employee = employeeId;
 
-  if (req.user.role === "Employee") {
-    const employee = await Employee.findOne({ user: req.user._id });
-    if (!employee) {
-      res.status(404);
-      throw new Error("Employee profile not found");
-    }
-    query.employee = employee._id;
-  }
-
   const advances = await Advance.find(query)
-    .populate({
-      path: "employee",
-      select: "name department",
-      populate: { path: "user", select: "name" }
-    })
+    .populate({ path: "employee", select: "name department", populate: { path: "user", select: "name" } })
     .sort({ date: -1 });
 
   res.json(advances);
 });
 
-// @desc    Get advances grouped by employee (ledger view)
-// @route   GET /api/advances/ledger
-// @access  Private (Admin)
 exports.getEmployeeLedger = asyncHandler(async (req, res) => {
   const { year, employeeId } = req.query;
   const query = {};
@@ -160,29 +117,19 @@ exports.getEmployeeLedger = asyncHandler(async (req, res) => {
     const empId = adv.employee?._id?.toString();
     if (!empId) return;
     if (!map.has(empId)) {
-      map.set(empId, {
-        employee: adv.employee,
-        advances: [],
-        totalAmount: 0,
-        approvedAmount: 0,
-        paidAmount: 0,
-        pendingAmount: 0,
-      });
+      map.set(empId, { employee: adv.employee, advances: [], totalAmount: 0, approvedAmount: 0, paidAmount: 0, pendingAmount: 0 });
     }
     const entry = map.get(empId);
     entry.advances.push(adv);
     entry.totalAmount += adv.amount || 0;
-    if (adv.status === "Paid")          entry.paidAmount     += adv.amount || 0;
+    if (adv.status === "Paid") entry.paidAmount += adv.amount || 0;
     else if (adv.status === "Approved") entry.approvedAmount += adv.amount || 0;
-    else if (adv.status === "Pending")  entry.pendingAmount  += adv.amount || 0;
+    else if (adv.status === "Pending") entry.pendingAmount += adv.amount || 0;
   });
 
   res.json(Array.from(map.values()));
 });
 
-// @desc    Update advance status (Approve/Reject)
-// @route   PUT /api/advances/:id
-// @access  Private (HR/Admin)
 exports.updateAdvanceStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
 
@@ -193,11 +140,7 @@ exports.updateAdvanceStatus = asyncHandler(async (req, res) => {
   }
 
   const advance = await Advance.findById(req.params.id);
-
-  if (!advance) {
-    res.status(404);
-    throw new Error("Advance request not found");
-  }
+  if (!advance) { res.status(404); throw new Error("Advance request not found"); }
 
   const oldStatus = advance.status;
   advance.status = status;
@@ -210,8 +153,27 @@ exports.updateAdvanceStatus = asyncHandler(async (req, res) => {
     recordName: String(advance.employee),
     description: `${req.user?.name} ${status.toLowerCase()} advance of PKR ${advance.amount?.toLocaleString()}`,
     oldValues: { status: oldStatus },
-    newValues: { status },
+    newValues: { status }
   });
 
   res.json(advance);
+});
+
+exports.deleteAdvance = asyncHandler(async (req, res) => {
+  const advance = await Advance.findById(req.params.id);
+  if (!advance) { res.status(404); throw new Error("Advance not found"); }
+  if (advance.status === "Paid") {
+    return res.status(400).json({ message: "Cannot delete a paid advance (already deducted from payroll)" });
+  }
+
+  logAudit(req, {
+    module: "Advance",
+    action: "Delete",
+    recordId: advance._id,
+    recordName: String(advance.employee),
+    description: `${req.user?.name} deleted advance of PKR ${advance.amount}`
+  });
+
+  await Advance.findByIdAndDelete(req.params.id);
+  res.json({ message: "Advance deleted successfully" });
 });

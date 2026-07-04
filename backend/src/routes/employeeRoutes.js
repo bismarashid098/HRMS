@@ -3,8 +3,10 @@ const {
   createEmployee,
   getEmployees,
   getEmployeeById,
+  getDeletedEmployees,
   updateEmployee,
-  deleteEmployee
+  deleteEmployee,
+  restoreEmployee
 } = require("../controllers/employeeController");
 
 const protect = require("../middleware/authMiddleware");
@@ -14,13 +16,12 @@ const router = express.Router();
 
 router.use(protect);
 
-// Admin & Manager - read only
+router.get("/deleted", authorize("Admin"), getDeletedEmployees);
 router.get("/", authorize("Admin", "Manager"), getEmployees);
 router.get("/:id", authorize("Admin", "Manager"), getEmployeeById);
-
-// Admin only - write operations
 router.post("/", authorize("Admin"), createEmployee);
 router.put("/:id", authorize("Admin"), updateEmployee);
+router.put("/:id/restore", authorize("Admin"), restoreEmployee);
 router.delete("/:id", authorize("Admin"), deleteEmployee);
 
 module.exports = router;

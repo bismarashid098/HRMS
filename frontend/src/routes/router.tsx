@@ -28,6 +28,23 @@ const Settings = lazy(() => import('pages/settings/Settings'));
 const AuditLogs = lazy(() => import('pages/audit/AuditLogs'));
 const ProfilePage = lazy(() => import('pages/profile/ProfilePage'));
 const BiometricImport = lazy(() => import('pages/biometric/BiometricImport'));
+// Org Structure
+const Departments = lazy(() => import('pages/org/Departments'));
+const Designations = lazy(() => import('pages/org/Designations'));
+const Branches = lazy(() => import('pages/org/Branches'));
+const Shifts = lazy(() => import('pages/org/Shifts'));
+const Holidays = lazy(() => import('pages/org/Holidays'));
+// Recruitment
+const JobPostings = lazy(() => import('pages/recruitment/JobPostings'));
+const Candidates = lazy(() => import('pages/recruitment/Candidates'));
+// People
+const PerformanceReviews = lazy(() => import('pages/performance/PerformanceReviews'));
+const TrainingPage = lazy(() => import('pages/training/TrainingPage'));
+// Operations
+const AssetManagement = lazy(() => import('pages/assets/AssetManagement'));
+const ExpenseClaims = lazy(() => import('pages/expenses/ExpenseClaims'));
+const DocumentsPage = lazy(() => import('pages/documents/DocumentsPage'));
+const NotificationsPage = lazy(() => import('pages/notifications/NotificationsPage'));
 
 export const SuspenseOutlet = () => {
   const location = useLocation();
@@ -37,6 +54,10 @@ export const SuspenseOutlet = () => {
     </Suspense>
   );
 };
+
+const AdminOnly = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute allowedRoles={['Admin']}>{children}</ProtectedRoute>
+);
 
 export const routes: RouteObject[] = [
   {
@@ -53,101 +74,60 @@ export const routes: RouteObject[] = [
         ),
         children: [
           { index: true, element: <DashboardHome /> },
+
+          // Employees
           { path: 'employees', element: <EmployeeList /> },
-          {
-            path: 'employees/add',
-            element: (
-              <ProtectedRoute allowedRoles={['Admin']}>
-                <EmployeeForm />
-              </ProtectedRoute>
-            ),
-          },
+          { path: 'employees/add', element: <AdminOnly><EmployeeForm /></AdminOnly> },
           { path: 'employees/:id', element: <EmployeeView /> },
-          {
-            path: 'employees/:id/edit',
-            element: (
-              <ProtectedRoute allowedRoles={['Admin']}>
-                <EmployeeForm />
-              </ProtectedRoute>
-            ),
-          },
+          { path: 'employees/:id/edit', element: <AdminOnly><EmployeeForm /></AdminOnly> },
+
+          // Attendance
           { path: 'attendance', element: <AttendanceDaily /> },
           { path: 'attendance/monthly', element: <AttendanceMonthly /> },
+
+          // Leaves
           { path: 'leaves', element: <LeaveManagement /> },
-          {
-            path: 'payroll',
-            element: (
-              <ProtectedRoute allowedRoles={['Admin']}>
-                <PayrollPage />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: 'payroll/advance',
-            element: (
-              <ProtectedRoute allowedRoles={['Admin']}>
-                <AdvanceSalary />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: 'payroll/slip/:id',
-            element: (
-              <ProtectedRoute allowedRoles={['Admin']}>
-                <SalarySlip />
-              </ProtectedRoute>
-            ),
-          },
+
+          // Payroll (Admin only)
+          { path: 'payroll', element: <AdminOnly><PayrollPage /></AdminOnly> },
+          { path: 'payroll/advance', element: <AdminOnly><AdvanceSalary /></AdminOnly> },
+          { path: 'payroll/slip/:id', element: <AdminOnly><SalarySlip /></AdminOnly> },
+
+          // Reports
           { path: 'reports/attendance', element: <AttendanceReport /> },
           { path: 'reports/leave', element: <LeaveReport /> },
-          {
-            path: 'reports/payroll',
-            element: (
-              <ProtectedRoute allowedRoles={['Admin']}>
-                <PayrollReport />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: 'reports/advance',
-            element: (
-              <ProtectedRoute allowedRoles={['Admin']}>
-                <AdvanceReport />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: 'users',
-            element: (
-              <ProtectedRoute allowedRoles={['Admin']}>
-                <UserManagement />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: 'settings',
-            element: (
-              <ProtectedRoute allowedRoles={['Admin']}>
-                <Settings />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: 'audit',
-            element: (
-              <ProtectedRoute allowedRoles={['Admin']}>
-                <AuditLogs />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: 'biometric',
-            element: (
-              <ProtectedRoute allowedRoles={['Admin']}>
-                <BiometricImport />
-              </ProtectedRoute>
-            ),
-          },
+          { path: 'reports/payroll', element: <AdminOnly><PayrollReport /></AdminOnly> },
+          { path: 'reports/advance', element: <AdminOnly><AdvanceReport /></AdminOnly> },
+
+          // Administration (Admin only)
+          { path: 'users', element: <AdminOnly><UserManagement /></AdminOnly> },
+          { path: 'settings', element: <AdminOnly><Settings /></AdminOnly> },
+          { path: 'audit', element: <AdminOnly><AuditLogs /></AdminOnly> },
+          { path: 'biometric', element: <AdminOnly><BiometricImport /></AdminOnly> },
+
+          // Organization Structure (Admin only)
+          { path: 'org/departments', element: <AdminOnly><Departments /></AdminOnly> },
+          { path: 'org/designations', element: <AdminOnly><Designations /></AdminOnly> },
+          { path: 'org/branches', element: <AdminOnly><Branches /></AdminOnly> },
+          { path: 'org/shifts', element: <AdminOnly><Shifts /></AdminOnly> },
+          { path: 'org/holidays', element: <AdminOnly><Holidays /></AdminOnly> },
+
+          // Recruitment (Admin only)
+          { path: 'recruitment/jobs', element: <AdminOnly><JobPostings /></AdminOnly> },
+          { path: 'recruitment/candidates', element: <AdminOnly><Candidates /></AdminOnly> },
+
+          // People (Admin only)
+          { path: 'performance', element: <AdminOnly><PerformanceReviews /></AdminOnly> },
+          { path: 'training', element: <AdminOnly><TrainingPage /></AdminOnly> },
+
+          // Operations (Admin only)
+          { path: 'assets', element: <AdminOnly><AssetManagement /></AdminOnly> },
+          { path: 'expenses', element: <AdminOnly><ExpenseClaims /></AdminOnly> },
+          { path: 'documents', element: <AdminOnly><DocumentsPage /></AdminOnly> },
+
+          // Notifications (all authenticated)
+          { path: 'notifications', element: <NotificationsPage /> },
+
           { path: 'profile', element: <ProfilePage /> },
         ],
       },

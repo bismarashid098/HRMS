@@ -15,7 +15,16 @@ const settingsSchema = new mongoose.Schema(
         end: { type: String, default: "18:00" }
       },
       lateAfterMinutes: { type: Number, default: 15 },
-      halfDayAfterMinutes: { type: Number, default: 240 }
+      halfDayAfterMinutes: { type: Number, default: 240 },
+      policy: {
+        gracePeriod: { type: Number, default: 5 },
+        deductionType: {
+          type: String,
+          enum: ["None", "Fixed", "Percentage", "PerMinute"],
+          default: "None",
+        },
+        deductionValue: { type: Number, default: 0 },
+      },
     },
 
     payroll: {

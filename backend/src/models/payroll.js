@@ -2,38 +2,27 @@ const mongoose = require("mongoose");
 
 const payrollSchema = new mongoose.Schema(
   {
-    employee: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Employee",
-      required: true
-    },
-
-    month: { type: Number, required: true }, // 1-12
-    year: { type: Number, required: true },
-
+    employee: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
+    month: { type: Number, required: true, min: 1, max: 12 },
+    year: { type: Number, required: true, min: 2000, max: 2100 },
     basicSalary: { type: Number, required: true },
     allowance: { type: Number, default: 0 },
-
     deductions: { type: Number, default: 0 },
     taxDeduction: { type: Number, default: 0 },
-    advanceDeduction:  { type: Number, default: 0 },
-    leaveDeduction:    { type: Number, default: 0 },
+    advanceDeduction: { type: Number, default: 0 },
+    leaveDeduction: { type: Number, default: 0 },
     extraOffDeduction: { type: Number, default: 0 },
-    extraOffDays:      { type: Number, default: 0 },
-    workingDays:       { type: Number, default: 26 },
-    presentDays:       { type: Number, default: 0 },
+    extraOffDays: { type: Number, default: 0 },
+    eobiDeduction: { type: Number, default: 0 },
+    pfDeduction: { type: Number, default: 0 },
+    workingDays: { type: Number, default: 26 },
+    presentDays: { type: Number, default: 0 },
     netSalary: { type: Number, required: true },
-
-    status: {
-      type: String,
-      enum: ["Generated", "Approved"],
-      default: "Generated"
-    }
+    status: { type: String, enum: ["Generated", "Approved"], default: "Generated" }
   },
   { timestamps: true }
 );
 
-// one payroll per employee per month
 payrollSchema.index({ employee: 1, month: 1, year: 1 }, { unique: true });
 
 module.exports = mongoose.model("Payroll", payrollSchema);

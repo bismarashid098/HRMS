@@ -10,7 +10,10 @@ const leaveBalanceSchema = new mongoose.Schema(
     },
     casual: { type: Number, default: 12 },
     sick: { type: Number, default: 8 },
-    annual: { type: Number, default: 14 }
+    annual: { type: Number, default: 14 },
+    maternity: { type: Number, default: 90 },
+    paternity: { type: Number, default: 3 },
+    lastResetYear: { type: Number, default: () => new Date().getFullYear() }
   },
   { timestamps: true }
 );
