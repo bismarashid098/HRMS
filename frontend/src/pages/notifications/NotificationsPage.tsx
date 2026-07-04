@@ -1,7 +1,17 @@
 import { useEffect, useState } from 'react';
 import {
-  Box, Card, CardContent, Chip, Typography, CircularProgress,
-  IconButton, Tooltip, Stack, Button, Divider, Avatar,
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  Typography,
+  CircularProgress,
+  IconButton,
+  Tooltip,
+  Stack,
+  Button,
+  Divider,
+  Avatar,
 } from '@mui/material';
 import { Icon } from '@iconify/react';
 import api from 'api/axios';
@@ -29,8 +39,15 @@ const typeIcon: Record<string, string> = {
 };
 
 const typeColor: Record<string, string> = {
-  Leave: '#3b82f6', Attendance: '#8b5cf6', Payroll: '#22c55e', Advance: '#f59e0b',
-  Asset: '#64748b', Expense: '#ef4444', Training: '#06b6d4', Performance: '#f97316', General: '#94a3b8',
+  Leave: '#3b82f6',
+  Attendance: '#8b5cf6',
+  Payroll: '#22c55e',
+  Advance: '#f59e0b',
+  Asset: '#64748b',
+  Expense: '#ef4444',
+  Training: '#06b6d4',
+  Performance: '#f97316',
+  General: '#94a3b8',
 };
 
 const NotificationsPage = () => {
@@ -44,17 +61,23 @@ const NotificationsPage = () => {
       const res = await api.get('/notifications', { params: { limit: 50 } });
       setNotifications(res.data.notifications || []);
       setUnreadCount(res.data.unreadCount || 0);
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const markRead = async (id: string) => {
     try {
       await api.put(`/notifications/${id}/read`);
-      setNotifications((prev) => prev.map((n) => n._id === id ? { ...n, isRead: true } : n));
+      setNotifications((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)));
       setUnreadCount((c) => Math.max(0, c - 1));
-    } catch {}
+    } catch {
+      // ignore
+    }
   };
 
   const markAllRead = async () => {
@@ -62,25 +85,35 @@ const NotificationsPage = () => {
       await api.put('/notifications/read-all');
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
-    } catch {}
+    } catch {
+      // ignore
+    }
   };
 
   const deleteNotification = async (id: string) => {
     try {
       await api.delete(`/notifications/${id}`);
       setNotifications((prev) => prev.filter((n) => n._id !== id));
-    } catch {}
+    } catch {
+      // ignore
+    }
   };
 
   return (
     <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="h5" fontWeight={700}>Notifications</Typography>
+          <Typography variant="h5" fontWeight={700}>
+            Notifications
+          </Typography>
           {unreadCount > 0 && <Chip label={unreadCount} color="error" size="small" />}
         </Stack>
         {unreadCount > 0 && (
-          <Button size="small" onClick={markAllRead} startIcon={<Icon icon="material-symbols:done-all" />}>
+          <Button
+            size="small"
+            onClick={markAllRead}
+            startIcon={<Icon icon="material-symbols:done-all" />}
+          >
             Mark all read
           </Button>
         )}
@@ -89,11 +122,19 @@ const NotificationsPage = () => {
       <Card>
         <CardContent sx={{ p: 0 }}>
           {loading ? (
-            <Box display="flex" justifyContent="center" py={4}><CircularProgress /></Box>
+            <Box display="flex" justifyContent="center" py={4}>
+              <CircularProgress />
+            </Box>
           ) : notifications.length === 0 ? (
             <Box textAlign="center" py={6}>
-              <Icon icon="material-symbols:notifications-off-outline" fontSize={48} color="#94a3b8" />
-              <Typography color="text.secondary" mt={1}>No notifications</Typography>
+              <Icon
+                icon="material-symbols:notifications-off-outline"
+                fontSize={48}
+                color="#94a3b8"
+              />
+              <Typography color="text.secondary" mt={1}>
+                No notifications
+              </Typography>
             </Box>
           ) : (
             notifications.map((n, i) => (
@@ -103,7 +144,8 @@ const NotificationsPage = () => {
                   alignItems="flex-start"
                   spacing={2}
                   sx={{
-                    px: 3, py: 2,
+                    px: 3,
+                    py: 2,
                     bgcolor: n.isRead ? 'transparent' : 'action.hover',
                     cursor: 'pointer',
                     '&:hover': { bgcolor: 'action.selected' },
@@ -115,27 +157,51 @@ const NotificationsPage = () => {
                   </Avatar>
                   <Box flex={1} minWidth={0}>
                     <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                      <Typography variant="body2" fontWeight={n.isRead ? 400 : 700} noWrap>{n.title}</Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap', ml: 1 }}>
+                      <Typography variant="body2" fontWeight={n.isRead ? 400 : 700} noWrap>
+                        {n.title}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ whiteSpace: 'nowrap', ml: 1 }}
+                      >
                         {new Date(n.createdAt).toLocaleDateString()}
                       </Typography>
                     </Stack>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>{n.message}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                      {n.message}
+                    </Typography>
                     <Stack direction="row" spacing={1} mt={0.5}>
-                      <Chip label={n.type} size="small" sx={{ bgcolor: typeColor[n.type], color: '#fff', fontSize: 11 }} />
+                      <Chip
+                        label={n.type}
+                        size="small"
+                        sx={{ bgcolor: typeColor[n.type], color: '#fff', fontSize: 11 }}
+                      />
                       {!n.isRead && <Chip label="New" color="primary" size="small" />}
                     </Stack>
                   </Box>
                   <Stack direction="row">
                     {!n.isRead && (
                       <Tooltip title="Mark read">
-                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); markRead(n._id); }}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markRead(n._id);
+                          }}
+                        >
                           <Icon icon="material-symbols:mark-email-read-outline" />
                         </IconButton>
                       </Tooltip>
                     )}
                     <Tooltip title="Delete">
-                      <IconButton size="small" onClick={(e) => { e.stopPropagation(); deleteNotification(n._id); }}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteNotification(n._id);
+                        }}
+                      >
                         <Icon icon="material-symbols:delete-outline" />
                       </IconButton>
                     </Tooltip>

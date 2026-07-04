@@ -60,7 +60,12 @@ const adminSitemap: MenuItem[] = [
         active: true,
         items: [
           { name: 'Daily', path: paths.attendance, pathName: 'attendance-daily', active: true },
-          { name: 'Monthly Ledger', path: paths.attendanceMonthly, pathName: 'attendance-monthly', active: true },
+          {
+            name: 'Monthly Ledger',
+            path: paths.attendanceMonthly,
+            pathName: 'attendance-monthly',
+            active: true,
+          },
         ],
       },
       {
@@ -91,7 +96,12 @@ const adminSitemap: MenuItem[] = [
         active: true,
         items: [
           { name: 'Departments', path: paths.departments, pathName: 'departments', active: true },
-          { name: 'Designations', path: paths.designations, pathName: 'designations', active: true },
+          {
+            name: 'Designations',
+            path: paths.designations,
+            pathName: 'designations',
+            active: true,
+          },
           { name: 'Branches', path: paths.branches, pathName: 'branches', active: true },
           { name: 'Shifts', path: paths.shifts, pathName: 'shifts', active: true },
           { name: 'Holidays', path: paths.holidays, pathName: 'holidays', active: true },
@@ -131,8 +141,18 @@ const adminSitemap: MenuItem[] = [
         icon: 'material-symbols:work-outline-rounded',
         active: true,
         items: [
-          { name: 'Job Postings', path: paths.recruitmentJobs, pathName: 'recruitment-jobs', active: true },
-          { name: 'Candidates', path: paths.recruitmentCandidates, pathName: 'recruitment-candidates', active: true },
+          {
+            name: 'Job Postings',
+            path: paths.recruitmentJobs,
+            pathName: 'recruitment-jobs',
+            active: true,
+          },
+          {
+            name: 'Candidates',
+            path: paths.recruitmentCandidates,
+            pathName: 'recruitment-candidates',
+            active: true,
+          },
         ],
       },
     ],
@@ -197,10 +217,25 @@ const adminSitemap: MenuItem[] = [
         icon: 'material-symbols:assessment-outline-rounded',
         active: true,
         items: [
-          { name: 'Attendance Report', path: paths.reportAttendance, pathName: 'report-attendance', active: true },
+          {
+            name: 'Attendance Report',
+            path: paths.reportAttendance,
+            pathName: 'report-attendance',
+            active: true,
+          },
           { name: 'Leave Report', path: paths.reportLeave, pathName: 'report-leave', active: true },
-          { name: 'Payroll Report', path: paths.reportPayroll, pathName: 'report-payroll', active: true },
-          { name: 'Advance Report', path: paths.reportAdvance, pathName: 'report-advance', active: true },
+          {
+            name: 'Payroll Report',
+            path: paths.reportPayroll,
+            pathName: 'report-payroll',
+            active: true,
+          },
+          {
+            name: 'Advance Report',
+            path: paths.reportAdvance,
+            pathName: 'report-advance',
+            active: true,
+          },
         ],
       },
     ],
@@ -270,7 +305,12 @@ const managerSitemap: MenuItem[] = [
         active: true,
         items: [
           { name: 'Daily', path: paths.attendance, pathName: 'attendance-daily', active: true },
-          { name: 'Monthly Ledger', path: paths.attendanceMonthly, pathName: 'attendance-monthly', active: true },
+          {
+            name: 'Monthly Ledger',
+            path: paths.attendanceMonthly,
+            pathName: 'attendance-monthly',
+            active: true,
+          },
         ],
       },
       {
@@ -293,7 +333,12 @@ const managerSitemap: MenuItem[] = [
         icon: 'material-symbols:assessment-outline-rounded',
         active: true,
         items: [
-          { name: 'Attendance Report', path: paths.reportAttendance, pathName: 'report-attendance', active: true },
+          {
+            name: 'Attendance Report',
+            path: paths.reportAttendance,
+            pathName: 'report-attendance',
+            active: true,
+          },
           { name: 'Leave Report', path: paths.reportLeave, pathName: 'report-leave', active: true },
         ],
       },

@@ -77,9 +77,23 @@ export const routes: RouteObject[] = [
 
           // Employees
           { path: 'employees', element: <EmployeeList /> },
-          { path: 'employees/add', element: <AdminOnly><EmployeeForm /></AdminOnly> },
+          {
+            path: 'employees/add',
+            element: (
+              <AdminOnly>
+                <EmployeeForm />
+              </AdminOnly>
+            ),
+          },
           { path: 'employees/:id', element: <EmployeeView /> },
-          { path: 'employees/:id/edit', element: <AdminOnly><EmployeeForm /></AdminOnly> },
+          {
+            path: 'employees/:id/edit',
+            element: (
+              <AdminOnly>
+                <EmployeeForm />
+              </AdminOnly>
+            ),
+          },
 
           // Attendance
           { path: 'attendance', element: <AttendanceDaily /> },
@@ -89,41 +103,188 @@ export const routes: RouteObject[] = [
           { path: 'leaves', element: <LeaveManagement /> },
 
           // Payroll (Admin only)
-          { path: 'payroll', element: <AdminOnly><PayrollPage /></AdminOnly> },
-          { path: 'payroll/advance', element: <AdminOnly><AdvanceSalary /></AdminOnly> },
-          { path: 'payroll/slip/:id', element: <AdminOnly><SalarySlip /></AdminOnly> },
+          {
+            path: 'payroll',
+            element: (
+              <AdminOnly>
+                <PayrollPage />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'payroll/advance',
+            element: (
+              <AdminOnly>
+                <AdvanceSalary />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'payroll/slip/:id',
+            element: (
+              <AdminOnly>
+                <SalarySlip />
+              </AdminOnly>
+            ),
+          },
 
           // Reports
           { path: 'reports/attendance', element: <AttendanceReport /> },
           { path: 'reports/leave', element: <LeaveReport /> },
-          { path: 'reports/payroll', element: <AdminOnly><PayrollReport /></AdminOnly> },
-          { path: 'reports/advance', element: <AdminOnly><AdvanceReport /></AdminOnly> },
+          {
+            path: 'reports/payroll',
+            element: (
+              <AdminOnly>
+                <PayrollReport />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'reports/advance',
+            element: (
+              <AdminOnly>
+                <AdvanceReport />
+              </AdminOnly>
+            ),
+          },
 
           // Administration (Admin only)
-          { path: 'users', element: <AdminOnly><UserManagement /></AdminOnly> },
-          { path: 'settings', element: <AdminOnly><Settings /></AdminOnly> },
-          { path: 'audit', element: <AdminOnly><AuditLogs /></AdminOnly> },
-          { path: 'biometric', element: <AdminOnly><BiometricImport /></AdminOnly> },
+          {
+            path: 'users',
+            element: (
+              <AdminOnly>
+                <UserManagement />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'settings',
+            element: (
+              <AdminOnly>
+                <Settings />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'audit',
+            element: (
+              <AdminOnly>
+                <AuditLogs />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'biometric',
+            element: (
+              <AdminOnly>
+                <BiometricImport />
+              </AdminOnly>
+            ),
+          },
 
           // Organization Structure (Admin only)
-          { path: 'org/departments', element: <AdminOnly><Departments /></AdminOnly> },
-          { path: 'org/designations', element: <AdminOnly><Designations /></AdminOnly> },
-          { path: 'org/branches', element: <AdminOnly><Branches /></AdminOnly> },
-          { path: 'org/shifts', element: <AdminOnly><Shifts /></AdminOnly> },
-          { path: 'org/holidays', element: <AdminOnly><Holidays /></AdminOnly> },
+          {
+            path: 'org/departments',
+            element: (
+              <AdminOnly>
+                <Departments />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'org/designations',
+            element: (
+              <AdminOnly>
+                <Designations />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'org/branches',
+            element: (
+              <AdminOnly>
+                <Branches />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'org/shifts',
+            element: (
+              <AdminOnly>
+                <Shifts />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'org/holidays',
+            element: (
+              <AdminOnly>
+                <Holidays />
+              </AdminOnly>
+            ),
+          },
 
           // Recruitment (Admin only)
-          { path: 'recruitment/jobs', element: <AdminOnly><JobPostings /></AdminOnly> },
-          { path: 'recruitment/candidates', element: <AdminOnly><Candidates /></AdminOnly> },
+          {
+            path: 'recruitment/jobs',
+            element: (
+              <AdminOnly>
+                <JobPostings />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'recruitment/candidates',
+            element: (
+              <AdminOnly>
+                <Candidates />
+              </AdminOnly>
+            ),
+          },
 
           // People (Admin only)
-          { path: 'performance', element: <AdminOnly><PerformanceReviews /></AdminOnly> },
-          { path: 'training', element: <AdminOnly><TrainingPage /></AdminOnly> },
+          {
+            path: 'performance',
+            element: (
+              <AdminOnly>
+                <PerformanceReviews />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'training',
+            element: (
+              <AdminOnly>
+                <TrainingPage />
+              </AdminOnly>
+            ),
+          },
 
           // Operations (Admin only)
-          { path: 'assets', element: <AdminOnly><AssetManagement /></AdminOnly> },
-          { path: 'expenses', element: <AdminOnly><ExpenseClaims /></AdminOnly> },
-          { path: 'documents', element: <AdminOnly><DocumentsPage /></AdminOnly> },
+          {
+            path: 'assets',
+            element: (
+              <AdminOnly>
+                <AssetManagement />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'expenses',
+            element: (
+              <AdminOnly>
+                <ExpenseClaims />
+              </AdminOnly>
+            ),
+          },
+          {
+            path: 'documents',
+            element: (
+              <AdminOnly>
+                <DocumentsPage />
+              </AdminOnly>
+            ),
+          },
 
           // Notifications (all authenticated)
           { path: 'notifications', element: <NotificationsPage /> },
