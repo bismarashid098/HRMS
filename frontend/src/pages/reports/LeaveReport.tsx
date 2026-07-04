@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
   MenuItem,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -14,8 +16,9 @@ import {
   Typography,
   CircularProgress,
   Select,
-  Stack,
 } from '@mui/material';
+import { Icon } from '@iconify/react';
+import * as XLSX from 'xlsx';
 import api from 'api/axios';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -25,6 +28,7 @@ const LeaveReport = () => {
   const [loading, setLoading] = useState(false);
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
+  const tableRef = useRef<HTMLTableElement>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -48,16 +52,92 @@ const LeaveReport = () => {
     .filter((l) => l.status === 'Approved')
     .reduce((s: number, l: any) => s + (l.totalDays || 0), 0);
 
+  const handleExport = () => {
+    const rows = records.map((r: any) => ({
+      Employee: r.employee?.name || '—',
+      Department: r.employee?.department || '—',
+      'Leave Type': r.type,
+      'From Date': r.fromDate?.slice(0, 10),
+      'To Date': r.toDate?.slice(0, 10),
+      'Total Days': r.totalDays,
+      Paid: r.paid ? 'Paid' : 'Unpaid',
+      Status: r.status,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Leaves');
+    XLSX.writeFile(wb, `Leave_Report_${MONTHS[month - 1]}_${year}.xlsx`);
+  };
+
+  const handlePrint = () => {
+    if (!tableRef.current) return;
+    const win = window.open('', '_blank', 'width=1000,height=700');
+    if (!win) return;
+    win.document.write(`
+      <html>
+      <head>
+        <title>Leave Report — ${MONTHS[month - 1]} ${year}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 24px; color: #0f172a; }
+          h2 { margin: 0 0 4px; font-size: 20px; }
+          p  { margin: 0 0 20px; color: #64748b; font-size: 13px; }
+          table { width: 100%; border-collapse: collapse; font-size: 12px; }
+          th { background: #f1f5f9; padding: 8px 10px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 600; }
+          td { padding: 7px 10px; border-bottom: 1px solid #f1f5f9; }
+          tr:nth-child(even) td { background: #f8fafc; }
+        </style>
+      </head>
+      <body>
+        <h2>Leave Report</h2>
+        <p>${MONTHS[month - 1]} ${year} &mdash; ${records.length} requests &mdash; ${totalApproved} approved &mdash; ${totalDays} days taken</p>
+        ${tableRef.current.outerHTML}
+      </body>
+      </html>
+    `);
+    win.document.close();
+    win.focus();
+    setTimeout(() => {
+      win.print();
+      win.close();
+    }, 300);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h5" fontWeight={700} sx={{ mb: 0.5 }}>
-        Leave Report
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        All leave requests filtered by month
-      </Typography>
+      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" mb={0.5}>
+        <Box>
+          <Typography variant="h5" fontWeight={700}>
+            Leave Report
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mt={0.5}>
+            All leave requests filtered by month
+          </Typography>
+        </Box>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Icon icon="material-symbols:print-outline-rounded" />}
+            onClick={handlePrint}
+            disabled={!records.length}
+            sx={{ borderRadius: '8px' }}
+          >
+            Print
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<Icon icon="material-symbols:download-rounded" />}
+            onClick={handleExport}
+            disabled={!records.length}
+            sx={{ borderRadius: '8px' }}
+          >
+            Export Excel
+          </Button>
+        </Stack>
+      </Stack>
 
-      <Card sx={{ mb: 3 }}>
+      <Card sx={{ mb: 3, mt: 3 }}>
         <CardContent>
           <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
             <Select
@@ -98,7 +178,7 @@ const LeaveReport = () => {
               <CircularProgress />
             </Box>
           ) : (
-            <Table>
+            <Table ref={tableRef}>
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 600 }}>Employee</TableCell>
