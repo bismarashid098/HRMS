@@ -191,8 +191,7 @@ const LeaveManagement = () => {
 
   const filtered = leaves.filter((l) => {
     const matchStatus = filter === 'all' || l.status === filter;
-    const matchSearch =
-      !search || l.employee?.name?.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = !search || l.employee?.name?.toLowerCase().includes(search.toLowerCase());
     return matchStatus && matchSearch;
   });
 
@@ -272,11 +271,7 @@ const LeaveManagement = () => {
                     <TableRow key={l._id}>
                       <TableCell>{l.employee?.name || '—'}</TableCell>
                       <TableCell>
-                        <Chip
-                          label={l.type}
-                          size="small"
-                          color={typeColor[l.type] || 'default'}
-                        />
+                        <Chip label={l.type} size="small" color={typeColor[l.type] || 'default'} />
                       </TableCell>
                       <TableCell>{l.fromDate?.slice(0, 10)}</TableCell>
                       <TableCell>{l.toDate?.slice(0, 10)}</TableCell>
@@ -299,7 +294,9 @@ const LeaveManagement = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <Box
+                          sx={{ display: 'flex', gap: 0.5, alignItems: 'center', flexWrap: 'wrap' }}
+                        >
                           {l.status === 'Pending' && (
                             <>
                               <Button
@@ -325,7 +322,11 @@ const LeaveManagement = () => {
                           {isAdmin && (
                             <>
                               <Tooltip title="Edit">
-                                <IconButton size="small" color="primary" onClick={() => openEdit(l)}>
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => openEdit(l)}
+                                >
                                   <Icon icon="material-symbols:edit-outline-rounded" />
                                 </IconButton>
                               </Tooltip>
@@ -511,12 +512,7 @@ const LeaveManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteId(null)}>Cancel</Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleDelete}
-            disabled={deleteLoading}
-          >
+          <Button variant="contained" color="error" onClick={handleDelete} disabled={deleteLoading}>
             Delete
           </Button>
         </DialogActions>
