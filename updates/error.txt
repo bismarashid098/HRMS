@@ -1,8 +1,0 @@
-backend
-1- check all logical error
-2-solve all logical error
-3-test each module(payroll,leave management, employee,reports,setting)
-4-if any module are not exist.the firstly you should create it.
-
-frontend
-1-check all import

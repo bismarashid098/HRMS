@@ -59,7 +59,11 @@
       "Bash(git commit *)",
       "Bash(Get-ChildItem *)",
       "Bash(node backend/src/seed/userSeed.js)",
-      "Bash(curl -s -X POST http://localhost:5000/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@hrms.com\",\"password\":\"12345678\"}')"
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@hrms.com\",\"password\":\"12345678\"}')",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(xargs -I {} sh -c 'echo \"=== {} ===\" && head -5 {}')",
+      "Bash(node -e \"require\\('./src/app.js'\\); console.log\\('OK'\\)\")",
+      "Bash(git push *)"
     ]
   }
 }
