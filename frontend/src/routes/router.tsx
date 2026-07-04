@@ -67,9 +67,7 @@ export const routes: RouteObject[] = [
         path: '/',
         element: (
           <ProtectedRoute>
-            <MainLayout>
-              <SuspenseOutlet />
-            </MainLayout>
+            <MainLayout />
           </ProtectedRoute>
         ),
         children: [

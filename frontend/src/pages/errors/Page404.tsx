@@ -1,91 +1,54 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
-import { useBreakpoints } from 'providers/BreakpointsProvider';
-import Image from 'components/base/Image';
-import image from '/assets/images/illustrations/1.webp';
+import { Box, Button, Typography } from '@mui/material';
+import { useNavigate } from 'react-router';
+import { Icon } from '@iconify/react';
 
 const Page404 = () => {
-  const { up } = useBreakpoints();
-  const upSm = up('sm');
+  const navigate = useNavigate();
   return (
-    <Stack
+    <Box
       sx={{
-        justifyContent: 'center',
-        alignItems: 'center',
         minHeight: '100vh',
-        p: { xs: 2.5, sm: 5 },
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#F1F5F9',
+        p: 3,
       }}
     >
-      <Stack
-        direction="column"
+      <Box
         sx={{
+          width: 80,
+          height: 80,
+          borderRadius: '20px',
+          background: 'linear-gradient(135deg, #4F46E5 0%, #818CF8 100%)',
+          display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          textAlign: 'center',
+          mb: 3,
+          boxShadow: '0 8px 24px rgba(79,70,229,0.4)',
         }}
       >
-        <Box
-          sx={{
-            mb: 6,
-            width: {
-              xs: 300,
-              sm: 500,
-              md: 800,
-            },
-            height: 'auto',
-          }}
-        >
-          <Image src={image} width="100%" height="100%" alt="404" />
-        </Box>
-        <Box
-          sx={[
-            {
-              textAlign: 'center',
-            },
-            !upSm && {
-              maxWidth: 340,
-              mx: 'auto',
-            },
-          ]}
-        >
-          <Typography
-            variant="h2"
-            sx={{
-              color: 'text.disabled',
-              fontWeight: 'medium',
-              mb: 2,
-              fontSize: { xs: 'h4.fontSize', sm: 'h2.fontSize' },
-            }}
-          >
-            Page not found
-          </Typography>
-          <Typography
-            variant="h5"
-            sx={{
-              color: 'text.secondary',
-              fontWeight: 'normal',
-              mb: 5,
-              fontSize: { xs: 'subtitle1.fontSize', sm: 'h5.fontSize' },
-            }}
-          >
-            No worries! Let’s take you back{' '}
-            <Box
-              component="br"
-              sx={{
-                display: {
-                  xs: 'none',
-                  sm: 'block',
-                },
-              }}
-            />
-            while our bear is searching everywhere
-          </Typography>
-
-          <Button variant="contained" href="/" size={upSm ? 'large' : 'medium'} sx={{ px: 7 }}>
-            Go Back Home{' '}
-          </Button>
-        </Box>
-      </Stack>
-    </Stack>
+        <Icon icon="material-symbols:search-off-rounded" color="#fff" width={40} />
+      </Box>
+      <Typography variant="h2" fontWeight={800} color="text.primary" mb={1}>
+        404
+      </Typography>
+      <Typography variant="h6" fontWeight={600} color="text.primary" mb={1}>
+        Page Not Found
+      </Typography>
+      <Typography variant="body2" color="text.secondary" mb={4} textAlign="center" maxWidth={360}>
+        The page you're looking for doesn't exist or has been moved.
+      </Typography>
+      <Button
+        variant="contained"
+        onClick={() => navigate('/')}
+        startIcon={<Icon icon="material-symbols:arrow-back-rounded" width={18} />}
+        sx={{ borderRadius: '10px', px: 3, py: 1.25 }}
+      >
+        Back to Dashboard
+      </Button>
+    </Box>
   );
 };
 

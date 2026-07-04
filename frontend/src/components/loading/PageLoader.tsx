@@ -1,42 +1,17 @@
-import { Box, CircularProgress, Stack, StackOwnProps } from '@mui/material';
-import { cssVarRgba } from 'lib/utils';
+import { Box, CircularProgress } from '@mui/material';
 
-const PageLoader = (props: StackOwnProps) => {
-  return (
-    <Stack
-      {...props}
-      sx={[
-        {
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: 1,
-          flex: 1,
-        },
-        ...(Array.isArray(props.sx) ? props.sx : [props.sx]),
-      ]}
-    >
-      <Box sx={{ position: 'relative' }}>
-        <CircularProgress
-          variant="determinate"
-          value={100}
-          size={74}
-          thickness={4}
-          sx={(theme) => ({
-            color: cssVarRgba(theme.vars.palette.primary.mainChannel, 0.1),
-          })}
-        />
-        <CircularProgress
-          size={74}
-          thickness={4}
-          sx={(theme) => ({
-            position: 'absolute',
-            left: 0,
-            color: cssVarRgba(theme.vars.palette.primary.mainChannel, 0.6),
-          })}
-        />
-      </Box>
-    </Stack>
-  );
-};
+const PageLoader = () => (
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      backgroundColor: '#F1F5F9',
+    }}
+  >
+    <CircularProgress size={48} thickness={4} sx={{ color: '#4F46E5' }} />
+  </Box>
+);
 
 export default PageLoader;
