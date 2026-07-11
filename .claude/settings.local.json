@@ -66,7 +66,14 @@
       "Bash(git push *)",
       "PowerShell(Get-NetTCPConnection *)",
       "Bash(curl -s -X POST http://localhost:5000/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"admin@hrms.com\",\"password\":\"123\"}')",
-      "Bash(Get-Content *)"
+      "Bash(Get-Content *)",
+      "Bash(node *)",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); print\\(json.dumps\\(p.get\\('scripts',{}\\), indent=2\\)\\)\")",
+      "Bash(npx pwa-assets-generator *)",
+      "Bash(grep -v \"//\")",
+      "Bash(grep -rn \"sx={{ mb: 2, width: [0-9]\" E:/HRMS/frontend/src/pages/)",
+      "Bash(grep -rn \"sx={{ mb: 2, width:\" E:/HRMS/frontend/src/pages/)",
+      "Bash(git ls-tree *)"
     ]
   }
 }
