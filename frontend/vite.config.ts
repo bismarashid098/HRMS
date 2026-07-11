@@ -70,11 +70,7 @@ export default ({ mode }: { mode: string }) => {
           navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [
             {
-              urlPattern: ({ url }) =>
-                url.pathname.startsWith('/api') ||
-                (process.env.VITE_API_URL
-                  ? url.href.startsWith(process.env.VITE_API_URL)
-                  : false),
+              urlPattern: ({ url }) => url.pathname.startsWith('/api'),
               handler: 'NetworkFirst',
               options: {
                 cacheName: 'api-cache',
