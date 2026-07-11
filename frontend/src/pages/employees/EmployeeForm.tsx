@@ -67,7 +67,7 @@ const EmployeeForm = () => {
             employmentStatus: e.employmentStatus || 'Active',
           });
         })
-        .catch(console.error);
+        .catch(() => setError('Failed to load employee data. Please go back and try again.'));
     }
   }, [id]);
 

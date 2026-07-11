@@ -20,10 +20,12 @@ import {
 import { Icon } from '@iconify/react';
 import * as XLSX from 'xlsx';
 import api from 'api/axios';
+import { useCurrency } from 'context/SettingsContext';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const PayrollReport = () => {
+  const { code: currCode } = useCurrency();
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [month, setMonth] = useState(new Date().getMonth() + 1);
@@ -80,7 +82,7 @@ const PayrollReport = () => {
       </head>
       <body>
         <h2>Payroll Report</h2>
-        <p>${MONTHS[month - 1]} ${year} &mdash; ${records.length} employees &mdash; Total Net: PKR ${totalNet.toLocaleString()}</p>
+        <p>${MONTHS[month - 1]} ${year} &mdash; ${records.length} employees &mdash; Total Net: ${currCode} ${totalNet.toLocaleString()}</p>
         ${tableRef.current.outerHTML}
       </body>
       </html>
@@ -155,7 +157,7 @@ const PayrollReport = () => {
               <Stack direction="row" spacing={1}>
                 <Chip label={`${records.length} employees`} size="small" color="default" />
                 <Chip
-                  label={`Total: PKR ${totalNet.toLocaleString()}`}
+                  label={`Total: ${currCode} ${totalNet.toLocaleString()}`}
                   size="small"
                   color="success"
                 />
@@ -216,16 +218,16 @@ const PayrollReport = () => {
                         </TableCell>
                         <TableCell>{r.department || '—'}</TableCell>
                         <TableCell align="right">
-                          PKR {(r.basicSalary || 0).toLocaleString()}
+                          {currCode} {(r.basicSalary || 0).toLocaleString()}
                         </TableCell>
                         <TableCell align="right">
-                          PKR {(r.allowance || 0).toLocaleString()}
+                          {currCode} {(r.allowance || 0).toLocaleString()}
                         </TableCell>
                         <TableCell align="right" sx={{ color: 'error.main' }}>
-                          PKR {(r.deductions || 0).toLocaleString()}
+                          {currCode} {(r.deductions || 0).toLocaleString()}
                         </TableCell>
                         <TableCell align="right">
-                          <strong>PKR {(r.netPay || 0).toLocaleString()}</strong>
+                          <strong>{currCode} {(r.netPay || 0).toLocaleString()}</strong>
                         </TableCell>
                         <TableCell>
                           <Chip
@@ -244,14 +246,14 @@ const PayrollReport = () => {
                       </TableCell>
                       <TableCell align="right">
                         <Typography variant="subtitle2" fontWeight={700}>
-                          PKR {totalBasic.toLocaleString()}
+                          {currCode} {totalBasic.toLocaleString()}
                         </Typography>
                       </TableCell>
                       <TableCell />
                       <TableCell />
                       <TableCell align="right">
                         <Typography variant="subtitle2" fontWeight={700} color="success.main">
-                          PKR {totalNet.toLocaleString()}
+                          {currCode} {totalNet.toLocaleString()}
                         </Typography>
                       </TableCell>
                       <TableCell />

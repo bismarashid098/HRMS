@@ -5,6 +5,7 @@ import Grid from '@mui/material/Grid';
 import { alpha, useTheme } from '@mui/material/styles';
 import { Icon } from '@iconify/react';
 import api from 'api/axios';
+import { useCurrency } from 'context/SettingsContext';
 
 const MONTHS = [
   'January',
@@ -57,30 +58,34 @@ const Row = ({
   isDeduction?: boolean;
   bold?: boolean;
   color?: string;
-}) => (
-  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ py: 0.9 }}>
-    <Typography
-      variant={bold ? 'subtitle1' : 'body2'}
-      fontWeight={bold ? 700 : 400}
-      color={color ?? 'text.primary'}
-    >
-      {label}
-    </Typography>
-    <Typography
-      variant={bold ? 'subtitle1' : 'body2'}
-      fontWeight={bold ? 700 : 500}
-      color={color ?? (isDeduction ? 'error.main' : 'text.primary')}
-    >
-      {isDeduction && value > 0 ? '− ' : ''}
-      PKR {Math.abs(value).toLocaleString('en-PK', { minimumFractionDigits: 0 })}
-    </Typography>
-  </Stack>
-);
+}) => {
+  const { code } = useCurrency();
+  return (
+    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ py: 0.9 }}>
+      <Typography
+        variant={bold ? 'subtitle1' : 'body2'}
+        fontWeight={bold ? 700 : 400}
+        color={color ?? 'text.primary'}
+      >
+        {label}
+      </Typography>
+      <Typography
+        variant={bold ? 'subtitle1' : 'body2'}
+        fontWeight={bold ? 700 : 500}
+        color={color ?? (isDeduction ? 'error.main' : 'text.primary')}
+      >
+        {isDeduction && value > 0 ? '− ' : ''}
+        {code} {Math.abs(value).toLocaleString('en-PK', { minimumFractionDigits: 0 })}
+      </Typography>
+    </Stack>
+  );
+};
 
 const SalarySlip = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
+  const { code: currCode } = useCurrency();
   const slipRef = useRef<HTMLDivElement>(null);
   const [payroll, setPayroll] = useState<Payroll | null>(null);
   const [loading, setLoading] = useState(true);
@@ -423,7 +428,7 @@ const SalarySlip = () => {
                   Net Take-Home Salary
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
-                  Gross PKR {grossSalary.toLocaleString()} − Deductions PKR{' '}
+                  Gross {currCode} {grossSalary.toLocaleString()} − Deductions {currCode}{' '}
                   {totalDeductions.toLocaleString()}
                 </Typography>
               </Box>
@@ -432,7 +437,7 @@ const SalarySlip = () => {
                 fontWeight={800}
                 sx={{ color: '#fff', letterSpacing: '-0.5px' }}
               >
-                PKR {net.toLocaleString('en-PK')}
+                {currCode} {net.toLocaleString('en-PK')}
               </Typography>
             </Box>
 

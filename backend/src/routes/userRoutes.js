@@ -1,5 +1,6 @@
 const express = require("express");
 const {
+    createUser,
     getAllUsers,
     getUserById,
     updateUserRole,
@@ -13,6 +14,7 @@ const router = express.Router();
 
 router.use(protect);
 
+router.post("/", authorize("Admin"), createUser);
 router.get("/", authorize("Admin"), getAllUsers);
 router.get("/:id", authorize("Admin"), getUserById);
 router.put("/:id/role", authorize("Admin"), updateUserRole);

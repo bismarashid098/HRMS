@@ -20,8 +20,10 @@ import {
   CircularProgress,
 } from '@mui/material';
 import api from 'api/axios';
+import { useCurrency } from 'context/SettingsContext';
 
 const AdvanceSalary = () => {
+  const { code: currCode } = useCurrency();
   const [advances, setAdvances] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,7 +137,7 @@ const AdvanceSalary = () => {
                   advances.map((a: any) => (
                     <TableRow key={a._id}>
                       <TableCell>{a.employee?.name || '—'}</TableCell>
-                      <TableCell>PKR {a.amount?.toLocaleString()}</TableCell>
+                      <TableCell>{currCode} {a.amount?.toLocaleString()}</TableCell>
                       <TableCell>{a.reason}</TableCell>
                       <TableCell>{a.date?.slice(0, 10)}</TableCell>
                       <TableCell>

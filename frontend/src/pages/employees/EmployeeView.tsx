@@ -14,6 +14,7 @@ import Grid from '@mui/material/Grid';
 import { Icon } from '@iconify/react';
 import api from 'api/axios';
 import { useAuth } from 'context/AuthContext';
+import { useCurrency } from 'context/SettingsContext';
 
 const InfoRow = ({ label, value }: { label: string; value: string | number }) => (
   <Box sx={{ display: 'flex', py: 1 }}>
@@ -30,15 +31,17 @@ const EmployeeView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { code: currCode } = useCurrency();
   const [employee, setEmployee] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
   const isAdmin = user?.role === 'Admin';
 
   useEffect(() => {
     api
       .get(`/employees/${id}`)
       .then((res) => setEmployee(res.data.employee || res.data))
-      .catch(console.error)
+      .catch(() => setFetchError('Failed to load employee. Please try again.'))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -46,6 +49,13 @@ const EmployeeView = () => {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
         <CircularProgress />
+      </Box>
+    );
+  if (fetchError)
+    return (
+      <Box>
+        <Typography color="error">{fetchError}</Typography>
+        <Button sx={{ mt: 1 }} onClick={() => navigate('/employees')}>Back to Employees</Button>
       </Box>
     );
   if (!employee)
@@ -136,7 +146,7 @@ const EmployeeView = () => {
               <InfoRow label="Monthly Off Days" value={employee.monthlyOffDays} />
               <InfoRow label="Biometric ID" value={employee.biometricId} />
               {isAdmin && (
-                <InfoRow label="Salary" value={`PKR ${employee.salary?.toLocaleString()}`} />
+                <InfoRow label="Salary" value={`${currCode} ${employee.salary?.toLocaleString()}`} />
               )}
             </Grid>
           </Grid>

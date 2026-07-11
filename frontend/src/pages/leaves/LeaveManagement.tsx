@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -23,6 +24,7 @@ import {
   FormControl,
   InputLabel,
   IconButton,
+  Snackbar,
   Tooltip,
 } from '@mui/material';
 import { Icon } from '@iconify/react';
@@ -88,6 +90,7 @@ const LeaveManagement = () => {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [snack, setSnack] = useState('');
 
   // Apply Leave dialog
   const [applyOpen, setApplyOpen] = useState(false);
@@ -128,8 +131,8 @@ const LeaveManagement = () => {
     try {
       await api.put(`/leaves/${id}`, { status });
       fetchLeaves();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      setSnack(e.response?.data?.message || 'Failed to update leave status');
     } finally {
       setActionLoading(null);
     }
@@ -142,8 +145,8 @@ const LeaveManagement = () => {
       setApplyOpen(false);
       setApplyForm({ ...defaultApplyForm });
       fetchLeaves();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      setSnack(e.response?.data?.message || 'Failed to apply for leave');
     } finally {
       setApplyLoading(false);
     }
@@ -168,8 +171,8 @@ const LeaveManagement = () => {
       await api.patch(`/leaves/${editLeave._id}`, editForm);
       setEditOpen(false);
       fetchLeaves();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      setSnack(e.response?.data?.message || 'Failed to update leave');
     } finally {
       setEditLoading(false);
     }
@@ -182,8 +185,8 @@ const LeaveManagement = () => {
       await api.delete(`/leaves/${deleteId}`);
       setDeleteId(null);
       fetchLeaves();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      setSnack(e.response?.data?.message || 'Failed to delete leave');
     } finally {
       setDeleteLoading(false);
     }
@@ -519,6 +522,10 @@ const LeaveManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar open={!!snack} autoHideDuration={3500} onClose={() => setSnack('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity="error" onClose={() => setSnack('')} sx={{ width: '100%' }}>{snack}</Alert>
+      </Snackbar>
     </Box>
   );
 };

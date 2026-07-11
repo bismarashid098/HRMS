@@ -22,12 +22,14 @@ import {
 import { Icon } from '@iconify/react';
 import { alpha, useTheme } from '@mui/material/styles';
 import api from 'api/axios';
+import { useCurrency } from 'context/SettingsContext';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const PayrollPage = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { code: currCode } = useCurrency();
   const [overview, setOverview] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -41,7 +43,7 @@ const PayrollPage = () => {
     api
       .get(`/payroll/overview?month=${month}&year=${year}`)
       .then((res) => setOverview(Array.isArray(res.data) ? res.data : []))
-      .catch(console.error)
+      .catch(() => setError('Failed to load payroll data'))
       .finally(() => setLoading(false));
   };
 
@@ -165,7 +167,7 @@ const PayrollPage = () => {
                   color="success"
                 />
                 <Chip
-                  label={`Total: PKR ${totalNet.toLocaleString()}`}
+                  label={`Total: ${currCode} ${totalNet.toLocaleString()}`}
                   size="small"
                   sx={{
                     bgcolor: alpha(theme.palette.success.main, 0.1),
@@ -230,7 +232,7 @@ const PayrollPage = () => {
                         </TableCell>
                         <TableCell>{e.department || '—'}</TableCell>
                         <TableCell align="right">
-                          PKR {(e.basicSalary || 0).toLocaleString()}
+                          {currCode} {(e.basicSalary || 0).toLocaleString()}
                         </TableCell>
                         <TableCell align="center">
                           <Typography variant="body2">
@@ -238,10 +240,10 @@ const PayrollPage = () => {
                           </Typography>
                         </TableCell>
                         <TableCell align="right" sx={{ color: 'error.main' }}>
-                          PKR {(e.totalDeductions || 0).toLocaleString()}
+                          {currCode} {(e.totalDeductions || 0).toLocaleString()}
                         </TableCell>
                         <TableCell align="right">
-                          <strong>PKR {(e.netSalary || 0).toLocaleString()}</strong>
+                          <strong>{currCode} {(e.netSalary || 0).toLocaleString()}</strong>
                         </TableCell>
                         <TableCell>
                           <Chip

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import {
+  Alert,
   Box,
   Card,
   CardContent,
   Chip,
   MenuItem,
   Select,
+  Snackbar,
   Table,
   TableBody,
   TableCell,
@@ -28,6 +30,7 @@ const AttendanceDaily = () => {
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [snack, setSnack] = useState('');
 
   const fetchAttendance = () => {
     setLoading(true);
@@ -55,8 +58,8 @@ const AttendanceDaily = () => {
         });
       }
       fetchAttendance();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      setSnack(e.response?.data?.message || 'Failed to update attendance');
     } finally {
       setSaving(null);
     }
@@ -148,6 +151,9 @@ const AttendanceDaily = () => {
           )}
         </CardContent>
       </Card>
+      <Snackbar open={!!snack} autoHideDuration={3500} onClose={() => setSnack('')} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity="error" onClose={() => setSnack('')} sx={{ width: '100%' }}>{snack}</Alert>
+      </Snackbar>
     </Box>
   );
 };

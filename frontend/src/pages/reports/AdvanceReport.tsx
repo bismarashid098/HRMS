@@ -18,8 +18,10 @@ import {
 import { Icon } from '@iconify/react';
 import * as XLSX from 'xlsx';
 import api from 'api/axios';
+import { useCurrency } from 'context/SettingsContext';
 
 const AdvanceReport = () => {
+  const { code: currCode } = useCurrency();
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [year, setYear] = useState(new Date().getFullYear());
@@ -80,7 +82,7 @@ const AdvanceReport = () => {
       </head>
       <body>
         <h2>Advance Report</h2>
-        <p>${year} &mdash; ${records.length} records &mdash; Approved/Paid total: PKR ${totalAmount.toLocaleString()}</p>
+        <p>${year} &mdash; ${records.length} records &mdash; Approved/Paid total: ${currCode} ${totalAmount.toLocaleString()}</p>
         ${tableRef.current.outerHTML}
       </body>
       </html>
@@ -144,7 +146,7 @@ const AdvanceReport = () => {
                 <Chip label={`${records.length} records`} size="small" color="default" />
                 {totalAmount > 0 && (
                   <Chip
-                    label={`PKR ${totalAmount.toLocaleString()} approved`}
+                    label={`${currCode} ${totalAmount.toLocaleString()} approved`}
                     size="small"
                     color="success"
                   />
@@ -193,7 +195,7 @@ const AdvanceReport = () => {
                       </TableCell>
                       <TableCell>{r.employee?.department || '—'}</TableCell>
                       <TableCell align="right">
-                        <strong>PKR {r.amount?.toLocaleString()}</strong>
+                        <strong>{currCode} {r.amount?.toLocaleString()}</strong>
                       </TableCell>
                       <TableCell>{r.date?.slice(0, 10)}</TableCell>
                       <TableCell>

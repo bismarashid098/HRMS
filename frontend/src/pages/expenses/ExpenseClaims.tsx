@@ -28,6 +28,7 @@ import {
 import Grid from '@mui/material/Grid';
 import { Icon } from '@iconify/react';
 import api from 'api/axios';
+import { useCurrency } from 'context/SettingsContext';
 
 interface Expense {
   _id: string;
@@ -64,6 +65,7 @@ const statusColor: Record<string, 'warning' | 'success' | 'error' | 'info'> = {
 };
 
 const ExpenseClaims = () => {
+  const { code: currCode } = useCurrency();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -248,7 +250,7 @@ const ExpenseClaims = () => {
                       <TableCell>{e.employee?.name}</TableCell>
                       <TableCell>{e.title}</TableCell>
                       <TableCell>{e.category}</TableCell>
-                      <TableCell>PKR {e.amount.toLocaleString()}</TableCell>
+                      <TableCell>{currCode} {e.amount.toLocaleString()}</TableCell>
                       <TableCell>{new Date(e.date).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <Chip

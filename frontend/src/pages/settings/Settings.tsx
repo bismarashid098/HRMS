@@ -105,7 +105,7 @@ const Settings = () => {
           },
         });
       })
-      .catch(console.error)
+      .catch(() => setError('Failed to load settings. Showing defaults.'))
       .finally(() => setLoading(false));
   }, []);
 
