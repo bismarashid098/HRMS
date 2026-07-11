@@ -154,7 +154,7 @@ const Settings = () => {
     );
 
   return (
-    <Box sx={{ p: 3, maxWidth: 860, mx: 'auto' }}>
+    <Box sx={{ maxWidth: 860, mx: 'auto' }}>
       <Typography variant="h5" fontWeight={700} sx={{ mb: 0.5 }}>
         Settings
       </Typography>

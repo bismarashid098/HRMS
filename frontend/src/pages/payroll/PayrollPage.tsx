@@ -91,7 +91,7 @@ const PayrollPage = () => {
   return (
     <Box>
       <Box
-        sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}
+        sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, mb: 3 }}
       >
         <Box>
           <Typography variant="h5" fontWeight={700}>
@@ -186,6 +186,7 @@ const PayrollPage = () => {
               <CircularProgress />
             </Box>
           ) : (
+            <Box sx={{ overflowX: 'auto' }}>
             <Table>
               <TableHead>
                 <TableRow>
@@ -316,6 +317,7 @@ const PayrollPage = () => {
                 )}
               </TableBody>
             </Table>
+            </Box>
           )}
         </CardContent>
       </Card>

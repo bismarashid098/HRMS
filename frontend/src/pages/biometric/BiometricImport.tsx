@@ -325,6 +325,7 @@ const ImportTab = () => {
                 Row Errors {result.errorCount > 50 && `(showing first 50 of ${result.errorCount})`}
               </Typography>
               <Paper variant="outlined" sx={{ overflow: 'hidden', borderRadius: 2 }}>
+                <Box sx={{ overflowX: 'auto' }}>
                 <Table size="small">
                   <TableHead>
                     <TableRow sx={{ bgcolor: alpha(theme.palette.error.main, 0.07) }}>
@@ -343,6 +344,7 @@ const ImportTab = () => {
                     ))}
                   </TableBody>
                 </Table>
+                </Box>
               </Paper>
             </Box>
           )}

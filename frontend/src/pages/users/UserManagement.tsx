@@ -70,6 +70,7 @@ const UserManagement = () => {
               <CircularProgress />
             </Box>
           ) : (
+            <Box sx={{ overflowX: 'auto' }}>
             <Table>
               <TableHead>
                 <TableRow>
@@ -106,6 +107,7 @@ const UserManagement = () => {
                 ))}
               </TableBody>
             </Table>
+            </Box>
           )}
         </CardContent>
       </Card>

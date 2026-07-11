@@ -246,6 +246,7 @@ const LeaveManagement = () => {
               <CircularProgress />
             </Box>
           ) : (
+            <Box sx={{ overflowX: 'auto' }}>
             <Table>
               <TableHead>
                 <TableRow>
@@ -348,6 +349,7 @@ const LeaveManagement = () => {
                 )}
               </TableBody>
             </Table>
+            </Box>
           )}
         </CardContent>
       </Card>

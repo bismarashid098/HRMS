@@ -100,8 +100,8 @@ const NotificationsPage = () => {
   };
 
   return (
-    <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+    <Box sx={{ p: { xs: 0, sm: 0 }, maxWidth: 800, mx: 'auto' }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} gap={1.5} mb={3}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <Typography variant="h5" fontWeight={700}>
             Notifications

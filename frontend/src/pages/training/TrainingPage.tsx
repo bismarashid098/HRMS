@@ -156,7 +156,7 @@ const TrainingPage = () => {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} gap={1.5} mb={3}>
         <Typography variant="h5" fontWeight={700}>
           Training Management
         </Typography>
@@ -174,16 +174,17 @@ const TrainingPage = () => {
 
       <Card>
         <CardContent>
-          <Stack direction="row" spacing={2} mb={2}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} mb={2}>
             <TextField
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               size="small"
+              fullWidth
               InputProps={{
                 startAdornment: <Icon icon="material-symbols:search" style={{ marginRight: 8 }} />,
               }}
-              sx={{ width: 260 }}
+              sx={{ maxWidth: { sm: 280 } }}
             />
             <FormControl size="small" sx={{ minWidth: 140 }}>
               <InputLabel>Status</InputLabel>
@@ -207,6 +208,7 @@ const TrainingPage = () => {
               <CircularProgress />
             </Box>
           ) : (
+            <Box sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -284,6 +286,7 @@ const TrainingPage = () => {
                 )}
               </TableBody>
             </Table>
+            </Box>
           )}
         </CardContent>
       </Card>

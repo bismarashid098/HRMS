@@ -112,6 +112,7 @@ const AdvanceSalary = () => {
               <CircularProgress />
             </Box>
           ) : (
+            <Box sx={{ overflowX: 'auto' }}>
             <Table>
               <TableHead>
                 <TableRow>
@@ -173,6 +174,7 @@ const AdvanceSalary = () => {
                 )}
               </TableBody>
             </Table>
+            </Box>
           )}
         </CardContent>
       </Card>

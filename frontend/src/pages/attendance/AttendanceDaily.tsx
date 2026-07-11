@@ -84,6 +84,7 @@ const AttendanceDaily = () => {
               <CircularProgress />
             </Box>
           ) : (
+            <Box sx={{ overflowX: 'auto' }}>
             <Table>
               <TableHead>
                 <TableRow>
@@ -143,6 +144,7 @@ const AttendanceDaily = () => {
                 )}
               </TableBody>
             </Table>
+            </Box>
           )}
         </CardContent>
       </Card>
