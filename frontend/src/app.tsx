@@ -8,6 +8,9 @@ const App = () => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
+
+
+  //  return <div className="App">{/* Your app content */}</div>;
   return <Outlet />;
 };
 
