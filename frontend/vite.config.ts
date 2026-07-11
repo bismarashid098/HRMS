@@ -16,8 +16,8 @@ export default ({ mode }: { mode: string }) => {
         { find: 'react-router-dom', replacement: 'react-router' },
         // Mirrors tsconfig "paths": { "*": ["./src/*"] }
         // Explicit aliases ensure bare imports resolve in all environments
-        { find: 'App', replacement: path.resolve(srcDir, 'App') },
-        { find: 'config', replacement: path.resolve(srcDir, 'config') },
+        { find: 'App', replacement: path.resolve(srcDir, 'App.tsx') },
+        { find: 'config', replacement: path.resolve(srcDir, 'config.ts') },
         { find: 'api', replacement: path.resolve(srcDir, 'api') },
         { find: 'components', replacement: path.resolve(srcDir, 'components') },
         { find: 'context', replacement: path.resolve(srcDir, 'context') },
