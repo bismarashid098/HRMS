@@ -38,27 +38,6 @@ const FEATURES = [
   },
 ];
 
-const DEMO = [
-  {
-    label: 'Admin',
-    email: 'admin@hrms.com',
-    password: '12345678',
-    icon: 'material-symbols:admin-panel-settings-outline-rounded',
-    color: '#818CF8',
-    bg: 'rgba(99,102,241,0.12)',
-    desc: 'Full system access',
-  },
-  {
-    label: 'Manager',
-    email: 'manager@hrms.com',
-    password: '12345678',
-    icon: 'material-symbols:manage-accounts-outline-rounded',
-    color: '#34D399',
-    bg: 'rgba(52,211,153,0.12)',
-    desc: 'Attendance & leaves',
-  },
-];
-
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -66,7 +45,6 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [demoLoading, setDemoLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [shake, setShake] = useState(false);
 
@@ -92,22 +70,6 @@ const Login = () => {
       triggerShake();
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async (d: (typeof DEMO)[0]) => {
-    setDemoLoading(d.label);
-    setError('');
-    try {
-      await login(d.email, d.password);
-      navigate('/');
-    } catch (err: any) {
-      setEmail(d.email);
-      setPassword(d.password);
-      setError(err?.response?.data?.message || 'Demo login failed.');
-      triggerShake();
-    } finally {
-      setDemoLoading(null);
     }
   };
 
@@ -382,58 +344,7 @@ const Login = () => {
           </Stack>
         </Box>
 
-        {/* Demo accounts */}
-        <Box sx={{ mt: 3.5, animation: 'fadeUp 0.5s 0.45s both' }}>
-          <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)', mb: 2.5 }}>
-            <Typography sx={{ fontSize: '0.68rem', color: '#334155', fontWeight: 600, letterSpacing: '0.08em', px: 1 }}>
-              DEMO ACCOUNTS
-            </Typography>
-          </Divider>
-          <Stack direction="row" spacing={1.5}>
-            {DEMO.map((d) => (
-              <Box
-                key={d.label}
-                onClick={() => !demoLoading && handleDemoLogin(d)}
-                sx={{
-                  flex: 1, p: 1.75, borderRadius: '14px',
-                  border: '1px solid rgba(255,255,255,0.07)',
-                  backgroundColor: 'rgba(255,255,255,0.03)',
-                  cursor: demoLoading ? 'wait' : 'pointer',
-                  transition: 'all 0.22s ease',
-                  '&:hover': {
-                    backgroundColor: d.bg,
-                    borderColor: `${d.color}55`,
-                    transform: demoLoading ? 'none' : 'translateY(-2px)',
-                    boxShadow: `0 8px 24px ${d.color}18`,
-                  },
-                  '&:active': { transform: 'translateY(0)' },
-                }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1} mb={0.75}>
-                  <Box sx={{ width: 24, height: 24, borderRadius: '7px', backgroundColor: d.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    {demoLoading === d.label
-                      ? <CircularProgress size={12} sx={{ color: d.color }} />
-                      : <Icon icon={d.icon} color={d.color} width={14} />
-                    }
-                  </Box>
-                  <Typography sx={{ fontSize: '0.8125rem', fontWeight: 700, color: '#E2E8F0' }}>
-                    {d.label}
-                  </Typography>
-                </Stack>
-                <Typography sx={{ fontSize: '0.7rem', color: '#64748B', mb: 0.3 }}>{d.email}</Typography>
-                <Typography sx={{ fontSize: '0.68rem', color: '#475569' }}>{d.desc}</Typography>
-                <Stack direction="row" alignItems="center" spacing={0.5} mt={0.75}>
-                  <Icon icon="material-symbols:bolt-rounded" color={d.color} width={12} />
-                  <Typography sx={{ fontSize: '0.68rem', color: d.color, fontWeight: 600 }}>
-                    {demoLoading === d.label ? 'Logging in…' : 'One-click login'}
-                  </Typography>
-                </Stack>
-              </Box>
-            ))}
-          </Stack>
-        </Box>
-
-        <Typography sx={{ textAlign: 'center', fontSize: '0.68rem', color: '#334155', mt: 3, animation: 'fadeUp 0.5s 0.6s both' }}>
+        <Typography sx={{ textAlign: 'center', fontSize: '0.68rem', color: '#334155', mt: 3, animation: 'fadeUp 0.5s 0.45s both' }}>
           © {new Date().getFullYear()} WorkSphere HRMS · All rights reserved
         </Typography>
       </Box>
