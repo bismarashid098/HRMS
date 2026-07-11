@@ -119,8 +119,8 @@ const Departments = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+    <Box>
+      <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }} gap={1.5} mb={3}>
         <Typography variant="h5" fontWeight={700}>
           Departments
         </Typography>
@@ -143,7 +143,7 @@ const Departments = () => {
             InputProps={{
               startAdornment: <Icon icon="material-symbols:search" style={{ marginRight: 8 }} />,
             }}
-            sx={{ mb: 2, width: 300 }}
+            fullWidth sx={{ mb: 2, maxWidth: { sm: 320 } }}
           />
 
           {loading ? (
@@ -151,6 +151,7 @@ const Departments = () => {
               <CircularProgress />
             </Box>
           ) : (
+            <Box sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -224,6 +225,7 @@ const Departments = () => {
                 )}
               </TableBody>
             </Table>
+            </Box>
           )}
         </CardContent>
       </Card>

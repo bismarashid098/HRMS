@@ -156,7 +156,7 @@ const JobPostings = () => {
       setForm({ ...form, [k]: e.target.value });
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h5" fontWeight={700}>
           Job Postings
@@ -205,6 +205,7 @@ const JobPostings = () => {
               <CircularProgress />
             </Box>
           ) : (
+            <Box sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -284,6 +285,7 @@ const JobPostings = () => {
                 )}
               </TableBody>
             </Table>
+            </Box>
           )}
         </CardContent>
       </Card>

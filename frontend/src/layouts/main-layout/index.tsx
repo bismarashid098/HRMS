@@ -1,4 +1,4 @@
-import { useState, useCallback, Suspense } from 'react';
+import { useState, useCallback, Suspense, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router';
 import PageLoader from 'components/loading/PageLoader';
 import {
@@ -20,6 +20,9 @@ import {
   Tooltip,
   Badge,
   Stack,
+  Paper,
+  BottomNavigation,
+  BottomNavigationAction,
   useMediaQuery,
   useTheme,
   alpha,
@@ -35,10 +38,12 @@ const NavItem = ({
   item,
   collapsed,
   depth = 0,
+  onNavigate,
 }: {
   item: SubMenuItem;
   collapsed: boolean;
   depth?: number;
+  onNavigate?: () => void;
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -62,6 +67,7 @@ const NavItem = ({
       setOpen((p) => !p);
     } else if (item.path) {
       navigate(item.path);
+      onNavigate?.();
     }
   };
 
@@ -109,7 +115,13 @@ const NavItem = ({
           <Collapse in={open} timeout="auto">
             <List disablePadding>
               {item.items!.map((sub) => (
-                <NavItem key={sub.pathName} item={sub} collapsed={collapsed} depth={depth + 1} />
+                <NavItem
+                  key={sub.pathName}
+                  item={sub}
+                  collapsed={collapsed}
+                  depth={depth + 1}
+                  onNavigate={onNavigate}
+                />
               ))}
             </List>
           </Collapse>
@@ -123,6 +135,7 @@ const NavItem = ({
       <ListItemButton
         component={Link}
         to={item.path || '#'}
+        onClick={onNavigate}
         sx={{
           pl: collapsed ? 1.75 : depth === 0 ? 1.5 : 3.5,
           pr: 1.5,
@@ -167,9 +180,10 @@ const NavItem = ({
 interface SidebarProps {
   collapsed: boolean;
   user: { name: string; role: string } | null;
+  onNavigate?: () => void;
 }
 
-const SidebarContent = ({ collapsed, user }: SidebarProps) => {
+const SidebarContent = ({ collapsed, user, onNavigate }: SidebarProps) => {
   const sitemap = getSitemap(user?.role);
 
   return (
@@ -255,7 +269,12 @@ const SidebarContent = ({ collapsed, user }: SidebarProps) => {
             )}
             <List disablePadding>
               {section.items.map((item) => (
-                <NavItem key={item.pathName} item={item} collapsed={collapsed} />
+                <NavItem
+                  key={item.pathName}
+                  item={item}
+                  collapsed={collapsed}
+                  onNavigate={onNavigate}
+                />
               ))}
             </List>
           </Box>
@@ -337,6 +356,27 @@ const getPageTitle = (pathname: string) => {
   return 'WorkSphere HRMS';
 };
 
+// Bottom nav items for mobile (most used)
+const BOTTOM_NAV = [
+  { label: 'Dashboard', icon: 'material-symbols:dashboard-outline-rounded', path: '/' },
+  {
+    label: 'Attendance',
+    icon: 'material-symbols:fingerprint-rounded',
+    path: '/attendance',
+  },
+  {
+    label: 'Leaves',
+    icon: 'material-symbols:event-available-outline-rounded',
+    path: '/leaves',
+  },
+  {
+    label: 'Profile',
+    icon: 'material-symbols:person-outline-rounded',
+    path: '/profile',
+  },
+  { label: 'More', icon: 'material-symbols:menu-rounded', path: '__menu__' },
+];
+
 const MainLayout = () => {
   const muiTheme = useTheme();
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
@@ -349,11 +389,23 @@ const MainLayout = () => {
 
   const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_W;
 
+  // Close mobile drawer on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   const handleLogout = useCallback(() => {
     logout();
     navigate('/auth/login');
     setAnchorEl(null);
   }, [logout, navigate]);
+
+  // Bottom nav active value
+  const bottomNavValue = BOTTOM_NAV.findIndex(
+    (n) =>
+      n.path !== '__menu__' &&
+      (pathname === n.path || (n.path !== '/' && pathname.startsWith(n.path))),
+  );
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -389,7 +441,11 @@ const MainLayout = () => {
           },
         }}
       >
-        <SidebarContent collapsed={false} user={user} />
+        <SidebarContent
+          collapsed={false}
+          user={user}
+          onNavigate={() => setMobileOpen(false)}
+        />
       </Drawer>
 
       {/* Main area */}
@@ -402,6 +458,10 @@ const MainLayout = () => {
           flexDirection: 'column',
           minHeight: '100vh',
           backgroundColor: '#F1F5F9',
+          // iOS safe area
+          paddingBottom: isMobile
+            ? 'calc(56px + env(safe-area-inset-bottom))'
+            : 0,
         }}
       >
         {/* Topbar */}
@@ -421,13 +481,10 @@ const MainLayout = () => {
               onClick={() => (isMobile ? setMobileOpen(true) : setCollapsed((p) => !p))}
               sx={{ color: '#64748B', mr: 1.5, '&:hover': { backgroundColor: '#F1F5F9' } }}
             >
-              <Icon
-                icon={isMobile ? 'material-symbols:menu-rounded' : 'material-symbols:menu-rounded'}
-                width={22}
-              />
+              <Icon icon="material-symbols:menu-rounded" width={22} />
             </IconButton>
 
-            <Typography variant="h6" fontWeight={700} fontSize="1rem" sx={{ flex: 1 }}>
+            <Typography variant="h6" fontWeight={700} fontSize="1rem" sx={{ flex: 1 }} noWrap>
               {getPageTitle(pathname)}
             </Typography>
 
@@ -560,7 +617,7 @@ const MainLayout = () => {
           </Suspense>
         </Box>
 
-        {/* Footer */}
+        {/* Footer — hide on mobile (bottom nav replaces it) */}
         <Box
           sx={{
             px: 3,
@@ -568,6 +625,7 @@ const MainLayout = () => {
             borderTop: '1px solid #E2E8F0',
             backgroundColor: '#fff',
             textAlign: 'center',
+            display: { xs: 'none', md: 'block' },
           }}
         >
           <Typography variant="caption" color="text.secondary" fontSize="0.72rem">
@@ -575,6 +633,48 @@ const MainLayout = () => {
           </Typography>
         </Box>
       </Box>
+
+      {/* Mobile Bottom Navigation */}
+      {isMobile && (
+        <Paper
+          elevation={8}
+          sx={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1200,
+            borderTop: '1px solid #E2E8F0',
+            paddingBottom: 'env(safe-area-inset-bottom)',
+          }}
+        >
+          <BottomNavigation
+            value={bottomNavValue === -1 ? false : bottomNavValue}
+            sx={{ height: 56, backgroundColor: '#fff' }}
+          >
+            {BOTTOM_NAV.map((item, idx) => (
+              <BottomNavigationAction
+                key={item.label}
+                label={item.label}
+                icon={<Icon icon={item.icon} width={22} />}
+                onClick={() => {
+                  if (item.path === '__menu__') {
+                    setMobileOpen(true);
+                  } else {
+                    navigate(item.path);
+                  }
+                }}
+                sx={{
+                  minWidth: 0,
+                  fontSize: '0.65rem',
+                  '&.Mui-selected': { color: '#4F46E5' },
+                  color: bottomNavValue === idx ? '#4F46E5' : '#94A3B8',
+                }}
+              />
+            ))}
+          </BottomNavigation>
+        </Paper>
+      )}
     </Box>
   );
 };

@@ -67,7 +67,7 @@ const AttendanceMonthly = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box>
       <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
         Monthly Attendance Ledger
       </Typography>
@@ -120,6 +120,7 @@ const AttendanceMonthly = () => {
               <CircularProgress />
             </Box>
           ) : (
+            <Box sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -154,6 +155,7 @@ const AttendanceMonthly = () => {
                 )}
               </TableBody>
             </Table>
+            </Box>
           )}
         </CardContent>
       </Card>

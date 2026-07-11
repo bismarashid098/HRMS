@@ -103,7 +103,7 @@ const LeaveReport = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box>
       <Stack direction="row" alignItems="flex-start" justifyContent="space-between" mb={0.5}>
         <Box>
           <Typography variant="h5" fontWeight={700}>
@@ -178,6 +178,7 @@ const LeaveReport = () => {
               <CircularProgress />
             </Box>
           ) : (
+            <Box sx={{ overflowX: 'auto' }}>
             <Table ref={tableRef}>
               <TableHead>
                 <TableRow>
@@ -238,6 +239,7 @@ const LeaveReport = () => {
                 )}
               </TableBody>
             </Table>
+            </Box>
           )}
         </CardContent>
       </Card>

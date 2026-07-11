@@ -164,7 +164,7 @@ const Candidates = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h5" fontWeight={700}>
           Candidates
@@ -217,6 +217,7 @@ const Candidates = () => {
               <CircularProgress />
             </Box>
           ) : (
+            <Box sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -292,6 +293,7 @@ const Candidates = () => {
                 )}
               </TableBody>
             </Table>
+            </Box>
           )}
         </CardContent>
       </Card>

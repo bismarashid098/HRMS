@@ -109,8 +109,17 @@ const EmployeeList = () => {
   ];
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+    <Box>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: 1.5,
+          mb: 3,
+        }}
+      >
         <Typography variant="h5" fontWeight="bold">
           Employees
         </Typography>
@@ -119,6 +128,7 @@ const EmployeeList = () => {
             variant="contained"
             startIcon={<Icon icon="material-symbols:add-rounded" />}
             onClick={() => navigate('/employees/add')}
+            sx={{ alignSelf: { xs: 'stretch', sm: 'auto' } }}
           >
             Add Employee
           </Button>
@@ -131,7 +141,8 @@ const EmployeeList = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             size="small"
-            sx={{ mb: 2, width: 350 }}
+            fullWidth
+            sx={{ mb: 2, maxWidth: { sm: 380 } }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">

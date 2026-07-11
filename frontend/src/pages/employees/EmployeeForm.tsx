@@ -113,7 +113,7 @@ const EmployeeForm = () => {
   ];
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box>
       <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
         {isEdit ? 'Edit Employee' : 'Add Employee'}
       </Typography>

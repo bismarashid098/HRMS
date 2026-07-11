@@ -89,7 +89,7 @@ const PayrollPage = () => {
     s === 'Approved' ? 'success' : s === 'Generated' ? 'info' : 'default';
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box>
       <Box
         sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}
       >

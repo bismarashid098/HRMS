@@ -125,8 +125,8 @@ const Designations = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+    <Box>
+      <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", sm: "center" }} gap={1.5} mb={3}>
         <Typography variant="h5" fontWeight={700}>
           Designations
         </Typography>
@@ -149,13 +149,14 @@ const Designations = () => {
             InputProps={{
               startAdornment: <Icon icon="material-symbols:search" style={{ marginRight: 8 }} />,
             }}
-            sx={{ mb: 2, width: 300 }}
+            fullWidth sx={{ mb: 2, maxWidth: { sm: 320 } }}
           />
           {loading ? (
             <Box display="flex" justifyContent="center" py={4}>
               <CircularProgress />
             </Box>
           ) : (
+            <Box sx={{ overflowX: 'auto' }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -217,6 +218,7 @@ const Designations = () => {
                 )}
               </TableBody>
             </Table>
+            </Box>
           )}
         </CardContent>
       </Card>
