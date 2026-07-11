@@ -42,16 +42,18 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-// CORS — allow all localhost in dev, restrict to FRONTEND_URL in production
-const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:5173")
+// CORS — allow localhost in dev, FRONTEND_URL in prod, any *.onrender.com as fallback
+const allowedOrigins = (process.env.FRONTEND_URL || "")
   .split(",")
-  .map((o) => o.trim());
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
-    if (process.env.NODE_ENV !== "production" && /^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true);
+    if (/^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true);
     if (allowedOrigins.includes(origin)) return cb(null, true);
+    if (/^https:\/\/[a-z0-9-]+\.onrender\.com$/.test(origin)) return cb(null, true);
     cb(new Error("Not allowed by CORS"));
   },
   credentials: true
