@@ -15,10 +15,12 @@ const seedUser = async () => {
         const existingUser = await User.findOne({ email: "admin@hrms.com" });
         if (existingUser) {
             console.log("⚠️ Admin user already exists. Updating password...");
-            existingUser.password = "123"; // Will be hashed by pre-save hook
+            existingUser.password = "12345678"; // Will be hashed by pre-save hook
             existingUser.isActive = true;
+            existingUser.failedLoginAttempts = 0;
+            existingUser.lockUntil = null;
             await existingUser.save();
-            console.log("✅ Admin password updated to '123'");
+            console.log("✅ Admin password updated to '12345678'");
         } else {
             console.log("Creating new admin user...");
             await User.create({
