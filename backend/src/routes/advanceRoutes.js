@@ -7,14 +7,14 @@ const {
   deleteAdvance
 } = require("../controllers/advanceController");
 const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+const { authorizePermission } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 
-router.post("/", protect, authorize("Admin"), requestAdvance);
-router.get("/ledger", protect, authorize("Admin"), getEmployeeLedger);
-router.get("/", protect, authorize("Admin"), getAdvances);
-router.put("/:id", protect, authorize("Admin"), updateAdvanceStatus);
-router.delete("/:id", protect, authorize("Admin"), deleteAdvance);
+router.post("/", protect, authorizePermission("advance-salary"), requestAdvance);
+router.get("/ledger", protect, authorizePermission("advance-salary"), getEmployeeLedger);
+router.get("/", protect, authorizePermission("advance-salary"), getAdvances);
+router.put("/:id", protect, authorizePermission("advance-salary"), updateAdvanceStatus);
+router.delete("/:id", protect, authorizePermission("advance-salary"), deleteAdvance);
 
 module.exports = router;

@@ -1,15 +1,15 @@
 const express = require("express");
 const { getDepartments, getDepartmentById, createDepartment, updateDepartment, deleteDepartment } = require("../controllers/departmentController");
 const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+const { authorizePermission } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 router.use(protect);
 
-router.get("/", authorize("Admin", "Manager"), getDepartments);
-router.get("/:id", authorize("Admin", "Manager"), getDepartmentById);
-router.post("/", authorize("Admin"), createDepartment);
-router.put("/:id", authorize("Admin"), updateDepartment);
-router.delete("/:id", authorize("Admin"), deleteDepartment);
+router.get("/", authorizePermission("departments"), getDepartments);
+router.get("/:id", authorizePermission("departments"), getDepartmentById);
+router.post("/", authorizePermission("departments"), createDepartment);
+router.put("/:id", authorizePermission("departments"), updateDepartment);
+router.delete("/:id", authorizePermission("departments"), deleteDepartment);
 
 module.exports = router;

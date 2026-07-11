@@ -179,12 +179,12 @@ const NavItem = ({
 
 interface SidebarProps {
   collapsed: boolean;
-  user: { name: string; role: string } | null;
+  user: { name: string; role: string; permissions?: string[] } | null;
   onNavigate?: () => void;
 }
 
 const SidebarContent = ({ collapsed, user, onNavigate }: SidebarProps) => {
-  const sitemap = getSitemap(user?.role);
+  const sitemap = getSitemap(user?.role, user?.permissions);
 
   return (
     <Box

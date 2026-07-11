@@ -11,19 +11,19 @@ const {
 } = require("../controllers/payrollController");
 
 const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+const { authorizePermission } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 
 router.use(protect);
 
-router.post("/generate", authorize("Admin"), generatePayroll);
-router.get("/overview", authorize("Admin"), getPayrollOverview);
-router.get("/employee/:employeeId", authorize("Admin"), getPayrollHistory);
-router.get("/", authorize("Admin"), getAllPayrolls);
-router.get("/:id/breakdown", authorize("Admin"), getPayrollBreakdown);
-router.get("/:id", authorize("Admin"), getPayrollById);
-router.put("/:id/approve", authorize("Admin"), approvePayroll);
-router.delete("/:id", authorize("Admin"), deletePayroll);
+router.post("/generate", authorizePermission("payroll"), generatePayroll);
+router.get("/overview", authorizePermission("payroll"), getPayrollOverview);
+router.get("/employee/:employeeId", authorizePermission("payroll"), getPayrollHistory);
+router.get("/", authorizePermission("payroll"), getAllPayrolls);
+router.get("/:id/breakdown", authorizePermission("payroll"), getPayrollBreakdown);
+router.get("/:id", authorizePermission("payroll"), getPayrollById);
+router.put("/:id/approve", authorizePermission("payroll"), approvePayroll);
+router.delete("/:id", authorizePermission("payroll"), deletePayroll);
 
 module.exports = router;

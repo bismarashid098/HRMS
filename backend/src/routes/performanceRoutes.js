@@ -1,15 +1,15 @@
 const express = require("express");
 const { getReviews, getReviewById, createReview, updateReview, deleteReview } = require("../controllers/performanceController");
 const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+const { authorizePermission } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 router.use(protect);
 
-router.get("/", authorize("Admin", "Manager"), getReviews);
-router.get("/:id", authorize("Admin", "Manager"), getReviewById);
-router.post("/", authorize("Admin"), createReview);
-router.put("/:id", authorize("Admin"), updateReview);
-router.delete("/:id", authorize("Admin"), deleteReview);
+router.get("/", authorizePermission("performance"), getReviews);
+router.get("/:id", authorizePermission("performance"), getReviewById);
+router.post("/", authorizePermission("performance"), createReview);
+router.put("/:id", authorizePermission("performance"), updateReview);
+router.delete("/:id", authorizePermission("performance"), deleteReview);
 
 module.exports = router;

@@ -21,7 +21,7 @@ const SidenavDrawerContent = ({ variant = 'permanent' }: SidenavDrawerContentPro
     setConfig,
   } = useSettingsContext();
   const { user } = useAuth();
-  const sitemap = getSitemap(user?.role);
+  const sitemap = getSitemap(user?.role, user?.permissions);
 
   const expanded = useMemo(
     () => variant === 'temporary' || (variant === 'permanent' && !sidenavCollapsed),

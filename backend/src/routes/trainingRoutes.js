@@ -1,17 +1,17 @@
 const express = require("express");
 const { getTrainings, getTrainingById, createTraining, updateTraining, enrollEmployee, updateEnrollment, deleteTraining } = require("../controllers/trainingController");
 const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+const { authorizePermission } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 router.use(protect);
 
-router.get("/", authorize("Admin", "Manager"), getTrainings);
-router.get("/:id", authorize("Admin", "Manager"), getTrainingById);
-router.post("/", authorize("Admin"), createTraining);
-router.put("/:id", authorize("Admin"), updateTraining);
-router.post("/:id/enroll", authorize("Admin"), enrollEmployee);
-router.put("/:id/enrollments/:employeeId", authorize("Admin"), updateEnrollment);
-router.delete("/:id", authorize("Admin"), deleteTraining);
+router.get("/", authorizePermission("training"), getTrainings);
+router.get("/:id", authorizePermission("training"), getTrainingById);
+router.post("/", authorizePermission("training"), createTraining);
+router.put("/:id", authorizePermission("training"), updateTraining);
+router.post("/:id/enroll", authorizePermission("training"), enrollEmployee);
+router.put("/:id/enrollments/:employeeId", authorizePermission("training"), updateEnrollment);
+router.delete("/:id", authorizePermission("training"), deleteTraining);
 
 module.exports = router;

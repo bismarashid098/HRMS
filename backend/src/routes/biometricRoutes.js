@@ -1,12 +1,12 @@
 const express = require("express");
 const { importAttendance, downloadTemplate, exportAttendance } = require("../controllers/biometricController");
 const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+const { authorizePermission } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 
 router.use(protect);
-router.use(authorize("Admin"));
+router.use(authorizePermission("biometric"));
 
 router.post("/import", importAttendance);
 router.get("/template", downloadTemplate);

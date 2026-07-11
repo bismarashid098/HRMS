@@ -11,19 +11,19 @@ const {
 } = require("../controllers/leaveController");
 
 const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+const { authorizePermission } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
 
 router.use(protect);
 
-router.post("/", authorize("Admin", "Manager"), applyLeave);
-router.get("/balance/:employeeId", authorize("Admin", "Manager"), getLeaveBalance);
-router.get("/my/:employeeId", authorize("Admin", "Manager"), getMyLeaves);
-router.get("/", authorize("Admin", "Manager"), getAllLeaves);
-router.put("/:id", authorize("Admin", "Manager"), updateLeaveStatus);
-router.put("/:id/cancel", authorize("Admin", "Manager"), cancelLeave);
-router.patch("/:id", authorize("Admin"), adminEditLeave);
-router.delete("/:id", authorize("Admin"), deleteLeave);
+router.post("/", authorizePermission("leaves"), applyLeave);
+router.get("/balance/:employeeId", authorizePermission("leaves"), getLeaveBalance);
+router.get("/my/:employeeId", authorizePermission("leaves"), getMyLeaves);
+router.get("/", authorizePermission("leaves"), getAllLeaves);
+router.put("/:id", authorizePermission("leaves"), updateLeaveStatus);
+router.put("/:id/cancel", authorizePermission("leaves"), cancelLeave);
+router.patch("/:id", authorizePermission("leaves"), adminEditLeave);
+router.delete("/:id", authorizePermission("leaves"), deleteLeave);
 
 module.exports = router;

@@ -94,6 +94,7 @@ exports.login = asyncHandler(async (req, res) => {
     name: user.name,
     email: user.email,
     role: user.role,
+    permissions: user.permissions || [],
     employeeId: employee ? employee._id : null,
     token: generateToken(user)
   });
@@ -113,6 +114,7 @@ exports.verify = asyncHandler(async (req, res) => {
     name: user.name,
     email: user.email,
     role: user.role,
+    permissions: user.permissions || [],
     employeeId: employee ? employee._id : null
   });
 });

@@ -4,11 +4,11 @@ const {
   getCandidates, getCandidateById, createCandidate, updateCandidateStatus, addInterview, deleteCandidate
 } = require("../controllers/recruitmentController");
 const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+const { authorizePermission } = require("../middleware/permissionMiddleware");
 const { upload, withFolder } = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
-router.use(protect, authorize("Admin"));
+router.use(protect, authorizePermission("recruitment"));
 
 // Job postings
 router.get("/jobs", getJobPostings);

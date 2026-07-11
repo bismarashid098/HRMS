@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const asyncHandler = require("express-async-handler");
 const { logAudit } = require("../services/auditService");
+const { GRANTABLE_MODULES } = require("../middleware/permissionMiddleware");
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -101,6 +102,32 @@ exports.toggleUserStatus = asyncHandler(async (req, res) => {
   });
 
   res.json({ message: `User ${user.isActive ? "activated" : "deactivated"} successfully` });
+});
+
+exports.updateUserPermissions = asyncHandler(async (req, res) => {
+  if (req.params.id === req.user._id.toString()) {
+    return res.status(400).json({ message: "Cannot change your own permissions" });
+  }
+
+  const user = await User.findById(req.params.id);
+  if (!user) { res.status(404); throw new Error("User not found"); }
+  if (user.role === "Admin") {
+    return res.status(400).json({ message: "Admin users have full access — permissions cannot be restricted" });
+  }
+
+  const permissions = (req.body.permissions || []).filter((p) => GRANTABLE_MODULES.includes(p));
+  const oldPerms = user.permissions;
+  user.permissions = permissions;
+  await user.save();
+
+  logAudit(req, {
+    module: "User", action: "Update", recordId: user._id, recordName: user.name,
+    description: `${req.user?.name} updated permissions for ${user.name}`,
+    oldValues: { permissions: oldPerms },
+    newValues: { permissions }
+  });
+
+  res.json({ message: "Permissions updated successfully", permissions: user.permissions });
 });
 
 exports.deleteUser = asyncHandler(async (req, res) => {

@@ -59,6 +59,10 @@ const AdminOnly = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute allowedRoles={['Admin']}>{children}</ProtectedRoute>
 );
 
+const WithPermission = ({ perm, children }: { perm: string; children: React.ReactNode }) => (
+  <ProtectedRoute requiredPermission={perm}>{children}</ProtectedRoute>
+);
+
 export const routes: RouteObject[] = [
   {
     element: <App />,
@@ -74,219 +78,59 @@ export const routes: RouteObject[] = [
           { index: true, element: <DashboardHome /> },
 
           // Employees
-          { path: 'employees', element: <EmployeeList /> },
-          {
-            path: 'employees/add',
-            element: (
-              <AdminOnly>
-                <EmployeeForm />
-              </AdminOnly>
-            ),
-          },
-          { path: 'employees/:id', element: <EmployeeView /> },
-          {
-            path: 'employees/:id/edit',
-            element: (
-              <AdminOnly>
-                <EmployeeForm />
-              </AdminOnly>
-            ),
-          },
+          { path: 'employees', element: <WithPermission perm="employees"><EmployeeList /></WithPermission> },
+          { path: 'employees/add', element: <WithPermission perm="employees"><EmployeeForm /></WithPermission> },
+          { path: 'employees/:id', element: <WithPermission perm="employees"><EmployeeView /></WithPermission> },
+          { path: 'employees/:id/edit', element: <WithPermission perm="employees"><EmployeeForm /></WithPermission> },
 
           // Attendance
-          { path: 'attendance', element: <AttendanceDaily /> },
-          { path: 'attendance/monthly', element: <AttendanceMonthly /> },
+          { path: 'attendance', element: <WithPermission perm="attendance"><AttendanceDaily /></WithPermission> },
+          { path: 'attendance/monthly', element: <WithPermission perm="attendance"><AttendanceMonthly /></WithPermission> },
 
           // Leaves
-          { path: 'leaves', element: <LeaveManagement /> },
+          { path: 'leaves', element: <WithPermission perm="leaves"><LeaveManagement /></WithPermission> },
 
-          // Payroll (Admin only)
-          {
-            path: 'payroll',
-            element: (
-              <AdminOnly>
-                <PayrollPage />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'payroll/advance',
-            element: (
-              <AdminOnly>
-                <AdvanceSalary />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'payroll/slip/:id',
-            element: (
-              <AdminOnly>
-                <SalarySlip />
-              </AdminOnly>
-            ),
-          },
+          // Payroll
+          { path: 'payroll', element: <WithPermission perm="payroll"><PayrollPage /></WithPermission> },
+          { path: 'payroll/advance', element: <WithPermission perm="advance-salary"><AdvanceSalary /></WithPermission> },
+          { path: 'payroll/slip/:id', element: <WithPermission perm="payroll"><SalarySlip /></WithPermission> },
 
           // Reports
-          { path: 'reports/attendance', element: <AttendanceReport /> },
-          { path: 'reports/leave', element: <LeaveReport /> },
-          {
-            path: 'reports/payroll',
-            element: (
-              <AdminOnly>
-                <PayrollReport />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'reports/advance',
-            element: (
-              <AdminOnly>
-                <AdvanceReport />
-              </AdminOnly>
-            ),
-          },
+          { path: 'reports/attendance', element: <WithPermission perm="reports"><AttendanceReport /></WithPermission> },
+          { path: 'reports/leave', element: <WithPermission perm="reports"><LeaveReport /></WithPermission> },
+          { path: 'reports/payroll', element: <WithPermission perm="reports"><PayrollReport /></WithPermission> },
+          { path: 'reports/advance', element: <WithPermission perm="reports"><AdvanceReport /></WithPermission> },
 
           // Administration (Admin only)
-          {
-            path: 'users',
-            element: (
-              <AdminOnly>
-                <UserManagement />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'settings',
-            element: (
-              <AdminOnly>
-                <Settings />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'audit',
-            element: (
-              <AdminOnly>
-                <AuditLogs />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'biometric',
-            element: (
-              <AdminOnly>
-                <BiometricImport />
-              </AdminOnly>
-            ),
-          },
+          { path: 'users', element: <AdminOnly><UserManagement /></AdminOnly> },
+          { path: 'settings', element: <AdminOnly><Settings /></AdminOnly> },
+          { path: 'audit', element: <AdminOnly><AuditLogs /></AdminOnly> },
 
-          // Organization Structure (Admin only)
-          {
-            path: 'org/departments',
-            element: (
-              <AdminOnly>
-                <Departments />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'org/designations',
-            element: (
-              <AdminOnly>
-                <Designations />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'org/branches',
-            element: (
-              <AdminOnly>
-                <Branches />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'org/shifts',
-            element: (
-              <AdminOnly>
-                <Shifts />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'org/holidays',
-            element: (
-              <AdminOnly>
-                <Holidays />
-              </AdminOnly>
-            ),
-          },
+          // Biometric
+          { path: 'biometric', element: <WithPermission perm="biometric"><BiometricImport /></WithPermission> },
 
-          // Recruitment (Admin only)
-          {
-            path: 'recruitment/jobs',
-            element: (
-              <AdminOnly>
-                <JobPostings />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'recruitment/candidates',
-            element: (
-              <AdminOnly>
-                <Candidates />
-              </AdminOnly>
-            ),
-          },
+          // Organization Structure
+          { path: 'org/departments', element: <WithPermission perm="departments"><Departments /></WithPermission> },
+          { path: 'org/designations', element: <WithPermission perm="designations"><Designations /></WithPermission> },
+          { path: 'org/branches', element: <WithPermission perm="branches"><Branches /></WithPermission> },
+          { path: 'org/shifts', element: <WithPermission perm="shifts"><Shifts /></WithPermission> },
+          { path: 'org/holidays', element: <WithPermission perm="holidays"><Holidays /></WithPermission> },
 
-          // People (Admin only)
-          {
-            path: 'performance',
-            element: (
-              <AdminOnly>
-                <PerformanceReviews />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'training',
-            element: (
-              <AdminOnly>
-                <TrainingPage />
-              </AdminOnly>
-            ),
-          },
+          // Recruitment
+          { path: 'recruitment/jobs', element: <WithPermission perm="recruitment"><JobPostings /></WithPermission> },
+          { path: 'recruitment/candidates', element: <WithPermission perm="recruitment"><Candidates /></WithPermission> },
 
-          // Operations (Admin only)
-          {
-            path: 'assets',
-            element: (
-              <AdminOnly>
-                <AssetManagement />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'expenses',
-            element: (
-              <AdminOnly>
-                <ExpenseClaims />
-              </AdminOnly>
-            ),
-          },
-          {
-            path: 'documents',
-            element: (
-              <AdminOnly>
-                <DocumentsPage />
-              </AdminOnly>
-            ),
-          },
+          // People
+          { path: 'performance', element: <WithPermission perm="performance"><PerformanceReviews /></WithPermission> },
+          { path: 'training', element: <WithPermission perm="training"><TrainingPage /></WithPermission> },
 
-          // Notifications (all authenticated)
+          // Operations
+          { path: 'assets', element: <WithPermission perm="assets"><AssetManagement /></WithPermission> },
+          { path: 'expenses', element: <WithPermission perm="expenses"><ExpenseClaims /></WithPermission> },
+          { path: 'documents', element: <WithPermission perm="documents"><DocumentsPage /></WithPermission> },
+
+          // Always accessible
           { path: 'notifications', element: <NotificationsPage /> },
-
           { path: 'profile', element: <ProfilePage /> },
         ],
       },

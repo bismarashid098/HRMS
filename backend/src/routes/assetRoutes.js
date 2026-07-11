@@ -1,10 +1,10 @@
 const express = require("express");
 const { getAssets, getAssetById, createAsset, updateAsset, assignAsset, returnAsset, deleteAsset } = require("../controllers/assetController");
 const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+const { authorizePermission } = require("../middleware/permissionMiddleware");
 
 const router = express.Router();
-router.use(protect, authorize("Admin"));
+router.use(protect, authorizePermission("assets"));
 
 router.get("/", getAssets);
 router.get("/:id", getAssetById);

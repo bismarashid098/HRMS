@@ -1,11 +1,11 @@
 const express = require("express");
 const { getExpenses, getExpenseById, createExpense, updateExpenseStatus, deleteExpense } = require("../controllers/expenseController");
 const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+const { authorizePermission } = require("../middleware/permissionMiddleware");
 const { upload, withFolder } = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
-router.use(protect, authorize("Admin"));
+router.use(protect, authorizePermission("expenses"));
 
 router.get("/", getExpenses);
 router.get("/:id", getExpenseById);

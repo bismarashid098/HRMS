@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema(
       default: "Manager"
     },
     isActive: { type: Boolean, default: true },
+    permissions: { type: [String], default: [] },
     failedLoginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
     passwordChangedAt: { type: Date },

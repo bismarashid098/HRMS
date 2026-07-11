@@ -1,11 +1,11 @@
 const express = require("express");
 const { getDocuments, getDocumentById, uploadDocument, updateDocument, deleteDocument } = require("../controllers/documentController");
 const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+const { authorizePermission } = require("../middleware/permissionMiddleware");
 const { upload, withFolder } = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
-router.use(protect, authorize("Admin"));
+router.use(protect, authorizePermission("documents"));
 
 router.get("/", getDocuments);
 router.get("/:id", getDocumentById);
