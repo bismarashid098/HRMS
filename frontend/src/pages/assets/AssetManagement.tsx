@@ -168,7 +168,7 @@ const AssetManagement = () => {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} gap={1.5} mb={3}>
         <Typography variant="h5" fontWeight={700}>
           Asset Management
         </Typography>
@@ -186,7 +186,7 @@ const AssetManagement = () => {
 
       <Card>
         <CardContent>
-          <Stack direction="row" spacing={2} mb={2}>
+          <Stack direction="row" spacing={2} mb={2} flexWrap="wrap">
             <TextField
               placeholder="Search..."
               value={search}
@@ -195,7 +195,7 @@ const AssetManagement = () => {
               InputProps={{
                 startAdornment: <Icon icon="material-symbols:search" style={{ marginRight: 8 }} />,
               }}
-              sx={{ width: 260 }}
+              sx={{ width: { xs: '100%', sm: 260 } }}
             />
             <FormControl size="small" sx={{ minWidth: 140 }}>
               <InputLabel>Status</InputLabel>

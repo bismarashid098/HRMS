@@ -66,7 +66,7 @@ const EmployeeView = () => {
             {employee.designation} · {employee.department}
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Button
             variant="outlined"
             startIcon={<Icon icon="material-symbols:arrow-back-rounded" />}

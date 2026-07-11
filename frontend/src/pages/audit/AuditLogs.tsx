@@ -895,9 +895,10 @@ const AuditLogs = () => {
             {/* Pagination */}
             <Divider />
             <Stack
-              direction="row"
+              direction={{ xs: 'column', sm: 'row' }}
               justifyContent="space-between"
-              alignItems="center"
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+              gap={1}
               sx={{ px: 2.5, py: 1.5 }}
             >
               <Typography variant="caption" color="text.secondary">

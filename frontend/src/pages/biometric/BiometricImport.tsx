@@ -292,7 +292,7 @@ const ImportTab = () => {
             Import complete — {result.total} row{result.total !== 1 ? 's' : ''} processed.
           </Alert>
 
-          <Stack direction="row" spacing={1.5} sx={{ mb: 3 }}>
+          <Stack direction="row" spacing={1.5} flexWrap="wrap" sx={{ mb: 3 }}>
             <StatBox
               icon="material-symbols:add-circle-outline-rounded"
               label="Inserted"

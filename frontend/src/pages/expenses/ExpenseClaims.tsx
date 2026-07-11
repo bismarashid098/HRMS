@@ -169,7 +169,7 @@ const ExpenseClaims = () => {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} gap={1.5} mb={3}>
         <Typography variant="h5" fontWeight={700}>
           Expense Claims
         </Typography>

@@ -121,7 +121,7 @@ const AttendanceReport = () => {
 
   return (
     <Box>
-      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" mb={0.5}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" gap={1.5} mb={0.5}>
         <Box>
           <Typography variant="h5" fontWeight={700}>
             Attendance Report
