@@ -18,7 +18,7 @@ const leaveSchema = new mongoose.Schema(
     paid: { type: Boolean, default: true },
     status: {
       type: String,
-      enum: ["Pending", "Approved", "Rejected"],
+      enum: ["Pending", "Approved", "Rejected", "Cancelled"],
       default: "Pending"
     },
     reason: String
@@ -27,6 +27,7 @@ const leaveSchema = new mongoose.Schema(
 );
 
 leaveSchema.index({ employee: 1, fromDate: 1 });
+leaveSchema.index({ employee: 1, toDate: 1 });
 leaveSchema.index({ status: 1 });
 
 module.exports = mongoose.model("Leave", leaveSchema);

@@ -36,4 +36,7 @@ const advanceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+advanceSchema.index({ employee: 1, month: 1, year: 1 });
+advanceSchema.index({ employee: 1, status: 1 });
+
 module.exports = mongoose.model("Advance", advanceSchema);

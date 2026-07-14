@@ -74,7 +74,7 @@ exports.downloadPayslip = asyncHandler(async (req, res) => {
   const totalEarnings = (payroll.basicSalary || 0) + (payroll.allowance || 0);
 
   const deductions = [
-    ["Tax Deduction", fmt(payroll.deductions)],
+    ["Tax Deduction", fmt(payroll.taxDeduction)],
     ["Leave Deduction", fmt(payroll.leaveDeduction)],
     ["Advance Deduction", fmt(payroll.advanceDeduction)],
     ["Extra Off Deduction", fmt(payroll.extraOffDeduction)],
@@ -82,10 +82,7 @@ exports.downloadPayslip = asyncHandler(async (req, res) => {
     ["Provident Fund", fmt(payroll.pfDeduction)]
   ].filter(([, v]) => v !== fmt(0));
 
-  const totalDeductions =
-    (payroll.deductions || 0) + (payroll.leaveDeduction || 0) +
-    (payroll.advanceDeduction || 0) + (payroll.extraOffDeduction || 0) +
-    (payroll.eobiDeduction || 0) + (payroll.pfDeduction || 0);
+  const totalDeductions = payroll.deductions || 0;
 
   // Two-column layout
   const colW = 247;

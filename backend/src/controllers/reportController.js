@@ -6,6 +6,7 @@ const {
 } = require("../services/reportService");
 const Advance  = require("../models/Advance");
 const Employee = require("../models/Employee");
+const escapeRegex = require("../utils/escapeRegex");
 
 /**
  * Attendance Report
@@ -49,7 +50,7 @@ exports.advanceReport = asyncHandler(async (req, res) => {
   let employeeIds;
   if (search) {
     const employees = await Employee.find({
-      name: { $regex: search, $options: "i" },
+      name: { $regex: escapeRegex(search), $options: "i" },
       isDeleted: false
     }).select("_id");
     employeeIds = employees.map(e => e._id);

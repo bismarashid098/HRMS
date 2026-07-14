@@ -54,7 +54,7 @@ const AttendanceReport = () => {
     const to = new Date(year, month, 0).toISOString().slice(0, 10);
     api
       .get(`/attendance/range?from=${from}&to=${to}`)
-      .then((res) => setRecords(Array.isArray(res.data) ? res.data : []))
+      .then((res) => setRecords(res.data.result || []))
       .catch(console.error)
       .finally(() => setLoading(false));
   };

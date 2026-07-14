@@ -30,6 +30,14 @@ const protect = asyncHandler(async (req, res, next) => {
       throw new Error("Account is temporarily locked due to too many failed login attempts");
     }
 
+    if (user.passwordChangedAt) {
+      const changedAt = Math.floor(user.passwordChangedAt.getTime() / 1000);
+      if (decoded.iat < changedAt) {
+        res.status(401);
+        throw new Error("Password was recently changed. Please log in again.");
+      }
+    }
+
     req.user = user;
     next();
   } catch (error) {

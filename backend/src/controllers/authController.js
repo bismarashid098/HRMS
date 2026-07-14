@@ -48,6 +48,11 @@ exports.login = asyncHandler(async (req, res) => {
     throw new Error("Invalid credentials");
   }
 
+  if (!user.isActive) {
+    res.status(403);
+    throw new Error("Account is deactivated. Contact your administrator.");
+  }
+
   // Check if account is locked
   if (user.isLocked) {
     const minutesLeft = Math.ceil((user.lockUntil - Date.now()) / (1000 * 60));
@@ -69,11 +74,6 @@ exports.login = asyncHandler(async (req, res) => {
     const attemptsLeft = Math.max(0, 5 - user.failedLoginAttempts);
     res.status(401);
     throw new Error(attemptsLeft > 0 ? `Invalid credentials. ${attemptsLeft} attempt(s) remaining before lockout.` : "Invalid credentials. Account is now locked for 15 minutes.");
-  }
-
-  if (!user.isActive) {
-    res.status(403);
-    throw new Error("Account is deactivated. Contact your administrator.");
   }
 
   await user.resetLoginAttempts();

@@ -33,6 +33,8 @@ interface Payroll {
   advanceDeduction: number;
   extraOffDeduction: number;
   taxDeduction: number;
+  eobiDeduction: number;
+  pfDeduction: number;
   deductions: number;
   extraOffDays: number;
   workingDays: number;
@@ -123,12 +125,8 @@ const SalarySlip = () => {
     );
 
   const grossSalary = (payroll.basicSalary || 0) + (payroll.allowance || 0);
-  const totalDeductions =
-    (payroll.leaveDeduction || 0) +
-    (payroll.advanceDeduction || 0) +
-    (payroll.extraOffDeduction || 0) +
-    (payroll.taxDeduction || 0);
-  const net = Math.max(0, grossSalary - totalDeductions);
+  const totalDeductions = payroll.deductions || 0;
+  const net = payroll.netSalary;
 
   const monthName = MONTHS[(payroll.month || 1) - 1];
   const isDark = theme.palette.mode === 'dark';
@@ -392,6 +390,12 @@ const SalarySlip = () => {
                   )}
                   {(payroll.taxDeduction || 0) > 0 && (
                     <Row label="Income Tax" value={payroll.taxDeduction || 0} isDeduction />
+                  )}
+                  {(payroll.eobiDeduction || 0) > 0 && (
+                    <Row label="EOBI" value={payroll.eobiDeduction || 0} isDeduction />
+                  )}
+                  {(payroll.pfDeduction || 0) > 0 && (
+                    <Row label="Provident Fund" value={payroll.pfDeduction || 0} isDeduction />
                   )}
                   {totalDeductions === 0 && (
                     <Typography

@@ -82,7 +82,7 @@ app.use("/api/auth/forgot-password", loginLimiter);
 
 app.use(compression());
 app.use(express.json({ limit: "10mb" }));
-app.use(morgan("dev"));
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));

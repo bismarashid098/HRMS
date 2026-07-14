@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const xlsx = require("xlsx");
 const AuditLog = require("../models/AuditLog");
+const escapeRegex = require("../utils/escapeRegex");
 
 const buildQuery = (q) => {
   const query = {};
@@ -19,10 +20,11 @@ const buildQuery = (q) => {
     }
   }
   if (search) {
+    const escaped = escapeRegex(search);
     query.$or = [
-      { description: { $regex: search, $options: "i" } },
-      { recordName:  { $regex: search, $options: "i" } },
-      { userName:    { $regex: search, $options: "i" } },
+      { description: { $regex: escaped, $options: "i" } },
+      { recordName:  { $regex: escaped, $options: "i" } },
+      { userName:    { $regex: escaped, $options: "i" } },
     ];
   }
   return query;

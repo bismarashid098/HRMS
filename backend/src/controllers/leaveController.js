@@ -302,7 +302,7 @@ exports.cancelLeave = asyncHandler(async (req, res) => {
     }
   }
 
-  leave.status = "Rejected";
+  leave.status = "Cancelled";
   await leave.save();
 
   logAudit(req, {

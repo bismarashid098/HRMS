@@ -222,7 +222,7 @@ exports.getPayrollOverview = asyncHandler(async (req, res) => {
         const taxDeduction = Math.max(0, (basic * Math.max(0, taxPercentage)) / 100);
         const eobiDeduction = emp.eobi ? (emp.eobiAmount || 0) : 0;
         const pfDeduction = emp.providentFund ? Math.round((basic * (emp.providentFundPercentage || 0)) / 100) : 0;
-        const netSalary = basic + allowance - deductionResult.total - taxDeduction - eobiDeduction - pfDeduction;
+        const netSalary = Math.max(0, basic + allowance - deductionResult.total - taxDeduction - eobiDeduction - pfDeduction);
 
         const payroll = payrollMap[emp._id.toString()];
 

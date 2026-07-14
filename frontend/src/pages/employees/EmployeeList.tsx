@@ -44,9 +44,14 @@ const EmployeeList = () => {
 
   const handleDelete = async () => {
     if (!deleteId) return;
-    await api.delete(`/employees/${deleteId}`);
-    setDeleteId(null);
-    fetchEmployees();
+    try {
+      await api.delete(`/employees/${deleteId}`);
+      setDeleteId(null);
+      fetchEmployees();
+    } catch (e: any) {
+      console.error(e.response?.data?.message || 'Failed to delete employee');
+      setDeleteId(null);
+    }
   };
 
   const filtered = employees.filter(

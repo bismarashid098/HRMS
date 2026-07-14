@@ -35,8 +35,8 @@ const AttendanceDaily = () => {
   const fetchAttendance = () => {
     setLoading(true);
     api
-      .get(`/attendance?date=${date}`)
-      .then((res) => setRecords(res.data.attendance || res.data || []))
+      .get(`/attendance/daily?date=${date}`)
+      .then((res) => setRecords(res.data.records || []))
       .catch(console.error)
       .finally(() => setLoading(false));
   };
@@ -46,17 +46,13 @@ const AttendanceDaily = () => {
   }, [date]);
 
   const handleStatusChange = async (record: any, newStatus: string) => {
-    setSaving(record._id || record.employee?._id);
+    setSaving(record._id || record.employeeId);
     try {
-      if (record._id) {
-        await api.put(`/attendance/${record._id}`, { status: newStatus });
-      } else {
-        await api.post('/attendance', {
-          employee: record.employee?._id,
-          date,
-          status: newStatus,
-        });
-      }
+      await api.post('/attendance/manual', {
+        employeeId: record.employeeId,
+        date,
+        status: newStatus,
+      });
       fetchAttendance();
     } catch (e: any) {
       setSnack(e.response?.data?.message || 'Failed to update attendance');
@@ -107,9 +103,9 @@ const AttendanceDaily = () => {
                   </TableRow>
                 ) : (
                   records.map((rec: any) => (
-                    <TableRow key={rec._id || rec.employee?._id}>
-                      <TableCell>{rec.employee?.name || rec.name}</TableCell>
-                      <TableCell>{rec.employee?.department || rec.department}</TableCell>
+                    <TableRow key={rec._id || rec.employeeId}>
+                      <TableCell>{rec.name}</TableCell>
+                      <TableCell>{rec.department}</TableCell>
                       <TableCell>{rec.punchIn || '—'}</TableCell>
                       <TableCell>{rec.punchOut || '—'}</TableCell>
                       <TableCell>
@@ -118,7 +114,7 @@ const AttendanceDaily = () => {
                             size="small"
                             value={rec.status || 'Absent'}
                             onChange={(e) => handleStatusChange(rec, e.target.value)}
-                            disabled={saving === (rec._id || rec.employee?._id)}
+                            disabled={saving === (rec._id || rec.employeeId)}
                           >
                             {statuses.map((s) => (
                               <MenuItem key={s} value={s}>

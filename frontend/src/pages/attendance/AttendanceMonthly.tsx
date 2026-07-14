@@ -53,8 +53,8 @@ const AttendanceMonthly = () => {
     if (!selectedEmployee) return;
     setLoading(true);
     api
-      .get(`/attendance?employee=${selectedEmployee}&month=${month}&year=${year}`)
-      .then((res) => setRecords(res.data.attendance || res.data || []))
+      .get(`/attendance/monthly?employeeId=${selectedEmployee}&month=${month}&year=${year}`)
+      .then((res) => setRecords(Array.isArray(res.data) ? res.data : []))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [selectedEmployee, month, year]);
