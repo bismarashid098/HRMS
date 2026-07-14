@@ -126,7 +126,15 @@ app.use("/api/documents", documentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/export", exportRoutes);
 
-app.use((req, res) => {
+// Serve React frontend in production
+const frontendDist = path.join(__dirname, "../../frontend/dist");
+app.use(express.static(frontendDist));
+app.get(/^(?!\/api\/).*/, (req, res) => {
+  res.sendFile(path.join(frontendDist, "index.html"));
+});
+
+// API 404 fallback (only reached for unmatched /api/* routes)
+app.use("/api", (req, res) => {
   res.status(404).json({ message: `Cannot ${req.method} ${req.path}` });
 });
 
